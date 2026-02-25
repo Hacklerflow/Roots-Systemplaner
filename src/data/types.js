@@ -1,4 +1,58 @@
-// Datenmodell für Roots Systemkonfigurator
+// Neues Datenmodell für Roots Systemkonfigurator mit Ein-/Ausgangs-System
+
+/**
+ * Modul-Typen Konstanten
+ */
+export const MODULE_TYPES = {
+  HEAT_PUMP: 'Wärmepumpe',
+  RECOOLER: 'Rückkühler',
+  STORAGE: 'Pufferspeicher',
+  SOLAR: 'Solarthermie',
+  CONSUMER: 'Verbraucher',
+  BUILDING: 'Gebäude',
+};
+
+/**
+ * Verbindungstypen Konstanten
+ */
+export const CONNECTION_TYPES = {
+  HYDRAULIC: 'hydraulic',
+  ELECTRIC: 'electric',
+  CONTROL: 'control',
+};
+
+/**
+ * Verbindungstyp-Labels (für UI)
+ */
+export const CONNECTION_TYPE_LABELS = {
+  [CONNECTION_TYPES.HYDRAULIC]: 'Hydraulisch',
+  [CONNECTION_TYPES.ELECTRIC]: 'Elektrisch',
+  [CONNECTION_TYPES.CONTROL]: 'Steuerung',
+};
+
+/**
+ * Factory-Funktion für einen Input
+ */
+export function createInput(label = '', connectionType = CONNECTION_TYPES.HYDRAULIC, allowedTypes = []) {
+  return {
+    id: `input-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    label,
+    connectionType,
+    allowedModuleTypes: allowedTypes,
+  };
+}
+
+/**
+ * Factory-Funktion für einen Output
+ */
+export function createOutput(label = '', connectionType = CONNECTION_TYPES.HYDRAULIC, allowedTypes = []) {
+  return {
+    id: `output-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    label,
+    connectionType,
+    allowedModuleTypes: allowedTypes,
+  };
+}
 
 /**
  * Factory-Funktion für ein neues Gebäude
@@ -7,6 +61,7 @@ export function createBuilding(name = 'Neues Gebäude') {
   return {
     id: `building-${Date.now()}`,
     type: 'building',
+    moduleType: MODULE_TYPES.BUILDING,
     name,
     properties: {
       baujahr: null,
@@ -14,13 +69,12 @@ export function createBuilding(name = 'Neues Gebäude') {
       hausnummer: '',
       stockwerke: null,
     },
-    capabilities: {
-      tiefenbohrung_vorhanden: false,
-      kellerfläche: false,
-      dachfläche: false,
-      heizlast_kw: null,
-    },
-    requirements: {}, // Gebäude hat keine Voraussetzungen
+    inputs: [], // Gebäude hat keine Eingänge
+    outputs: [
+      // Standard-Ausgänge
+      createOutput('Heizung', CONNECTION_TYPES.HYDRAULIC, [MODULE_TYPES.HEAT_PUMP, MODULE_TYPES.STORAGE]),
+      createOutput('Strom 400V', CONNECTION_TYPES.ELECTRIC, [MODULE_TYPES.HEAT_PUMP]),
+    ],
   };
 }
 
@@ -31,35 +85,28 @@ export function createModuleInstance(moduleTemplate) {
   return {
     ...moduleTemplate,
     id: `module-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    // Deep-copy inputs/outputs um Referenzen zu vermeiden
+    inputs: moduleTemplate.inputs.map(inp => ({ ...inp, id: `input-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` })),
+    outputs: moduleTemplate.outputs.map(out => ({ ...out, id: `output-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` })),
   };
 }
 
 /**
  * Factory-Funktion für ein neues Modul-Template
  */
-export function createModuleTemplate(name = 'Neues Modul') {
+export function createModuleTemplate(name = 'Neues Modul', moduleType = MODULE_TYPES.CONSUMER) {
   return {
     id: `template-${Date.now()}`,
     type: 'module',
+    moduleType,
     name,
     properties: {
-      modultyp: '',
       hersteller: 'Roots Energy',
       abmessungen: '',
       gewicht_kg: null,
     },
-    capabilities: {
-      wärmequelle_vorhanden: false,
-      verfuegbare_leistung_kw: null,
-    },
-    requirements: {
-      tiefenbohrung_required: false,
-      kellerfläche: false,
-      dachfläche: false,
-      wärmequelle_vorhanden: false,
-      min_leistung_kw: null,
-      max_heizlast_kw: null,
-    },
+    inputs: [],
+    outputs: [],
   };
 }
 
@@ -75,4 +122,18 @@ export function isBuilding(element) {
  */
 export function isModule(element) {
   return element && element.type === 'module';
+}
+
+/**
+ * Gibt alle Modul-Typen als Array zurück (für UI Select)
+ */
+export function getModuleTypeOptions() {
+  return Object.values(MODULE_TYPES).filter(type => type !== MODULE_TYPES.BUILDING);
+}
+
+/**
+ * Gibt alle Verbindungstypen als Array zurück (für UI Select)
+ */
+export function getConnectionTypeOptions() {
+  return Object.values(CONNECTION_TYPES);
 }

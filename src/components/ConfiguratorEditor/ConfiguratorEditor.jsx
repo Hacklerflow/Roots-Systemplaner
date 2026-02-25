@@ -6,22 +6,26 @@ import {
   MiniMap,
   useNodesState,
   useEdgesState,
-  addEdge,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
 import BuildingNode from './BuildingNode';
 import ModuleNode from './ModuleNode';
+import WarningEdge from './WarningEdge';
 import ElementModal from './ElementModal';
-import { createBuilding, createModuleInstance } from '../../data/types';
-import { checkCompatibility, getCompatibleModules } from '../../data/compatibilityChecker';
+import { createBuilding, createModuleInstance, isBuilding } from '../../data/types';
+import { checkConnection, getEdgeStyle } from '../../data/compatibilityChecker';
 
 const nodeTypes = {
   building: BuildingNode,
   module: ModuleNode,
 };
 
-export default function ConfiguratorEditor({ modules, configuration, setConfiguration }) {
+const edgeTypes = {
+  warning: WarningEdge,
+};
+
+export default function ConfiguratorEditor({ modules: moduleTemplates, configuration, setConfiguration }) {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [selectedElement, setSelectedElement] = useState(null);
@@ -32,44 +36,58 @@ export default function ConfiguratorEditor({ modules, configuration, setConfigur
     const newNodes = [];
     const newEdges = [];
 
-    if (configuration.building) {
-      newNodes.push({
-        id: configuration.building.id,
-        type: 'building',
-        position: { x: 50, y: 200 },
-        data: {
-          ...configuration.building,
-          onClick: () => openModal(configuration.building),
-        },
-      });
-    }
+    // Module zu Nodes konvertieren (inkl. Gebäude)
+    configuration.modules.forEach((module, index) => {
+      const isFirstModule = index === 0;
+      const isBuildingModule = isBuilding(module);
 
-    configuration.chain.forEach((module, index) => {
       newNodes.push({
         id: module.id,
-        type: 'module',
-        position: { x: 350 + index * 300, y: 200 },
+        type: isBuildingModule ? 'building' : 'module',
+        position: module.position || {
+          x: isFirstModule ? 50 : 300 + (index - 1) * 280,
+          y: isFirstModule ? 200 : 200 + (index % 3) * 150,
+        },
         data: {
           ...module,
           onClick: () => openModal(module),
         },
       });
+    });
 
-      // Edge zum vorherigen Element
-      const sourceId =
-        index === 0
-          ? configuration.building?.id
-          : configuration.chain[index - 1]?.id;
+    // Connections zu Edges konvertieren
+    configuration.connections.forEach((conn) => {
+      const sourceModule = configuration.modules.find(m => m.id === conn.source);
+      const targetModule = configuration.modules.find(m => m.id === conn.target);
 
-      if (sourceId) {
-        newEdges.push({
-          id: `${sourceId}-${module.id}`,
-          source: sourceId,
-          target: module.id,
-          animated: true,
-          style: { stroke: 'var(--accent)' },
-        });
-      }
+      if (!sourceModule || !targetModule) return;
+
+      // Prüfe Kompatibilität
+      const check = checkConnection(
+        sourceModule,
+        conn.sourceHandle,
+        targetModule,
+        conn.targetHandle
+      );
+
+      // Ermittle connectionType vom Output
+      const output = sourceModule.outputs?.find(o => o.id === conn.sourceHandle);
+      const connectionType = output?.connectionType || 'hydraulic';
+
+      newEdges.push({
+        id: conn.id || `${conn.source}-${conn.sourceHandle}-${conn.target}-${conn.targetHandle}`,
+        source: conn.source,
+        sourceHandle: conn.sourceHandle,
+        target: conn.target,
+        targetHandle: conn.targetHandle,
+        type: check.warning ? 'warning' : 'default',
+        animated: !check.warning,
+        style: getEdgeStyle(connectionType),
+        data: {
+          warning: check.warning,
+          warningReason: check.reason,
+        },
+      });
     });
 
     setNodes(newNodes);
@@ -82,90 +100,138 @@ export default function ConfiguratorEditor({ modules, configuration, setConfigur
   };
 
   const handleSaveElement = (updatedElement) => {
-    if (updatedElement.type === 'building') {
-      setConfiguration({
-        ...configuration,
-        building: updatedElement,
-      });
-    } else {
-      setConfiguration({
-        ...configuration,
-        chain: configuration.chain.map((m) =>
-          m.id === updatedElement.id ? updatedElement : m
-        ),
-      });
-    }
+    setConfiguration({
+      ...configuration,
+      modules: configuration.modules.map((m) =>
+        m.id === updatedElement.id ? updatedElement : m
+      ),
+    });
   };
 
   const handleCreateBuilding = () => {
     const building = createBuilding();
     setConfiguration({
-      building,
-      chain: [],
+      modules: [building],
+      connections: [],
     });
   };
 
   const handleAddModule = (moduleTemplate) => {
-    if (!configuration.building) {
-      alert('Bitte erst ein Gebäude erstellen.');
-      return;
-    }
-
-    // Prüfe Kompatibilität
-    const lastElement =
-      configuration.chain.length > 0
-        ? configuration.chain[configuration.chain.length - 1]
-        : configuration.building;
-
-    const check = checkCompatibility(lastElement, moduleTemplate);
-
-    if (!check.compatible) {
-      alert(
-        `Modul nicht kompatibel:\n${check.missingRequirements.join('\n')}`
-      );
-      return;
-    }
-
     const moduleInstance = createModuleInstance(moduleTemplate);
     setConfiguration({
       ...configuration,
-      chain: [...configuration.chain, moduleInstance],
+      modules: [...configuration.modules, moduleInstance],
     });
   };
 
   const handleClearConfiguration = () => {
     if (confirm('Konfiguration wirklich löschen?')) {
       setConfiguration({
-        building: null,
-        chain: [],
+        modules: [],
+        connections: [],
       });
     }
   };
 
-  const handleDeleteNode = (nodeId) => {
-    if (nodeId === configuration.building?.id) {
-      handleClearConfiguration();
-    } else {
-      // Entferne Modul und alle nachfolgenden Module
-      const index = configuration.chain.findIndex((m) => m.id === nodeId);
-      if (index !== -1) {
-        setConfiguration({
-          ...configuration,
-          chain: configuration.chain.slice(0, index),
-        });
-      }
+  const handleDeleteModule = (moduleId) => {
+    if (confirm('Modul wirklich löschen?')) {
+      setConfiguration({
+        ...configuration,
+        modules: configuration.modules.filter((m) => m.id !== moduleId),
+        connections: configuration.connections.filter(
+          (c) => c.source !== moduleId && c.target !== moduleId
+        ),
+      });
     }
   };
 
-  // Hole kompatible und inkompatible Module
-  const lastElement =
-    configuration.chain.length > 0
-      ? configuration.chain[configuration.chain.length - 1]
-      : configuration.building;
+  // Handle neue Verbindung
+  const handleConnect = useCallback(
+    (params) => {
+      const sourceModule = configuration.modules.find(m => m.id === params.source);
+      const targetModule = configuration.modules.find(m => m.id === params.target);
 
-  const { compatible, incompatible } = lastElement
-    ? getCompatibleModules(lastElement, modules)
-    : { compatible: [], incompatible: [] };
+      if (!sourceModule || !targetModule) return;
+
+      // Prüfe ob Input bereits verbunden ist
+      const inputAlreadyConnected = configuration.connections.some(
+        c => c.target === params.target && c.targetHandle === params.targetHandle
+      );
+
+      if (inputAlreadyConnected) {
+        alert('Dieser Eingang ist bereits verbunden!');
+        return;
+      }
+
+      // Prüfe Kompatibilität (aber erlaube trotzdem)
+      const check = checkConnection(
+        sourceModule,
+        params.sourceHandle,
+        targetModule,
+        params.targetHandle
+      );
+
+      if (check.warning) {
+        const proceed = confirm(
+          `Warnung: ${check.reason}\n\nTrotzdem verbinden?`
+        );
+        if (!proceed) return;
+      }
+
+      // Füge Verbindung hinzu
+      const newConnection = {
+        id: `${params.source}-${params.sourceHandle}-${params.target}-${params.targetHandle}`,
+        source: params.source,
+        sourceHandle: params.sourceHandle,
+        target: params.target,
+        targetHandle: params.targetHandle,
+      };
+
+      setConfiguration({
+        ...configuration,
+        connections: [...configuration.connections, newConnection],
+      });
+    },
+    [configuration, setConfiguration]
+  );
+
+  // Handle Verbindung löschen
+  const handleEdgesDelete = useCallback(
+    (edgesToDelete) => {
+      const edgeIds = edgesToDelete.map(e => e.id);
+      setConfiguration({
+        ...configuration,
+        connections: configuration.connections.filter(
+          c => !edgeIds.includes(c.id)
+        ),
+      });
+    },
+    [configuration, setConfiguration]
+  );
+
+  // Handle Node-Position Update
+  const handleNodesChange = useCallback(
+    (changes) => {
+      onNodesChange(changes);
+
+      // Speichere Position in configuration
+      changes.forEach(change => {
+        if (change.type === 'position' && change.position) {
+          setConfiguration(prev => ({
+            ...prev,
+            modules: prev.modules.map(m =>
+              m.id === change.id
+                ? { ...m, position: change.position }
+                : m
+            ),
+          }));
+        }
+      });
+    },
+    [onNodesChange, setConfiguration]
+  );
+
+  const hasBuilding = configuration.modules.some(m => isBuilding(m));
 
   return (
     <div style={{ display: 'flex', height: '100%', position: 'relative' }}>
@@ -182,23 +248,23 @@ export default function ConfiguratorEditor({ modules, configuration, setConfigur
       >
         <button
           onClick={handleCreateBuilding}
-          disabled={!!configuration.building}
+          disabled={hasBuilding}
           style={{
             padding: '10px 16px',
-            background: configuration.building ? 'var(--bg-tertiary)' : 'var(--accent)',
-            color: configuration.building ? 'var(--text-secondary)' : 'var(--bg-primary)',
+            background: hasBuilding ? 'var(--bg-tertiary)' : 'var(--accent)',
+            color: hasBuilding ? 'var(--text-secondary)' : 'var(--bg-primary)',
             border: 'none',
             borderRadius: '4px',
             fontWeight: 600,
-            cursor: configuration.building ? 'not-allowed' : 'pointer',
+            cursor: hasBuilding ? 'not-allowed' : 'pointer',
             fontFamily: 'inherit',
             fontSize: '13px',
           }}
         >
-          {configuration.building ? 'Gebäude vorhanden' : 'Neues Gebäude'}
+          {hasBuilding ? 'Gebäude vorhanden' : 'Neues Gebäude'}
         </button>
 
-        {configuration.building && (
+        {hasBuilding && (
           <button
             onClick={handleClearConfiguration}
             style={{
@@ -223,12 +289,16 @@ export default function ConfiguratorEditor({ modules, configuration, setConfigur
         <ReactFlow
           nodes={nodes}
           edges={edges}
-          onNodesChange={onNodesChange}
+          onNodesChange={handleNodesChange}
           onEdgesChange={onEdgesChange}
+          onConnect={handleConnect}
+          onEdgesDelete={handleEdgesDelete}
           nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
           fitView
-          minZoom={0.5}
+          minZoom={0.3}
           maxZoom={2}
+          deleteKeyCode="Delete"
         >
           <Background color="var(--border)" gap={16} />
           <Controls />
@@ -245,7 +315,7 @@ export default function ConfiguratorEditor({ modules, configuration, setConfigur
       </div>
 
       {/* Sidebar mit Modulen */}
-      {configuration.building && (
+      {hasBuilding && (
         <div
           style={{
             width: '300px',
@@ -256,42 +326,20 @@ export default function ConfiguratorEditor({ modules, configuration, setConfigur
           }}
         >
           <h3 style={{ marginTop: 0, marginBottom: '16px', fontSize: '14px' }}>
-            Verfügbare Module
+            Module hinzufügen
           </h3>
 
-          {/* Kompatible Module */}
-          {compatible.length > 0 && (
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ fontSize: '12px', color: 'var(--success)', marginBottom: '8px' }}>
-                ✓ Kompatibel
-              </div>
-              {compatible.map(({ module }) => (
-                <ModuleCard
-                  key={module.id}
-                  module={module}
-                  compatible={true}
-                  onAdd={() => handleAddModule(module)}
-                />
-              ))}
-            </div>
-          )}
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
+            Ziehe eine Verbindung von einem Ausgang zu einem Eingang
+          </div>
 
-          {/* Inkompatible Module */}
-          {incompatible.length > 0 && (
-            <div>
-              <div style={{ fontSize: '12px', color: 'var(--error)', marginBottom: '8px' }}>
-                ✗ Nicht kompatibel
-              </div>
-              {incompatible.map(({ module, check }) => (
-                <ModuleCard
-                  key={module.id}
-                  module={module}
-                  compatible={false}
-                  reason={check.missingRequirements.join(', ')}
-                />
-              ))}
-            </div>
-          )}
+          {moduleTemplates.map((template) => (
+            <ModuleCard
+              key={template.id}
+              module={template}
+              onAdd={() => handleAddModule(template)}
+            />
+          ))}
         </div>
       )}
 
@@ -301,63 +349,55 @@ export default function ConfiguratorEditor({ modules, configuration, setConfigur
           element={selectedElement}
           onClose={() => setModalOpen(false)}
           onSave={handleSaveElement}
+          onDelete={() => {
+            handleDeleteModule(selectedElement.id);
+            setModalOpen(false);
+          }}
         />
       )}
     </div>
   );
 }
 
-function ModuleCard({ module, compatible, onAdd, reason }) {
+function ModuleCard({ module, onAdd }) {
   return (
     <div
       style={{
         background: 'var(--bg-tertiary)',
-        border: `1px solid ${compatible ? 'var(--success)' : 'var(--error)'}`,
+        border: '1px solid var(--border)',
         borderRadius: '4px',
         padding: '12px',
         marginBottom: '8px',
-        opacity: compatible ? 1 : 0.5,
       }}
-      title={!compatible ? `Grund: ${reason}` : ''}
     >
       <div style={{ fontWeight: 600, fontSize: '13px', marginBottom: '4px' }}>
         {module.name}
       </div>
       <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
-        {module.properties?.modultyp}
+        {module.moduleType}
       </div>
 
-      {compatible && onAdd && (
-        <button
-          onClick={onAdd}
-          style={{
-            width: '100%',
-            padding: '6px',
-            background: 'var(--accent)',
-            color: 'var(--bg-primary)',
-            border: 'none',
-            borderRadius: '4px',
-            fontSize: '12px',
-            fontWeight: 600,
-            cursor: 'pointer',
-            fontFamily: 'inherit',
-          }}
-        >
-          Hinzufügen
-        </button>
-      )}
+      <div style={{ fontSize: '10px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+        {module.inputs.length} Ein | {module.outputs.length} Aus
+      </div>
 
-      {!compatible && reason && (
-        <div
-          style={{
-            fontSize: '10px',
-            color: 'var(--error)',
-            marginTop: '8px',
-          }}
-        >
-          {reason}
-        </div>
-      )}
+      <button
+        onClick={onAdd}
+        style={{
+          width: '100%',
+          padding: '6px',
+          background: 'var(--accent)',
+          color: 'var(--bg-primary)',
+          border: 'none',
+          borderRadius: '4px',
+          fontSize: '12px',
+          fontWeight: 600,
+          cursor: 'pointer',
+          fontFamily: 'inherit',
+        }}
+      >
+        Hinzufügen
+      </button>
     </div>
   );
 }

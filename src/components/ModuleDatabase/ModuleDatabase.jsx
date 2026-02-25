@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { createModuleTemplate } from '../../data/types';
+import { createModuleTemplate, createInput, createOutput, getModuleTypeOptions, MODULE_TYPES } from '../../data/types';
+import InputOutputEditor from '../ConfiguratorEditor/InputOutputEditor';
 
 export default function ModuleDatabase({ modules, setModules }) {
   const [editingModule, setEditingModule] = useState(null);
@@ -32,7 +33,7 @@ export default function ModuleDatabase({ modules, setModules }) {
   };
 
   return (
-    <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
+    <div style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <h2 style={{ margin: 0 }}>Moduldatenbank</h2>
         <button
@@ -65,7 +66,7 @@ export default function ModuleDatabase({ modules, setModules }) {
       )}
 
       {/* Modulliste */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '16px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px' }}>
         {modules.map((module) => (
           <ModuleCard
             key={module.id}
@@ -98,19 +99,17 @@ function ModuleCard({ module, onEdit, onDelete, disabled }) {
         {module.name}
       </div>
       <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
-        {module.properties?.modultyp || 'Modul'}
+        {module.moduleType || 'Modul'}
       </div>
 
       {/* Schnellinfo */}
-      <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
+      <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
+        <div>⚡ {module.inputs.length} Eingänge | {module.outputs.length} Ausgänge</div>
         {module.properties?.leistung_nominal_kw && (
-          <div>⚡ {module.properties.leistung_nominal_kw} kW</div>
+          <div>🔥 {module.properties.leistung_nominal_kw} kW</div>
         )}
         {module.properties?.volumen_liter && (
           <div>📦 {module.properties.volumen_liter} L</div>
-        )}
-        {module.requirements?.tiefenbohrung_required && (
-          <div>⚠️ Tiefenbohrung erforderlich</div>
         )}
       </div>
 
@@ -175,6 +174,55 @@ function ModuleForm({ module, onSave, onCancel, isCreating }) {
     onSave(formData);
   };
 
+  // Input/Output Management
+  const handleUpdateInput = (index, updated) => {
+    const newInputs = [...formData.inputs];
+    newInputs[index] = updated;
+    setFormData({ ...formData, inputs: newInputs });
+  };
+
+  const handleDeleteInput = (index) => {
+    setFormData({
+      ...formData,
+      inputs: formData.inputs.filter((_, i) => i !== index),
+    });
+  };
+
+  const handleAddInput = () => {
+    if (formData.inputs.length >= 12) {
+      alert('Maximal 12 Eingänge erlaubt');
+      return;
+    }
+    setFormData({
+      ...formData,
+      inputs: [...formData.inputs, createInput()],
+    });
+  };
+
+  const handleUpdateOutput = (index, updated) => {
+    const newOutputs = [...formData.outputs];
+    newOutputs[index] = updated;
+    setFormData({ ...formData, outputs: newOutputs });
+  };
+
+  const handleDeleteOutput = (index) => {
+    setFormData({
+      ...formData,
+      outputs: formData.outputs.filter((_, i) => i !== index),
+    });
+  };
+
+  const handleAddOutput = () => {
+    if (formData.outputs.length >= 36) {
+      alert('Maximal 36 Ausgänge erlaubt');
+      return;
+    }
+    setFormData({
+      ...formData,
+      outputs: [...formData.outputs, createOutput()],
+    });
+  };
+
   return (
     <form
       onSubmit={handleSubmit}
@@ -190,37 +238,59 @@ function ModuleForm({ module, onSave, onCancel, isCreating }) {
         {isCreating ? 'Neues Modul erstellen' : 'Modul bearbeiten'}
       </h3>
 
-      {/* Name */}
-      <div style={{ marginBottom: '24px' }}>
-        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '13px' }}>
-          Name *
-        </label>
-        <input
-          type="text"
-          required
-          value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          style={{
-            width: '100%',
-            padding: '10px',
-            background: 'var(--bg-tertiary)',
-            border: '1px solid var(--border)',
-            borderRadius: '4px',
-            color: 'var(--text-primary)',
-            fontFamily: 'inherit',
-            fontSize: '14px',
-          }}
-        />
+      {/* Name & Modultyp */}
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '16px', marginBottom: '24px' }}>
+        <div>
+          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '13px' }}>
+            Name *
+          </label>
+          <input
+            type="text"
+            required
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            style={{
+              width: '100%',
+              padding: '10px',
+              background: 'var(--bg-tertiary)',
+              border: '1px solid var(--border)',
+              borderRadius: '4px',
+              color: 'var(--text-primary)',
+              fontFamily: 'inherit',
+              fontSize: '14px',
+            }}
+          />
+        </div>
+
+        <div>
+          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '13px' }}>
+            Modultyp *
+          </label>
+          <select
+            required
+            value={formData.moduleType || MODULE_TYPES.CONSUMER}
+            onChange={(e) => setFormData({ ...formData, moduleType: e.target.value })}
+            style={{
+              width: '100%',
+              padding: '10px',
+              background: 'var(--bg-tertiary)',
+              border: '1px solid var(--border)',
+              borderRadius: '4px',
+              color: 'var(--text-primary)',
+              fontFamily: 'inherit',
+              fontSize: '14px',
+            }}
+          >
+            {getModuleTypeOptions().map(type => (
+              <option key={type} value={type}>{type}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px' }}>
         {/* Eigenschaften */}
         <FormSection title="Eigenschaften">
-          <FormField
-            label="Modultyp"
-            value={formData.properties.modultyp}
-            onChange={(v) => handleChange('properties', 'modultyp', v)}
-          />
           <FormField
             label="Hersteller"
             value={formData.properties.hersteller}
@@ -251,61 +321,81 @@ function ModuleForm({ module, onSave, onCancel, isCreating }) {
           />
         </FormSection>
 
-        {/* Leistungen */}
-        <FormSection title="Leistungen">
-          <FormField
-            label="Wärmequelle vorhanden"
-            type="boolean"
-            value={formData.capabilities.wärmequelle_vorhanden}
-            onChange={(v) => handleChange('capabilities', 'wärmequelle_vorhanden', v)}
-          />
-          <FormField
-            label="Verfügbare Leistung (kW)"
-            type="number"
-            value={formData.capabilities.verfuegbare_leistung_kw}
-            onChange={(v) => handleChange('capabilities', 'verfuegbare_leistung_kw', v)}
-          />
-        </FormSection>
+        {/* Eingänge */}
+        <div>
+          <h4 style={{ fontSize: '13px', fontWeight: 600, marginBottom: '12px', color: 'var(--accent)' }}>
+            Eingänge ({formData.inputs.length}/12)
+          </h4>
+          <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+            {formData.inputs.map((input, idx) => (
+              <InputOutputEditor
+                key={input.id}
+                connector={input}
+                type="input"
+                onUpdate={(updated) => handleUpdateInput(idx, updated)}
+                onDelete={() => handleDeleteInput(idx)}
+              />
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={handleAddInput}
+            disabled={formData.inputs.length >= 12}
+            style={{
+              width: '100%',
+              padding: '8px',
+              marginTop: '8px',
+              background: formData.inputs.length >= 12 ? 'var(--bg-tertiary)' : 'var(--success)',
+              color: formData.inputs.length >= 12 ? 'var(--text-secondary)' : 'white',
+              border: 'none',
+              borderRadius: '4px',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: formData.inputs.length >= 12 ? 'not-allowed' : 'pointer',
+              fontFamily: 'inherit',
+            }}
+          >
+            + Eingang
+          </button>
+        </div>
 
-        {/* Voraussetzungen */}
-        <FormSection title="Voraussetzungen">
-          <FormField
-            label="Tiefenbohrung erforderlich"
-            type="boolean"
-            value={formData.requirements.tiefenbohrung_required}
-            onChange={(v) => handleChange('requirements', 'tiefenbohrung_required', v)}
-          />
-          <FormField
-            label="Kellerfläche"
-            type="boolean"
-            value={formData.requirements.kellerfläche}
-            onChange={(v) => handleChange('requirements', 'kellerfläche', v)}
-          />
-          <FormField
-            label="Dachfläche"
-            type="boolean"
-            value={formData.requirements.dachfläche}
-            onChange={(v) => handleChange('requirements', 'dachfläche', v)}
-          />
-          <FormField
-            label="Wärmequelle vorhanden"
-            type="boolean"
-            value={formData.requirements.wärmequelle_vorhanden}
-            onChange={(v) => handleChange('requirements', 'wärmequelle_vorhanden', v)}
-          />
-          <FormField
-            label="Max. Heizlast (kW)"
-            type="number"
-            value={formData.requirements.max_heizlast_kw}
-            onChange={(v) => handleChange('requirements', 'max_heizlast_kw', v)}
-          />
-          <FormField
-            label="Min. Leistung (kW)"
-            type="number"
-            value={formData.requirements.min_leistung_kw}
-            onChange={(v) => handleChange('requirements', 'min_leistung_kw', v)}
-          />
-        </FormSection>
+        {/* Ausgänge */}
+        <div>
+          <h4 style={{ fontSize: '13px', fontWeight: 600, marginBottom: '12px', color: 'var(--accent)' }}>
+            Ausgänge ({formData.outputs.length}/36)
+          </h4>
+          <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+            {formData.outputs.map((output, idx) => (
+              <InputOutputEditor
+                key={output.id}
+                connector={output}
+                type="output"
+                onUpdate={(updated) => handleUpdateOutput(idx, updated)}
+                onDelete={() => handleDeleteOutput(idx)}
+              />
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={handleAddOutput}
+            disabled={formData.outputs.length >= 36}
+            style={{
+              width: '100%',
+              padding: '8px',
+              marginTop: '8px',
+              background: formData.outputs.length >= 36 ? 'var(--bg-tertiary)' : 'var(--success)',
+              color: formData.outputs.length >= 36 ? 'var(--text-secondary)' : 'white',
+              border: 'none',
+              borderRadius: '4px',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: formData.outputs.length >= 36 ? 'not-allowed' : 'pointer',
+              fontFamily: 'inherit',
+            }}
+          >
+            + Ausgang
+          </button>
+        </div>
       </div>
 
       {/* Buttons */}
@@ -355,12 +445,10 @@ function FormSection({ title, children }) {
     <div>
       <div
         style={{
-          fontSize: '12px',
+          fontSize: '13px',
           fontWeight: 600,
           color: 'var(--accent)',
           marginBottom: '12px',
-          textTransform: 'uppercase',
-          letterSpacing: '0.5px',
         }}
       >
         {title}
@@ -373,20 +461,6 @@ function FormSection({ title, children }) {
 }
 
 function FormField({ label, value, onChange, type = 'text' }) {
-  if (type === 'boolean') {
-    return (
-      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-        <input
-          type="checkbox"
-          checked={value || false}
-          onChange={(e) => onChange(e.target.checked)}
-          style={{ width: '16px', height: '16px' }}
-        />
-        <span style={{ fontSize: '12px' }}>{label}</span>
-      </label>
-    );
-  }
-
   return (
     <div>
       <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px' }}>

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
+import InputOutputEditor from './InputOutputEditor';
+import { createInput, createOutput, isBuilding, getModuleTypeOptions } from '../../data/types';
 
-export default function ElementModal({ element, onClose, onSave }) {
+export default function ElementModal({ element, onClose, onSave, onDelete }) {
   const [formData, setFormData] = useState(element);
 
   useEffect(() => {
@@ -24,7 +26,62 @@ export default function ElementModal({ element, onClose, onSave }) {
     onClose();
   };
 
-  const isBuilding = element.type === 'building';
+  const isBuildingElement = isBuilding(element);
+
+  // Input/Output Management
+  const handleUpdateInput = (index, updated) => {
+    const newInputs = [...formData.inputs];
+    newInputs[index] = updated;
+    setFormData({ ...formData, inputs: newInputs });
+  };
+
+  const handleDeleteInput = (index) => {
+    if (confirm('Eingang wirklich löschen?')) {
+      setFormData({
+        ...formData,
+        inputs: formData.inputs.filter((_, i) => i !== index),
+      });
+    }
+  };
+
+  const handleAddInput = () => {
+    const maxInputs = 12;
+    if (formData.inputs.length >= maxInputs) {
+      alert(`Maximal ${maxInputs} Eingänge erlaubt`);
+      return;
+    }
+    setFormData({
+      ...formData,
+      inputs: [...formData.inputs, createInput()],
+    });
+  };
+
+  const handleUpdateOutput = (index, updated) => {
+    const newOutputs = [...formData.outputs];
+    newOutputs[index] = updated;
+    setFormData({ ...formData, outputs: newOutputs });
+  };
+
+  const handleDeleteOutput = (index) => {
+    if (confirm('Ausgang wirklich löschen?')) {
+      setFormData({
+        ...formData,
+        outputs: formData.outputs.filter((_, i) => i !== index),
+      });
+    }
+  };
+
+  const handleAddOutput = () => {
+    const maxOutputs = 36;
+    if (formData.outputs.length >= maxOutputs) {
+      alert(`Maximal ${maxOutputs} Ausgänge erlaubt`);
+      return;
+    }
+    setFormData({
+      ...formData,
+      outputs: [...formData.outputs, createOutput()],
+    });
+  };
 
   return (
     <div
@@ -48,15 +105,15 @@ export default function ElementModal({ element, onClose, onSave }) {
           border: '1px solid var(--border)',
           borderRadius: '8px',
           padding: '24px',
-          maxWidth: '600px',
+          maxWidth: '900px',
           width: '90%',
-          maxHeight: '80vh',
+          maxHeight: '90vh',
           overflow: 'auto',
         }}
         onClick={(e) => e.stopPropagation()}
       >
         <h2 style={{ marginTop: 0, marginBottom: '24px' }}>
-          {isBuilding ? 'Gebäude bearbeiten' : 'Modul bearbeiten'}
+          {isBuildingElement ? 'Gebäude bearbeiten' : 'Modul bearbeiten'}
         </h2>
 
         {/* Name */}
@@ -80,6 +137,32 @@ export default function ElementModal({ element, onClose, onSave }) {
           />
         </div>
 
+        {/* Modultyp (nur für Module) */}
+        {!isBuildingElement && (
+          <div style={{ marginBottom: '24px' }}>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+              Modultyp
+            </label>
+            <select
+              value={formData.moduleType || ''}
+              onChange={(e) => setFormData({ ...formData, moduleType: e.target.value })}
+              style={{
+                width: '100%',
+                padding: '8px',
+                background: 'var(--bg-tertiary)',
+                border: '1px solid var(--border)',
+                borderRadius: '4px',
+                color: 'var(--text-primary)',
+                fontFamily: 'inherit',
+              }}
+            >
+              {getModuleTypeOptions().map(type => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
         {/* Eigenschaften */}
         <Section title="Eigenschaften">
           {Object.keys(formData.properties || {}).map((key) => (
@@ -92,33 +175,75 @@ export default function ElementModal({ element, onClose, onSave }) {
           ))}
         </Section>
 
-        {/* Leistungen */}
-        <Section title="Leistungen">
-          {Object.keys(formData.capabilities || {}).map((key) => (
-            <FormField
-              key={key}
-              label={formatLabel(key)}
-              value={formData.capabilities[key]}
-              onChange={(value) => handleChange('capabilities', key, value)}
-              type={typeof formData.capabilities[key]}
-            />
-          ))}
-        </Section>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
+          {/* Eingänge (nicht für Gebäude) */}
+          {!isBuildingElement && (
+            <div>
+              <Section title={`Eingänge (${formData.inputs.length}/12)`}>
+                {formData.inputs.map((input, idx) => (
+                  <InputOutputEditor
+                    key={input.id}
+                    connector={input}
+                    type="input"
+                    onUpdate={(updated) => handleUpdateInput(idx, updated)}
+                    onDelete={() => handleDeleteInput(idx)}
+                  />
+                ))}
+                <button
+                  onClick={handleAddInput}
+                  disabled={formData.inputs.length >= 12}
+                  style={{
+                    width: '100%',
+                    padding: '8px',
+                    background: formData.inputs.length >= 12 ? 'var(--bg-tertiary)' : 'var(--success)',
+                    color: formData.inputs.length >= 12 ? 'var(--text-secondary)' : 'var(--bg-primary)',
+                    border: 'none',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    cursor: formData.inputs.length >= 12 ? 'not-allowed' : 'pointer',
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  + Eingang hinzufügen
+                </button>
+              </Section>
+            </div>
+          )}
 
-        {/* Voraussetzungen (nur für Module) */}
-        {!isBuilding && (
-          <Section title="Voraussetzungen">
-            {Object.keys(formData.requirements || {}).map((key) => (
-              <FormField
-                key={key}
-                label={formatLabel(key)}
-                value={formData.requirements[key]}
-                onChange={(value) => handleChange('requirements', key, value)}
-                type={typeof formData.requirements[key]}
-              />
-            ))}
-          </Section>
-        )}
+          {/* Ausgänge */}
+          <div>
+            <Section title={`Ausgänge (${formData.outputs.length}/36)`}>
+              {formData.outputs.map((output, idx) => (
+                <InputOutputEditor
+                  key={output.id}
+                  connector={output}
+                  type="output"
+                  onUpdate={(updated) => handleUpdateOutput(idx, updated)}
+                  onDelete={() => handleDeleteOutput(idx)}
+                />
+              ))}
+              <button
+                onClick={handleAddOutput}
+                disabled={formData.outputs.length >= 36}
+                style={{
+                  width: '100%',
+                  padding: '8px',
+                  background: formData.outputs.length >= 36 ? 'var(--bg-tertiary)' : 'var(--success)',
+                  color: formData.outputs.length >= 36 ? 'var(--text-secondary)' : 'var(--bg-primary)',
+                  border: 'none',
+                  borderRadius: '4px',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  cursor: formData.outputs.length >= 36 ? 'not-allowed' : 'pointer',
+                  fontFamily: 'inherit',
+                }}
+              >
+                + Ausgang hinzufügen
+              </button>
+            </Section>
+          </div>
+        </div>
 
         {/* Buttons */}
         <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
@@ -154,6 +279,24 @@ export default function ElementModal({ element, onClose, onSave }) {
           >
             Abbrechen
           </button>
+          {onDelete && !isBuildingElement && (
+            <button
+              onClick={onDelete}
+              style={{
+                flex: 1,
+                padding: '12px',
+                background: 'var(--error)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+              }}
+            >
+              Löschen
+            </button>
+          )}
         </div>
       </div>
     </div>

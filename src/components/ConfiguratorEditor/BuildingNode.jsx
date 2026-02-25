@@ -1,12 +1,8 @@
 import { Handle, Position } from '@xyflow/react';
+import { getConnectionTypeColor } from '../../data/compatibilityChecker';
 
 export default function BuildingNode({ data }) {
-  const { name, capabilities, onClick } = data;
-
-  // Subtitle erstellen
-  const subtitle = capabilities?.heizlast_kw
-    ? `${capabilities.heizlast_kw} kW Heizlast`
-    : 'Keine Heizlast definiert';
+  const { name, outputs = [], onClick } = data;
 
   return (
     <div
@@ -18,31 +14,57 @@ export default function BuildingNode({ data }) {
         borderRadius: '8px',
         padding: '16px',
         minWidth: '200px',
+        minHeight: '100px',
         cursor: 'pointer',
+        position: 'relative',
       }}
     >
       <div style={{ fontWeight: 600, fontSize: '14px', marginBottom: '4px' }}>
         {name}
       </div>
       <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-        {subtitle}
+        Gebäude
       </div>
 
+      {/* Ausgänge */}
+      {outputs.map((output, index) => {
+        const total = outputs.length;
+        const yOffset = total === 1 ? 50 : (100 / (total + 1)) * (index + 1);
+
+        return (
+          <div key={output.id}>
+            <Handle
+              type="source"
+              position={Position.Right}
+              id={output.id}
+              style={{
+                top: `${yOffset}%`,
+                background: getConnectionTypeColor(output.connectionType),
+                width: '12px',
+                height: '12px',
+                border: '2px solid var(--bg-primary)',
+              }}
+            />
+            <div
+              style={{
+                position: 'absolute',
+                right: '20px',
+                top: `calc(${yOffset}% - 8px)`,
+                fontSize: '10px',
+                color: 'var(--text-secondary)',
+                pointerEvents: 'none',
+              }}
+            >
+              {output.label}
+            </div>
+          </div>
+        );
+      })}
+
+      {/* Info über Ausgänge */}
       <div style={{ marginTop: '12px', fontSize: '11px', color: 'var(--text-secondary)' }}>
-        {capabilities?.tiefenbohrung_vorhanden && <div>✓ Tiefenbohrung</div>}
-        {capabilities?.kellerfläche && <div>✓ Kellerfläche</div>}
-        {capabilities?.dachfläche && <div>✓ Dachfläche</div>}
+        {outputs.length} Ausgang{outputs.length !== 1 ? 'e' : ''}
       </div>
-
-      <Handle
-        type="source"
-        position={Position.Right}
-        style={{
-          background: 'var(--accent)',
-          width: '12px',
-          height: '12px',
-        }}
-      />
     </div>
   );
 }

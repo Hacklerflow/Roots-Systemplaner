@@ -1,16 +1,15 @@
 import { Handle, Position } from '@xyflow/react';
+import { getConnectionTypeColor } from '../../data/compatibilityChecker';
 
 export default function ModuleNode({ data }) {
-  const { name, properties, capabilities, onClick, isCompatible = true } = data;
+  const { name, moduleType, properties, inputs = [], outputs = [], onClick } = data;
 
   // Subtitle erstellen
-  let subtitle = '';
+  let subtitle = moduleType || 'Modul';
   if (properties?.leistung_nominal_kw) {
-    subtitle = `${properties.leistung_nominal_kw} kW`;
+    subtitle += ` | ${properties.leistung_nominal_kw} kW`;
   } else if (properties?.volumen_liter) {
-    subtitle = `${properties.volumen_liter} L`;
-  } else if (properties?.kollektorfläche_m2) {
-    subtitle = `${properties.kollektorfläche_m2} m²`;
+    subtitle += ` | ${properties.volumen_liter} L`;
   }
 
   return (
@@ -19,50 +18,97 @@ export default function ModuleNode({ data }) {
       onClick={onClick}
       style={{
         background: 'var(--bg-secondary)',
-        border: `2px solid ${isCompatible ? 'var(--success)' : 'var(--error)'}`,
+        border: '2px solid var(--success)',
         borderRadius: '8px',
         padding: '16px',
-        minWidth: '200px',
+        minWidth: '220px',
+        minHeight: '120px',
         cursor: 'pointer',
-        opacity: isCompatible ? 1 : 0.6,
+        position: 'relative',
       }}
     >
-      <Handle
-        type="target"
-        position={Position.Left}
-        style={{
-          background: 'var(--accent)',
-          width: '12px',
-          height: '12px',
-        }}
-      />
+      {/* Eingänge */}
+      {inputs.map((input, index) => {
+        const total = inputs.length;
+        const yOffset = total === 1 ? 50 : (100 / (total + 1)) * (index + 1);
 
+        return (
+          <div key={input.id}>
+            <Handle
+              type="target"
+              position={Position.Left}
+              id={input.id}
+              style={{
+                top: `${yOffset}%`,
+                background: getConnectionTypeColor(input.connectionType),
+                width: '12px',
+                height: '12px',
+                border: '2px solid var(--bg-primary)',
+              }}
+            />
+            <div
+              style={{
+                position: 'absolute',
+                left: '20px',
+                top: `calc(${yOffset}% - 8px)`,
+                fontSize: '10px',
+                color: 'var(--text-secondary)',
+                pointerEvents: 'none',
+              }}
+            >
+              {input.label}
+            </div>
+          </div>
+        );
+      })}
+
+      {/* Modul-Info */}
       <div style={{ fontWeight: 600, fontSize: '14px', marginBottom: '4px' }}>
         {name}
       </div>
-      {subtitle && (
-        <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-          {subtitle}
-        </div>
-      )}
-
-      <div style={{ marginTop: '12px', fontSize: '11px', color: 'var(--text-secondary)' }}>
-        {properties?.modultyp && <div>Typ: {properties.modultyp}</div>}
-        {capabilities?.wärmequelle_vorhanden && <div>✓ Wärmequelle</div>}
-        {capabilities?.verfuegbare_leistung_kw && (
-          <div>⚡ {capabilities.verfuegbare_leistung_kw} kW</div>
-        )}
+      <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
+        {subtitle}
       </div>
 
-      <Handle
-        type="source"
-        position={Position.Right}
-        style={{
-          background: 'var(--accent)',
-          width: '12px',
-          height: '12px',
-        }}
-      />
+      {/* Ausgänge */}
+      {outputs.map((output, index) => {
+        const total = outputs.length;
+        const yOffset = total === 1 ? 50 : (100 / (total + 1)) * (index + 1);
+
+        return (
+          <div key={output.id}>
+            <Handle
+              type="source"
+              position={Position.Right}
+              id={output.id}
+              style={{
+                top: `${yOffset}%`,
+                background: getConnectionTypeColor(output.connectionType),
+                width: '12px',
+                height: '12px',
+                border: '2px solid var(--bg-primary)',
+              }}
+            />
+            <div
+              style={{
+                position: 'absolute',
+                right: '20px',
+                top: `calc(${yOffset}% - 8px)`,
+                fontSize: '10px',
+                color: 'var(--text-secondary)',
+                pointerEvents: 'none',
+              }}
+            >
+              {output.label}
+            </div>
+          </div>
+        );
+      })}
+
+      {/* Info über Ein-/Ausgänge */}
+      <div style={{ marginTop: '8px', fontSize: '10px', color: 'var(--text-secondary)' }}>
+        {inputs.length} Ein | {outputs.length} Aus
+      </div>
     </div>
   );
 }

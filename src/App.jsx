@@ -17,15 +17,38 @@ function App() {
     localStorage.setItem('roots-modules', JSON.stringify(modules));
   }, [modules]);
 
-  // Konfigurations State (mit localStorage Persistenz)
+  // Konfigurations State (NEUE STRUKTUR: modules + connections)
   const [configuration, setConfiguration] = useState(() => {
     const stored = localStorage.getItem('roots-configuration');
-    return stored
-      ? JSON.parse(stored)
-      : {
-          building: null,
-          chain: [],
-        };
+
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+
+        // Migration: Altes Format zu neuem Format
+        if (parsed.building || parsed.chain) {
+          console.warn('Altes Konfigurationsformat erkannt - wird zurückgesetzt');
+          localStorage.removeItem('roots-configuration');
+          return {
+            modules: [],
+            connections: [],
+          };
+        }
+
+        // Neues Format
+        if (parsed.modules && parsed.connections) {
+          return parsed;
+        }
+      } catch (e) {
+        console.error('Fehler beim Laden der Konfiguration:', e);
+      }
+    }
+
+    // Default: leere Konfiguration
+    return {
+      modules: [],      // Array von Modulen (inkl. Gebäude)
+      connections: [],  // Array von Verbindungen
+    };
   });
 
   useEffect(() => {
@@ -46,7 +69,7 @@ function App() {
           Roots Systemkonfigurator
         </h1>
         <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-          Modulare Wärmepumpen-Planung für Roots Energy
+          Modulare Wärmepumpen-Planung mit Ein-/Ausgangs-System
         </div>
       </header>
 

@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { checkCompatibility } from '../../data/compatibilityChecker';
+import { checkConnection } from '../../data/compatibilityChecker';
+import { CONNECTION_TYPE_LABELS, isBuilding } from '../../data/types';
 
 export default function ListView({ configuration }) {
-  const { building, chain } = configuration;
+  const { modules, connections } = configuration;
 
-  if (!building) {
+  if (modules.length === 0) {
     return (
       <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-secondary)' }}>
         Keine Konfiguration vorhanden. Erstelle zuerst ein Gebäude im Konfigurator.
@@ -13,78 +14,87 @@ export default function ListView({ configuration }) {
   }
 
   return (
-    <div style={{ padding: '24px', maxWidth: '900px', margin: '0 auto' }}>
-      <h2 style={{ marginTop: 0, marginBottom: '24px' }}>Systemkette</h2>
+    <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
+      <h2 style={{ marginTop: 0, marginBottom: '24px' }}>System-Übersicht</h2>
 
-      {/* Gebäude */}
-      <ElementCard element={building} />
+      {/* Module */}
+      <Section title="Module">
+        {modules.map((module) => (
+          <ModuleCard key={module.id} module={module} />
+        ))}
+      </Section>
 
-      {/* Module mit Kompatibilitätsstatus */}
-      {chain.map((module, index) => {
-        const predecessor = index === 0 ? building : chain[index - 1];
-        const check = checkCompatibility(predecessor, module);
-
-        return (
-          <div key={module.id}>
-            {/* Verbindungsanzeige */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                marginLeft: '40px',
-                padding: '12px 0',
-              }}
-            >
-              <div
-                style={{
-                  width: '3px',
-                  height: '40px',
-                  background: check.compatible ? 'var(--success)' : 'var(--error)',
-                }}
-              />
-              <div
-                style={{
-                  marginLeft: '12px',
-                  fontSize: '12px',
-                  color: check.compatible ? 'var(--success)' : 'var(--error)',
-                }}
-              >
-                {check.compatible ? (
-                  '✓ Kompatibel'
-                ) : (
-                  <div>
-                    ✗ Nicht kompatibel
-                    <div style={{ marginTop: '4px', fontSize: '11px' }}>
-                      {check.missingRequirements.map((req, i) => (
-                        <div key={i}>• {req}</div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Modul */}
-            <ElementCard element={module} />
+      {/* Verbindungen */}
+      <Section title="Verbindungen">
+        {connections.length === 0 ? (
+          <div style={{ fontSize: '13px', color: 'var(--text-secondary)', padding: '12px' }}>
+            Keine Verbindungen vorhanden
           </div>
-        );
-      })}
+        ) : (
+          connections.map((conn, index) => {
+            const sourceModule = modules.find(m => m.id === conn.source);
+            const targetModule = modules.find(m => m.id === conn.target);
+
+            if (!sourceModule || !targetModule) return null;
+
+            const check = checkConnection(
+              sourceModule,
+              conn.sourceHandle,
+              targetModule,
+              conn.targetHandle
+            );
+
+            const output = sourceModule.outputs?.find(o => o.id === conn.sourceHandle);
+            const input = targetModule.inputs?.find(i => i.id === conn.targetHandle);
+
+            return (
+              <ConnectionCard
+                key={conn.id || index}
+                sourceModule={sourceModule}
+                targetModule={targetModule}
+                output={output}
+                input={input}
+                check={check}
+              />
+            );
+          })
+        )}
+      </Section>
     </div>
   );
 }
 
-function ElementCard({ element }) {
-  const [expanded, setExpanded] = useState(false);
+function Section({ title, children }) {
+  return (
+    <div style={{ marginBottom: '32px' }}>
+      <h3
+        style={{
+          fontSize: '16px',
+          fontWeight: 600,
+          marginBottom: '16px',
+          color: 'var(--accent)',
+          textTransform: 'uppercase',
+          letterSpacing: '0.5px',
+        }}
+      >
+        {title}
+      </h3>
+      <div>{children}</div>
+    </div>
+  );
+}
 
-  const isBuilding = element.type === 'building';
+function ModuleCard({ module }) {
+  const [expanded, setExpanded] = useState(false);
+  const isBuildingModule = isBuilding(module);
 
   return (
     <div
       style={{
         background: 'var(--bg-secondary)',
-        border: `2px solid ${isBuilding ? 'var(--accent)' : 'var(--success)'}`,
+        border: `2px solid ${isBuildingModule ? 'var(--accent)' : 'var(--success)'}`,
         borderRadius: '8px',
-        marginBottom: '16px',
+        marginBottom: '12px',
       }}
     >
       {/* Header */}
@@ -100,10 +110,10 @@ function ElementCard({ element }) {
       >
         <div>
           <div style={{ fontWeight: 600, fontSize: '16px', marginBottom: '4px' }}>
-            {element.name}
+            {module.name}
           </div>
           <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-            {isBuilding ? 'Gebäude' : element.properties?.modultyp || 'Modul'}
+            {module.moduleType} | {module.inputs.length} Ein | {module.outputs.length} Aus
           </div>
         </div>
         <div style={{ fontSize: '18px', color: 'var(--text-secondary)' }}>
@@ -113,32 +123,68 @@ function ElementCard({ element }) {
 
       {/* Expanded Content */}
       {expanded && (
-        <div style={{ padding: '0 16px 16px 16px' }}>
+        <div style={{ padding: '0 16px 16px 16px', borderTop: '1px solid var(--border)' }}>
           {/* Eigenschaften */}
-          {Object.keys(element.properties || {}).length > 0 && (
-            <Section title="Eigenschaften">
-              {Object.entries(element.properties).map(([key, value]) => (
+          {Object.keys(module.properties || {}).length > 0 && (
+            <DetailSection title="Eigenschaften">
+              {Object.entries(module.properties).map(([key, value]) => (
                 <Property key={key} label={formatLabel(key)} value={value} />
               ))}
-            </Section>
+            </DetailSection>
           )}
 
-          {/* Leistungen */}
-          {Object.keys(element.capabilities || {}).length > 0 && (
-            <Section title="Leistungen">
-              {Object.entries(element.capabilities).map(([key, value]) => (
-                <Property key={key} label={formatLabel(key)} value={value} type={typeof value} />
+          {/* Eingänge */}
+          {module.inputs.length > 0 && (
+            <DetailSection title="Eingänge">
+              {module.inputs.map((input, idx) => (
+                <div
+                  key={input.id}
+                  style={{
+                    padding: '8px',
+                    background: 'var(--bg-tertiary)',
+                    borderRadius: '4px',
+                    marginBottom: '6px',
+                  }}
+                >
+                  <div style={{ fontSize: '13px', fontWeight: 500 }}>
+                    {input.label || `Eingang ${idx + 1}`}
+                  </div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                    Typ: {CONNECTION_TYPE_LABELS[input.connectionType]}
+                    {input.allowedModuleTypes.length > 0 && (
+                      <div>Erlaubt: {input.allowedModuleTypes.join(', ')}</div>
+                    )}
+                  </div>
+                </div>
               ))}
-            </Section>
+            </DetailSection>
           )}
 
-          {/* Voraussetzungen */}
-          {!isBuilding && Object.keys(element.requirements || {}).length > 0 && (
-            <Section title="Voraussetzungen">
-              {Object.entries(element.requirements).map(([key, value]) => (
-                <Property key={key} label={formatLabel(key)} value={value} type={typeof value} />
+          {/* Ausgänge */}
+          {module.outputs.length > 0 && (
+            <DetailSection title="Ausgänge">
+              {module.outputs.map((output, idx) => (
+                <div
+                  key={output.id}
+                  style={{
+                    padding: '8px',
+                    background: 'var(--bg-tertiary)',
+                    borderRadius: '4px',
+                    marginBottom: '6px',
+                  }}
+                >
+                  <div style={{ fontSize: '13px', fontWeight: 500 }}>
+                    {output.label || `Ausgang ${idx + 1}`}
+                  </div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                    Typ: {CONNECTION_TYPE_LABELS[output.connectionType]}
+                    {output.allowedModuleTypes.length > 0 && (
+                      <div>Erlaubt: {output.allowedModuleTypes.join(', ')}</div>
+                    )}
+                  </div>
+                </div>
               ))}
-            </Section>
+            </DetailSection>
           )}
         </div>
       )}
@@ -146,42 +192,85 @@ function ElementCard({ element }) {
   );
 }
 
-function Section({ title, children }) {
+function ConnectionCard({ sourceModule, targetModule, output, input, check }) {
   return (
-    <div style={{ marginBottom: '16px' }}>
+    <div
+      style={{
+        background: 'var(--bg-secondary)',
+        border: `2px solid ${check.warning ? 'var(--error)' : 'var(--success)'}`,
+        borderRadius: '8px',
+        padding: '16px',
+        marginBottom: '12px',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: '13px', fontWeight: 600 }}>{sourceModule.name}</div>
+          <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+            {output?.label || 'Ausgang'}
+          </div>
+        </div>
+
+        <div style={{ fontSize: '20px', color: 'var(--text-secondary)' }}>→</div>
+
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: '13px', fontWeight: 600 }}>{targetModule.name}</div>
+          <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+            {input?.label || 'Eingang'}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+        Verbindungstyp: {CONNECTION_TYPE_LABELS[output?.connectionType || 'hydraulic']}
+      </div>
+
+      {/* Status */}
+      <div
+        style={{
+          marginTop: '12px',
+          padding: '8px',
+          background: check.warning ? 'rgba(255, 68, 68, 0.1)' : 'rgba(0, 255, 136, 0.1)',
+          borderRadius: '4px',
+          fontSize: '12px',
+          color: check.warning ? 'var(--error)' : 'var(--success)',
+        }}
+      >
+        {check.warning ? (
+          <>
+            ⚠️ Warnung: {check.reason}
+          </>
+        ) : (
+          <>✓ Kompatibel</>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function DetailSection({ title, children }) {
+  return (
+    <div style={{ marginBottom: '16px', marginTop: '16px' }}>
       <div
         style={{
           fontSize: '12px',
           fontWeight: 600,
           color: 'var(--accent)',
           marginBottom: '8px',
-          textTransform: 'uppercase',
-          letterSpacing: '0.5px',
         }}
       >
         {title}
       </div>
-      <div
-        style={{
-          background: 'var(--bg-tertiary)',
-          border: '1px solid var(--border)',
-          borderRadius: '4px',
-          padding: '12px',
-        }}
-      >
-        {children}
-      </div>
+      <div>{children}</div>
     </div>
   );
 }
 
-function Property({ label, value, type = 'string' }) {
+function Property({ label, value }) {
   let displayValue = value;
 
   if (value === null || value === undefined || value === '') {
     displayValue = '—';
-  } else if (type === 'boolean') {
-    displayValue = value ? '✓ Ja' : '✗ Nein';
   }
 
   return (
@@ -191,6 +280,7 @@ function Property({ label, value, type = 'string' }) {
         justifyContent: 'space-between',
         padding: '6px 0',
         fontSize: '13px',
+        borderBottom: '1px solid var(--border)',
       }}
     >
       <span style={{ color: 'var(--text-secondary)' }}>{label}:</span>

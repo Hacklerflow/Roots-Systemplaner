@@ -1,131 +1,186 @@
-// Kompatibilitätsprüfung zwischen Elementen in der Kette
+// Kompatibilitätsprüfung für Ein-/Ausgangs-System
+
+import { CONNECTION_TYPES } from './types';
 
 /**
- * Prüft ob ein Element mit seinem Vorgänger kompatibel ist
+ * Prüft ob eine Verbindung zwischen Output und Input erlaubt/empfohlen ist
  *
- * @param {Object} predecessor - Das vorherige Element in der Kette
- * @param {Object} element - Das zu prüfende Element
- * @returns {Object} { compatible: boolean, missingRequirements: string[] }
+ * @param {Object} sourceModule - Das Quell-Modul
+ * @param {string} sourceOutputId - ID des Ausgangs
+ * @param {Object} targetModule - Das Ziel-Modul
+ * @param {string} targetInputId - ID des Eingangs
+ * @returns {Object} { valid: boolean, warning: boolean, reason: string }
  */
-export function checkCompatibility(predecessor, element) {
-  if (!predecessor || !element) {
-    return { compatible: true, missingRequirements: [] };
+export function checkConnection(sourceModule, sourceOutputId, targetModule, targetInputId) {
+  const output = sourceModule.outputs?.find(o => o.id === sourceOutputId);
+  const input = targetModule.inputs?.find(i => i.id === targetInputId);
+
+  if (!output || !input) {
+    return {
+      valid: false,
+      warning: true,
+      reason: 'Konnektor nicht gefunden'
+    };
   }
 
-  const missingRequirements = [];
-
-  // Prüfe alle requirements des Elements
-  const requirements = element.requirements || {};
-  const capabilities = predecessor.capabilities || {};
-
-  // Boolean-Flags prüfen
-  Object.keys(requirements).forEach((key) => {
-    const required = requirements[key];
-
-    if (typeof required === 'boolean' && required === true) {
-      // Element benötigt dieses Flag auf true
-      if (capabilities[key] !== true) {
-        missingRequirements.push(formatRequirementName(key));
-      }
-    }
-  });
-
-  // Numerische Voraussetzungen prüfen
-  // max_heizlast_kw: Modul kann max X kW Heizlast bedienen
-  if (requirements.max_heizlast_kw !== null && requirements.max_heizlast_kw !== undefined) {
-    const heizlast = capabilities.heizlast_kw;
-    if (heizlast !== null && heizlast !== undefined) {
-      if (heizlast > requirements.max_heizlast_kw) {
-        missingRequirements.push(
-          `Heizlast zu hoch (${heizlast} kW > ${requirements.max_heizlast_kw} kW max)`
-        );
-      }
-    }
+  // ConnectionType muss übereinstimmen
+  if (output.connectionType !== input.connectionType) {
+    return {
+      valid: true,  // Trotzdem erlauben
+      warning: true,
+      reason: `Verbindungstyp passt nicht (${formatConnectionType(output.connectionType)} → ${formatConnectionType(input.connectionType)})`
+    };
   }
 
-  // min_leistung_kw: Element benötigt mindestens X kW Leistung
-  if (requirements.min_leistung_kw !== null && requirements.min_leistung_kw !== undefined) {
-    const leistung = capabilities.verfuegbare_leistung_kw;
-    if (leistung === null || leistung === undefined || leistung < requirements.min_leistung_kw) {
-      missingRequirements.push(
-        `Zu wenig Leistung (benötigt ${requirements.min_leistung_kw} kW)`
-      );
-    }
+  // Prüfe ob Ziel-Modul-Typ in erlaubten Typen des Outputs ist
+  const outputAllowed = output.allowedModuleTypes.length === 0 ||
+                        output.allowedModuleTypes.includes(targetModule.moduleType);
+
+  // Prüfe ob Quell-Modul-Typ in erlaubten Typen des Inputs ist
+  const inputAllowed = input.allowedModuleTypes.length === 0 ||
+                       input.allowedModuleTypes.includes(sourceModule.moduleType);
+
+  if (!outputAllowed || !inputAllowed) {
+    return {
+      valid: true,  // Trotzdem erlauben
+      warning: true,
+      reason: `Modultyp nicht in erlaubten Verbindungen (${sourceModule.moduleType} → ${targetModule.moduleType})`
+    };
   }
 
-  return {
-    compatible: missingRequirements.length === 0,
-    missingRequirements,
+  return { valid: true, warning: false, reason: '' };
+}
+
+/**
+ * Gibt Linienstil basierend auf ConnectionType zurück
+ *
+ * @param {string} connectionType - Der Verbindungstyp
+ * @returns {Object} Style-Objekt für React Flow Edge
+ */
+export function getEdgeStyle(connectionType) {
+  const baseStyle = {
+    stroke: 'var(--accent)',
+    strokeWidth: 2,
   };
-}
 
-/**
- * Filtert Module nach Kompatibilität mit einem Element
- *
- * @param {Object} currentElement - Das aktuelle letzte Element der Kette
- * @param {Array} moduleDatabase - Array aller verfügbaren Module
- * @returns {Object} { compatible: Module[], incompatible: Module[] }
- */
-export function getCompatibleModules(currentElement, moduleDatabase) {
-  const compatible = [];
-  const incompatible = [];
-
-  moduleDatabase.forEach((module) => {
-    const check = checkCompatibility(currentElement, module);
-
-    if (check.compatible) {
-      compatible.push({
-        module,
-        check,
-      });
-    } else {
-      incompatible.push({
-        module,
-        check,
-      });
-    }
-  });
-
-  return { compatible, incompatible };
-}
-
-/**
- * Formatiert einen Requirement-Key zu einem lesbaren Namen
- */
-function formatRequirementName(key) {
-  const names = {
-    tiefenbohrung_required: 'Tiefenbohrung',
-    kellerfläche: 'Kellerfläche',
-    dachfläche: 'Dachfläche',
-    wärmequelle_vorhanden: 'Wärmequelle',
-  };
-  return names[key] || key;
-}
-
-/**
- * Validiert eine komplette Kette
- *
- * @param {Object} building - Das Gebäude
- * @param {Array} chain - Array der Module in der Kette
- * @returns {Array} Array von Validierungsergebnissen für jede Verbindung
- */
-export function validateChain(building, chain) {
-  if (!building || chain.length === 0) {
-    return [];
+  switch (connectionType) {
+    case CONNECTION_TYPES.HYDRAULIC:
+      return { ...baseStyle, strokeDasharray: '0' };  // Durchgezogen
+    case CONNECTION_TYPES.ELECTRIC:
+      return { ...baseStyle, strokeDasharray: '8,4' };   // Gestrichelt
+    case CONNECTION_TYPES.CONTROL:
+      return { ...baseStyle, strokeDasharray: '2,3' };   // Gepunktet
+    default:
+      return { ...baseStyle, strokeDasharray: '0' };
   }
+}
 
+/**
+ * Gibt Farbe basierend auf ConnectionType zurück
+ *
+ * @param {string} connectionType - Der Verbindungstyp
+ * @returns {string} CSS-Farbe
+ */
+export function getConnectionTypeColor(connectionType) {
+  switch (connectionType) {
+    case CONNECTION_TYPES.HYDRAULIC:
+      return '#00d9ff';  // Cyan (Accent)
+    case CONNECTION_TYPES.ELECTRIC:
+      return '#ffaa00';  // Orange
+    case CONNECTION_TYPES.CONTROL:
+      return '#aa00ff';  // Lila
+    default:
+      return '#00d9ff';
+  }
+}
+
+/**
+ * Formatiert ConnectionType für Anzeige
+ */
+function formatConnectionType(type) {
+  switch (type) {
+    case CONNECTION_TYPES.HYDRAULIC:
+      return 'Hydraulisch';
+    case CONNECTION_TYPES.ELECTRIC:
+      return 'Elektrisch';
+    case CONNECTION_TYPES.CONTROL:
+      return 'Steuerung';
+    default:
+      return type;
+  }
+}
+
+/**
+ * Prüft ob ein Input bereits verbunden ist
+ *
+ * @param {Array} connections - Alle Verbindungen
+ * @param {string} nodeId - Node ID
+ * @param {string} inputId - Input ID (Handle ID)
+ * @returns {boolean}
+ */
+export function isInputConnected(connections, nodeId, inputId) {
+  return connections.some(conn => conn.target === nodeId && conn.targetHandle === inputId);
+}
+
+/**
+ * Gibt die Verbindung zu einem Input zurück
+ *
+ * @param {Array} connections - Alle Verbindungen
+ * @param {string} nodeId - Node ID
+ * @param {string} inputId - Input ID (Handle ID)
+ * @returns {Object|null} Connection oder null
+ */
+export function getInputConnection(connections, nodeId, inputId) {
+  return connections.find(conn => conn.target === nodeId && conn.targetHandle === inputId) || null;
+}
+
+/**
+ * Gibt alle Verbindungen eines Outputs zurück
+ *
+ * @param {Array} connections - Alle Verbindungen
+ * @param {string} nodeId - Node ID
+ * @param {string} outputId - Output ID (Handle ID)
+ * @returns {Array} Array von Connections
+ */
+export function getOutputConnections(connections, nodeId, outputId) {
+  return connections.filter(conn => conn.source === nodeId && conn.sourceHandle === outputId);
+}
+
+/**
+ * Validiert alle Verbindungen in der Konfiguration
+ *
+ * @param {Array} modules - Alle Module (inkl. Gebäude)
+ * @param {Array} connections - Alle Verbindungen
+ * @returns {Array} Array von Validierungsergebnissen
+ */
+export function validateAllConnections(modules, connections) {
   const results = [];
-  let predecessor = building;
 
-  chain.forEach((element, index) => {
-    const check = checkCompatibility(predecessor, element);
+  connections.forEach(conn => {
+    const sourceModule = modules.find(m => m.id === conn.source);
+    const targetModule = modules.find(m => m.id === conn.target);
+
+    if (!sourceModule || !targetModule) {
+      results.push({
+        connection: conn,
+        valid: false,
+        warning: true,
+        reason: 'Modul nicht gefunden'
+      });
+      return;
+    }
+
+    const check = checkConnection(
+      sourceModule,
+      conn.sourceHandle,
+      targetModule,
+      conn.targetHandle
+    );
+
     results.push({
-      index,
-      element,
-      predecessor,
-      ...check,
+      connection: conn,
+      ...check
     });
-    predecessor = element;
   });
 
   return results;
