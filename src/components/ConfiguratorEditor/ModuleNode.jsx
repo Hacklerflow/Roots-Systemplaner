@@ -27,41 +27,6 @@ export default function ModuleNode({ data }) {
         position: 'relative',
       }}
     >
-      {/* Eingänge */}
-      {inputs.map((input, index) => {
-        const total = inputs.length;
-        const yOffset = total === 1 ? 50 : (100 / (total + 1)) * (index + 1);
-
-        return (
-          <div key={input.id}>
-            <Handle
-              type="target"
-              position={Position.Left}
-              id={input.id}
-              style={{
-                top: `${yOffset}%`,
-                background: getConnectionTypeColor(input.connectionType),
-                width: '12px',
-                height: '12px',
-                border: '2px solid var(--bg-primary)',
-              }}
-            />
-            <div
-              style={{
-                position: 'absolute',
-                left: '20px',
-                top: `calc(${yOffset}% - 8px)`,
-                fontSize: '10px',
-                color: 'var(--text-secondary)',
-                pointerEvents: 'none',
-              }}
-            >
-              {input.label}
-            </div>
-          </div>
-        );
-      })}
-
       {/* Modul-Info */}
       <div style={{ fontWeight: 600, fontSize: '14px', marginBottom: '4px' }}>
         {name}
@@ -70,45 +35,98 @@ export default function ModuleNode({ data }) {
         {subtitle}
       </div>
 
-      {/* Ausgänge */}
+      {/* Info über Ein-/Ausgänge */}
+      <div style={{ marginTop: '8px', fontSize: '10px', color: 'var(--text-secondary)' }}>
+        {inputs.length} Ein | {outputs.length} Aus
+      </div>
+
+      {/* Eingänge - Handles */}
+      {inputs.map((input, index) => {
+        const total = inputs.length;
+        const yOffset = total === 1 ? 50 : (100 / (total + 1)) * (index + 1);
+
+        return (
+          <Handle
+            key={input.id}
+            type="target"
+            position={Position.Left}
+            id={input.id}
+            style={{
+              top: `${yOffset}%`,
+              background: getConnectionTypeColor(input.connectionType),
+              width: '12px',
+              height: '12px',
+              border: '2px solid var(--bg-primary)',
+            }}
+          />
+        );
+      })}
+
+      {/* Eingänge - Labels */}
+      {inputs.map((input, index) => {
+        const total = inputs.length;
+        const yOffset = total === 1 ? 50 : (100 / (total + 1)) * (index + 1);
+
+        return (
+          <div
+            key={`label-${input.id}`}
+            style={{
+              position: 'absolute',
+              left: '20px',
+              top: `calc(${yOffset}% - 8px)`,
+              fontSize: '10px',
+              color: 'var(--text-secondary)',
+              pointerEvents: 'none',
+            }}
+          >
+            {input.label}
+          </div>
+        );
+      })}
+
+      {/* Ausgänge - Handles */}
       {outputs.map((output, index) => {
         const total = outputs.length;
         const yOffset = total === 1 ? 50 : (100 / (total + 1)) * (index + 1);
 
         return (
-          <div key={output.id}>
-            <Handle
-              type="source"
-              position={Position.Right}
-              id={output.id}
-              style={{
-                top: `${yOffset}%`,
-                background: getConnectionTypeColor(output.connectionType),
-                width: '12px',
-                height: '12px',
-                border: '2px solid var(--bg-primary)',
-              }}
-            />
-            <div
-              style={{
-                position: 'absolute',
-                right: '20px',
-                top: `calc(${yOffset}% - 8px)`,
-                fontSize: '10px',
-                color: 'var(--text-secondary)',
-                pointerEvents: 'none',
-              }}
-            >
-              {output.label}
-            </div>
-          </div>
+          <Handle
+            key={output.id}
+            type="source"
+            position={Position.Right}
+            id={output.id}
+            style={{
+              top: `${yOffset}%`,
+              background: getConnectionTypeColor(output.connectionType),
+              width: '12px',
+              height: '12px',
+              border: '2px solid var(--bg-primary)',
+            }}
+          />
         );
       })}
 
-      {/* Info über Ein-/Ausgänge */}
-      <div style={{ marginTop: '8px', fontSize: '10px', color: 'var(--text-secondary)' }}>
-        {inputs.length} Ein | {outputs.length} Aus
-      </div>
+      {/* Ausgänge - Labels */}
+      {outputs.map((output, index) => {
+        const total = outputs.length;
+        const yOffset = total === 1 ? 50 : (100 / (total + 1)) * (index + 1);
+
+        return (
+          <div
+            key={`label-${output.id}`}
+            style={{
+              position: 'absolute',
+              right: '20px',
+              top: `calc(${yOffset}% - 8px)`,
+              fontSize: '10px',
+              color: 'var(--text-secondary)',
+              pointerEvents: 'none',
+            }}
+          >
+            {output.label}
+          </div>
+        );
+      })}
     </div>
   );
 }

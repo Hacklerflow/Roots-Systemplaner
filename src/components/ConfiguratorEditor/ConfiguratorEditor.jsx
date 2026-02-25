@@ -36,8 +36,11 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
     const newNodes = [];
     const newEdges = [];
 
+    const modules = configuration?.modules || [];
+    const connections = configuration?.connections || [];
+
     // Module zu Nodes konvertieren (inkl. Gebäude)
-    configuration.modules.forEach((module, index) => {
+    modules.forEach((module, index) => {
       const isFirstModule = index === 0;
       const isBuildingModule = isBuilding(module);
 
@@ -56,9 +59,9 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
     });
 
     // Connections zu Edges konvertieren
-    configuration.connections.forEach((conn) => {
-      const sourceModule = configuration.modules.find(m => m.id === conn.source);
-      const targetModule = configuration.modules.find(m => m.id === conn.target);
+    connections.forEach((conn) => {
+      const sourceModule = modules.find(m => m.id === conn.source);
+      const targetModule = modules.find(m => m.id === conn.target);
 
       if (!sourceModule || !targetModule) return;
 
@@ -102,7 +105,7 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
   const handleSaveElement = (updatedElement) => {
     setConfiguration({
       ...configuration,
-      modules: configuration.modules.map((m) =>
+      modules: (configuration?.modules || []).map((m) =>
         m.id === updatedElement.id ? updatedElement : m
       ),
     });
@@ -120,7 +123,7 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
     const moduleInstance = createModuleInstance(moduleTemplate);
     setConfiguration({
       ...configuration,
-      modules: [...configuration.modules, moduleInstance],
+      modules: [...(configuration?.modules || []), moduleInstance],
     });
   };
 
@@ -137,8 +140,8 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
     if (confirm('Modul wirklich löschen?')) {
       setConfiguration({
         ...configuration,
-        modules: configuration.modules.filter((m) => m.id !== moduleId),
-        connections: configuration.connections.filter(
+        modules: (configuration?.modules || []).filter((m) => m.id !== moduleId),
+        connections: (configuration?.connections || []).filter(
           (c) => c.source !== moduleId && c.target !== moduleId
         ),
       });
@@ -148,13 +151,16 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
   // Handle neue Verbindung
   const handleConnect = useCallback(
     (params) => {
-      const sourceModule = configuration.modules.find(m => m.id === params.source);
-      const targetModule = configuration.modules.find(m => m.id === params.target);
+      const modules = configuration?.modules || [];
+      const connections = configuration?.connections || [];
+
+      const sourceModule = modules.find(m => m.id === params.source);
+      const targetModule = modules.find(m => m.id === params.target);
 
       if (!sourceModule || !targetModule) return;
 
       // Prüfe ob Input bereits verbunden ist
-      const inputAlreadyConnected = configuration.connections.some(
+      const inputAlreadyConnected = connections.some(
         c => c.target === params.target && c.targetHandle === params.targetHandle
       );
 
@@ -189,7 +195,7 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
 
       setConfiguration({
         ...configuration,
-        connections: [...configuration.connections, newConnection],
+        connections: [...connections, newConnection],
       });
     },
     [configuration, setConfiguration]
@@ -201,7 +207,7 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
       const edgeIds = edgesToDelete.map(e => e.id);
       setConfiguration({
         ...configuration,
-        connections: configuration.connections.filter(
+        connections: (configuration?.connections || []).filter(
           c => !edgeIds.includes(c.id)
         ),
       });
@@ -214,12 +220,12 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
     (changes) => {
       onNodesChange(changes);
 
-      // Speichere Position in configuration
+      // Speichere Position nur wenn Dragging beendet ist (nicht während des Verschiebens)
       changes.forEach(change => {
-        if (change.type === 'position' && change.position) {
+        if (change.type === 'position' && change.position && change.dragging === false) {
           setConfiguration(prev => ({
             ...prev,
-            modules: prev.modules.map(m =>
+            modules: (prev?.modules || []).map(m =>
               m.id === change.id
                 ? { ...m, position: change.position }
                 : m
@@ -231,7 +237,7 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
     [onNodesChange, setConfiguration]
   );
 
-  const hasBuilding = configuration.modules.some(m => isBuilding(m));
+  const hasBuilding = (configuration?.modules || []).some(m => isBuilding(m));
 
   return (
     <div style={{ display: 'flex', height: '100%', position: 'relative' }}>

@@ -26,45 +26,54 @@ export default function BuildingNode({ data }) {
         Gebäude
       </div>
 
-      {/* Ausgänge */}
+      {/* Info über Ausgänge */}
+      <div style={{ marginTop: '12px', fontSize: '11px', color: 'var(--text-secondary)' }}>
+        {outputs.length} Ausgang{outputs.length !== 1 ? 'e' : ''}
+      </div>
+
+      {/* Ausgänge - Handles */}
       {outputs.map((output, index) => {
         const total = outputs.length;
         const yOffset = total === 1 ? 50 : (100 / (total + 1)) * (index + 1);
 
         return (
-          <div key={output.id}>
-            <Handle
-              type="source"
-              position={Position.Right}
-              id={output.id}
-              style={{
-                top: `${yOffset}%`,
-                background: getConnectionTypeColor(output.connectionType),
-                width: '12px',
-                height: '12px',
-                border: '2px solid var(--bg-primary)',
-              }}
-            />
-            <div
-              style={{
-                position: 'absolute',
-                right: '20px',
-                top: `calc(${yOffset}% - 8px)`,
-                fontSize: '10px',
-                color: 'var(--text-secondary)',
-                pointerEvents: 'none',
-              }}
-            >
-              {output.label}
-            </div>
-          </div>
+          <Handle
+            key={output.id}
+            type="source"
+            position={Position.Right}
+            id={output.id}
+            style={{
+              top: `${yOffset}%`,
+              background: getConnectionTypeColor(output.connectionType),
+              width: '12px',
+              height: '12px',
+              border: '2px solid var(--bg-primary)',
+            }}
+          />
         );
       })}
 
-      {/* Info über Ausgänge */}
-      <div style={{ marginTop: '12px', fontSize: '11px', color: 'var(--text-secondary)' }}>
-        {outputs.length} Ausgang{outputs.length !== 1 ? 'e' : ''}
-      </div>
+      {/* Ausgänge - Labels */}
+      {outputs.map((output, index) => {
+        const total = outputs.length;
+        const yOffset = total === 1 ? 50 : (100 / (total + 1)) * (index + 1);
+
+        return (
+          <div
+            key={`label-${output.id}`}
+            style={{
+              position: 'absolute',
+              right: '20px',
+              top: `calc(${yOffset}% - 8px)`,
+              fontSize: '10px',
+              color: 'var(--text-secondary)',
+              pointerEvents: 'none',
+            }}
+          >
+            {output.label}
+          </div>
+        );
+      })}
     </div>
   );
 }

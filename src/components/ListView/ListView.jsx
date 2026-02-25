@@ -3,9 +3,9 @@ import { checkConnection } from '../../data/compatibilityChecker';
 import { CONNECTION_TYPE_LABELS, isBuilding } from '../../data/types';
 
 export default function ListView({ configuration }) {
-  const { modules, connections } = configuration;
+  const { modules = [], connections = [] } = configuration || {};
 
-  if (modules.length === 0) {
+  if (!modules || modules.length === 0) {
     return (
       <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-secondary)' }}>
         Keine Konfiguration vorhanden. Erstelle zuerst ein Gebäude im Konfigurator.
