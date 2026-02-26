@@ -35,11 +35,6 @@ export default function ModuleNode({ data }) {
         {subtitle}
       </div>
 
-      {/* Info über Ein-/Ausgänge */}
-      <div style={{ marginTop: '8px', fontSize: '10px', color: 'var(--text-secondary)' }}>
-        {inputs.length} Ein | {outputs.length} Aus
-      </div>
-
       {/* Eingänge - Handles */}
       {inputs.map((input, index) => {
         const total = inputs.length;
@@ -62,7 +57,7 @@ export default function ModuleNode({ data }) {
         );
       })}
 
-      {/* Eingänge - Labels */}
+      {/* Eingänge - Labels (außerhalb links) */}
       {inputs.map((input, index) => {
         const total = inputs.length;
         const yOffset = total === 1 ? 50 : (100 / (total + 1)) * (index + 1);
@@ -72,11 +67,12 @@ export default function ModuleNode({ data }) {
             key={`label-${input.id}`}
             style={{
               position: 'absolute',
-              left: '20px',
+              right: 'calc(100% + 8px)',
               top: `calc(${yOffset}% - 8px)`,
               fontSize: '10px',
               color: 'var(--text-secondary)',
               pointerEvents: 'none',
+              whiteSpace: 'nowrap',
             }}
           >
             {input.label}
@@ -106,7 +102,7 @@ export default function ModuleNode({ data }) {
         );
       })}
 
-      {/* Ausgänge - Labels */}
+      {/* Ausgänge - Labels (außerhalb rechts) */}
       {outputs.map((output, index) => {
         const total = outputs.length;
         const yOffset = total === 1 ? 50 : (100 / (total + 1)) * (index + 1);
@@ -116,11 +112,12 @@ export default function ModuleNode({ data }) {
             key={`label-${output.id}`}
             style={{
               position: 'absolute',
-              right: '20px',
+              left: 'calc(100% + 8px)',
               top: `calc(${yOffset}% - 8px)`,
               fontSize: '10px',
               color: 'var(--text-secondary)',
               pointerEvents: 'none',
+              whiteSpace: 'nowrap',
             }}
           >
             {output.label}

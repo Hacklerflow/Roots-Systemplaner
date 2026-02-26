@@ -17,7 +17,7 @@ function App() {
     localStorage.setItem('roots-modules', JSON.stringify(modules));
   }, [modules]);
 
-  // Konfigurations State (NEUE STRUKTUR: modules + connections)
+  // Konfigurations State (STRUKTUR: building + modules + connections)
   const [configuration, setConfiguration] = useState(() => {
     const stored = localStorage.getItem('roots-configuration');
 
@@ -26,18 +26,23 @@ function App() {
         const parsed = JSON.parse(stored);
 
         // Migration: Altes Format zu neuem Format
-        if (parsed.building || parsed.chain) {
+        if (parsed.chain) {
           console.warn('Altes Konfigurationsformat erkannt - wird zurückgesetzt');
           localStorage.removeItem('roots-configuration');
           return {
+            building: null,
             modules: [],
             connections: [],
           };
         }
 
-        // Neues Format
-        if (parsed.modules && parsed.connections) {
-          return parsed;
+        // Neues Format validieren
+        if (parsed.hasOwnProperty('modules') && parsed.hasOwnProperty('connections')) {
+          return {
+            building: parsed.building || null,
+            modules: parsed.modules || [],
+            connections: parsed.connections || [],
+          };
         }
       } catch (e) {
         console.error('Fehler beim Laden der Konfiguration:', e);
@@ -46,7 +51,8 @@ function App() {
 
     // Default: leere Konfiguration
     return {
-      modules: [],      // Array von Modulen (inkl. Gebäude)
+      building: null,   // Gebäude (nicht als Node)
+      modules: [],      // Array von Modulen
       connections: [],  // Array von Verbindungen
     };
   });

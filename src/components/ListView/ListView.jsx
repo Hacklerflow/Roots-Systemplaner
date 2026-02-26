@@ -3,9 +3,9 @@ import { checkConnection } from '../../data/compatibilityChecker';
 import { CONNECTION_TYPE_LABELS, isBuilding } from '../../data/types';
 
 export default function ListView({ configuration }) {
-  const { modules = [], connections = [] } = configuration || {};
+  const { building, modules = [], connections = [] } = configuration || {};
 
-  if (!modules || modules.length === 0) {
+  if (!building && (!modules || modules.length === 0)) {
     return (
       <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-secondary)' }}>
         Keine Konfiguration vorhanden. Erstelle zuerst ein Gebäude im Konfigurator.
@@ -17,12 +17,21 @@ export default function ListView({ configuration }) {
     <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
       <h2 style={{ marginTop: 0, marginBottom: '24px' }}>System-Übersicht</h2>
 
+      {/* Gebäude */}
+      {building && (
+        <Section title="Gebäude">
+          <ModuleCard module={building} />
+        </Section>
+      )}
+
       {/* Module */}
-      <Section title="Module">
-        {modules.map((module) => (
-          <ModuleCard key={module.id} module={module} />
-        ))}
-      </Section>
+      {modules.length > 0 && (
+        <Section title="Module">
+          {modules.map((module) => (
+            <ModuleCard key={module.id} module={module} />
+          ))}
+        </Section>
+      )}
 
       {/* Verbindungen */}
       <Section title="Verbindungen">

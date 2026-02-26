@@ -26,11 +26,6 @@ export default function BuildingNode({ data }) {
         Gebäude
       </div>
 
-      {/* Info über Ausgänge */}
-      <div style={{ marginTop: '12px', fontSize: '11px', color: 'var(--text-secondary)' }}>
-        {outputs.length} Ausgang{outputs.length !== 1 ? 'e' : ''}
-      </div>
-
       {/* Ausgänge - Handles */}
       {outputs.map((output, index) => {
         const total = outputs.length;
@@ -53,7 +48,7 @@ export default function BuildingNode({ data }) {
         );
       })}
 
-      {/* Ausgänge - Labels */}
+      {/* Ausgänge - Labels (außerhalb rechts) */}
       {outputs.map((output, index) => {
         const total = outputs.length;
         const yOffset = total === 1 ? 50 : (100 / (total + 1)) * (index + 1);
@@ -63,11 +58,12 @@ export default function BuildingNode({ data }) {
             key={`label-${output.id}`}
             style={{
               position: 'absolute',
-              right: '20px',
+              left: 'calc(100% + 8px)',
               top: `calc(${yOffset}% - 8px)`,
               fontSize: '10px',
               color: 'var(--text-secondary)',
               pointerEvents: 'none',
+              whiteSpace: 'nowrap',
             }}
           >
             {output.label}

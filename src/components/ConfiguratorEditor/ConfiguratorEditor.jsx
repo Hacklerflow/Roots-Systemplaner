@@ -39,24 +39,23 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
     const modules = configuration?.modules || [];
     const connections = configuration?.connections || [];
 
-    // Module zu Nodes konvertieren (inkl. Gebäude)
-    modules.forEach((module, index) => {
-      const isFirstModule = index === 0;
-      const isBuildingModule = isBuilding(module);
-
-      newNodes.push({
-        id: module.id,
-        type: isBuildingModule ? 'building' : 'module',
-        position: module.position || {
-          x: isFirstModule ? 50 : 300 + (index - 1) * 280,
-          y: isFirstModule ? 200 : 200 + (index % 3) * 150,
-        },
-        data: {
-          ...module,
-          onClick: () => openModal(module),
-        },
+    // Module zu Nodes konvertieren (OHNE Gebäude)
+    modules
+      .filter(module => !isBuilding(module)) // Gebäude nicht als Node
+      .forEach((module, index) => {
+        newNodes.push({
+          id: module.id,
+          type: 'module',
+          position: module.position || {
+            x: 100 + index * 280,
+            y: 100 + (index % 3) * 180,
+          },
+          data: {
+            ...module,
+            onClick: () => openModal(module),
+          },
+        });
       });
-    });
 
     // Connections zu Edges konvertieren
     connections.forEach((conn) => {
@@ -83,7 +82,7 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
         sourceHandle: conn.sourceHandle,
         target: conn.target,
         targetHandle: conn.targetHandle,
-        type: check.warning ? 'warning' : 'default',
+        type: 'warning', // Immer warning type für Delete-Button
         animated: !check.warning,
         style: getEdgeStyle(connectionType),
         data: {
@@ -103,18 +102,28 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
   };
 
   const handleSaveElement = (updatedElement) => {
-    setConfiguration({
-      ...configuration,
-      modules: (configuration?.modules || []).map((m) =>
-        m.id === updatedElement.id ? updatedElement : m
-      ),
-    });
+    if (isBuilding(updatedElement)) {
+      // Gebäude separat speichern
+      setConfiguration({
+        ...configuration,
+        building: updatedElement,
+      });
+    } else {
+      // Modul in Liste aktualisieren
+      setConfiguration({
+        ...configuration,
+        modules: (configuration?.modules || []).map((m) =>
+          m.id === updatedElement.id ? updatedElement : m
+        ),
+      });
+    }
   };
 
   const handleCreateBuilding = () => {
     const building = createBuilding();
     setConfiguration({
-      modules: [building],
+      building, // Gebäude separat speichern
+      modules: [],
       connections: [],
     });
   };
@@ -130,6 +139,7 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
   const handleClearConfiguration = () => {
     if (confirm('Konfiguration wirklich löschen?')) {
       setConfiguration({
+        building: null,
         modules: [],
         connections: [],
       });
@@ -237,7 +247,7 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
     [onNodesChange, setConfiguration]
   );
 
-  const hasBuilding = (configuration?.modules || []).some(m => isBuilding(m));
+  const hasBuilding = !!configuration?.building;
 
   return (
     <div style={{ display: 'flex', height: '100%', position: 'relative' }}>
@@ -252,23 +262,41 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
           gap: '8px',
         }}
       >
-        <button
-          onClick={handleCreateBuilding}
-          disabled={hasBuilding}
-          style={{
-            padding: '10px 16px',
-            background: hasBuilding ? 'var(--bg-tertiary)' : 'var(--accent)',
-            color: hasBuilding ? 'var(--text-secondary)' : 'var(--bg-primary)',
-            border: 'none',
-            borderRadius: '4px',
-            fontWeight: 600,
-            cursor: hasBuilding ? 'not-allowed' : 'pointer',
-            fontFamily: 'inherit',
-            fontSize: '13px',
-          }}
-        >
-          {hasBuilding ? 'Gebäude vorhanden' : 'Neues Gebäude'}
-        </button>
+        {!hasBuilding ? (
+          <button
+            onClick={handleCreateBuilding}
+            style={{
+              padding: '10px 16px',
+              background: 'var(--accent)',
+              color: 'var(--bg-primary)',
+              border: 'none',
+              borderRadius: '4px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              fontSize: '13px',
+            }}
+          >
+            Neues Gebäude
+          </button>
+        ) : (
+          <button
+            onClick={() => openModal(configuration.building)}
+            style={{
+              padding: '10px 16px',
+              background: 'var(--bg-secondary)',
+              color: 'var(--text-primary)',
+              border: '2px solid var(--accent)',
+              borderRadius: '4px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              fontSize: '13px',
+            }}
+          >
+            📋 {configuration.building?.name || 'Gebäude'} bearbeiten
+          </button>
+        )}
 
         {hasBuilding && (
           <button
