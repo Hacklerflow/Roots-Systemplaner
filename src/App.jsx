@@ -280,16 +280,16 @@ function App() {
             </>
           )}
         </div>
-
-        {/* Hidden File Input */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".json"
-          onChange={handleImportConfiguration}
-          style={{ display: 'none' }}
-        />
       </header>
+
+      {/* Hidden File Input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".json"
+        onChange={handleImportConfiguration}
+        style={{ display: 'none' }}
+      />
 
       {/* Tab Navigation */}
       <div className="tabs">
