@@ -96,6 +96,8 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
           onClick: openConnectionModal,
           sourceLabel: output?.label || '',
           targetLabel: input?.label || '',
+          laenge_meter: conn.laenge_meter,
+          dimension: conn.dimension,
         },
       });
     });

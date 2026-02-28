@@ -31,6 +31,11 @@ export default function WarningEdge({
   const sourceLabel = data.sourceLabel || '';
   const targetLabel = data.targetLabel || '';
 
+  // Connection properties (Länge und Dimension)
+  const laenge = data.laenge_meter;
+  const dimension = data.dimension;
+  const hasProperties = laenge || dimension;
+
   return (
     <>
       <BaseEdge
@@ -95,12 +100,37 @@ export default function WarningEdge({
           </div>
         )}
 
-        {/* Warning Icon - in der Mitte */}
+        {/* Länge und Dimension - in der Mitte */}
+        {hasProperties && (
+          <div
+            style={{
+              position: 'absolute',
+              transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY - 20}px)`,
+              background: '#000000',
+              color: 'var(--text-primary)',
+              padding: '4px 8px',
+              borderRadius: '4px',
+              fontSize: '11px',
+              fontWeight: 500,
+              pointerEvents: 'none',
+              whiteSpace: 'nowrap',
+              border: '1px solid var(--border)',
+              display: 'flex',
+              gap: '8px',
+            }}
+          >
+            {laenge && <span>{laenge} m</span>}
+            {laenge && dimension && <span>|</span>}
+            {dimension && <span>{dimension}</span>}
+          </div>
+        )}
+
+        {/* Warning Icon - unter den Properties */}
         {data.warning && (
           <div
             style={{
               position: 'absolute',
-              transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
+              transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY + (hasProperties ? 10 : 0)}px)`,
               background: 'var(--bg-secondary)',
               border: '2px solid var(--error)',
               borderRadius: '50%',
