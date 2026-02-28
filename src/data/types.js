@@ -9,6 +9,7 @@ export const MODULE_TYPES = {
   SOURCE: 'Quelle',
   STORAGE: 'Speicher',
   SOLAR_THERMAL: 'Soletherme',
+  NETWORK_COMPONENT: 'Netzwerkkomponente',
   BUILDING: 'Gebäude',
 };
 
