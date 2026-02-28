@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -52,6 +52,7 @@ function ConfiguratorEditorInner({ modules: moduleTemplates, configuration, setC
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedConnection, setSelectedConnection] = useState(null);
   const [connectionModalOpen, setConnectionModalOpen] = useState(false);
+  const fileInputRef = useRef(null);
 
   // Synchronisiere configuration mit nodes/edges
   useEffect(() => {
@@ -263,6 +264,76 @@ function ConfiguratorEditorInner({ modules: moduleTemplates, configuration, setC
     });
   };
 
+  // Export Konfiguration als JSON
+  const handleExportConfiguration = () => {
+    if (!configuration?.building) {
+      alert('Bitte erstelle zuerst ein Gebäude!');
+      return;
+    }
+
+    // Erstelle Dateinamen aus Gebäudenamen
+    const buildingName = configuration.building.name || 'Konfiguration';
+    const fileName = `${buildingName.replace(/[^a-zA-Z0-9]/g, '_')}.json`;
+
+    // Erstelle JSON
+    const dataStr = JSON.stringify(configuration, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+
+    // Download auslösen
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // Import Konfiguration aus JSON
+  const handleImportConfiguration = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const imported = JSON.parse(e.target.result);
+
+        // Validiere die Struktur
+        if (!imported.building) {
+          alert('Ungültige Konfigurationsdatei: Kein Gebäude gefunden!');
+          return;
+        }
+
+        // Validiere dass alle Module inputs/outputs haben
+        if (imported.modules && !imported.modules.every(m =>
+          Array.isArray(m.inputs) && Array.isArray(m.outputs)
+        )) {
+          alert('Ungültige Konfigurationsdatei: Module haben ungültige Struktur!');
+          return;
+        }
+
+        // Lade die Konfiguration
+        setConfiguration({
+          building: imported.building || null,
+          modules: imported.modules || [],
+          junctions: imported.junctions || [],
+          connections: imported.connections || [],
+        });
+
+        alert(`Konfiguration "${imported.building.name}" erfolgreich geladen!`);
+      } catch (error) {
+        console.error('Fehler beim Laden der Konfiguration:', error);
+        alert('Fehler beim Laden der Datei. Bitte überprüfe das Format.');
+      }
+    };
+    reader.readAsText(file);
+
+    // Reset file input
+    event.target.value = '';
+  };
+
   const handleSaveConnection = (updatedConnection) => {
     setConfiguration({
       ...configuration,
@@ -393,39 +464,91 @@ function ConfiguratorEditorInner({ modules: moduleTemplates, configuration, setC
         }}
       >
         {!hasBuilding ? (
-          <button
-            onClick={handleCreateBuilding}
-            style={{
-              padding: '10px 16px',
-              background: 'var(--accent)',
-              color: 'var(--bg-primary)',
-              border: 'none',
-              borderRadius: '4px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              fontSize: '13px',
-            }}
-          >
-            Neues Gebäude
-          </button>
+          <>
+            <button
+              onClick={handleCreateBuilding}
+              style={{
+                padding: '10px 16px',
+                background: 'var(--accent)',
+                color: 'var(--bg-primary)',
+                border: 'none',
+                borderRadius: '4px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                fontSize: '13px',
+              }}
+            >
+              Neues Gebäude
+            </button>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              style={{
+                padding: '10px 16px',
+                background: 'var(--bg-secondary)',
+                color: 'var(--text-primary)',
+                border: '2px solid var(--accent)',
+                borderRadius: '4px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                fontSize: '13px',
+              }}
+            >
+              📂 Öffnen
+            </button>
+          </>
         ) : (
-          <button
-            onClick={() => openModal(configuration.building)}
-            style={{
-              padding: '10px 16px',
-              background: 'var(--bg-secondary)',
-              color: 'var(--text-primary)',
-              border: '2px solid var(--accent)',
-              borderRadius: '4px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              fontSize: '13px',
-            }}
-          >
-            📋 {configuration.building?.name || 'Gebäude'} bearbeiten
-          </button>
+          <>
+            <button
+              onClick={() => openModal(configuration.building)}
+              style={{
+                padding: '10px 16px',
+                background: 'var(--bg-secondary)',
+                color: 'var(--text-primary)',
+                border: '2px solid var(--accent)',
+                borderRadius: '4px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                fontSize: '13px',
+              }}
+            >
+              📋 {configuration.building?.name || 'Gebäude'} bearbeiten
+            </button>
+            <button
+              onClick={handleExportConfiguration}
+              style={{
+                padding: '10px 16px',
+                background: 'var(--success)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                fontSize: '13px',
+              }}
+            >
+              💾 Speichern
+            </button>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              style={{
+                padding: '10px 16px',
+                background: 'var(--bg-secondary)',
+                color: 'var(--text-primary)',
+                border: '2px solid var(--accent)',
+                borderRadius: '4px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                fontSize: '13px',
+              }}
+            >
+              📂 Öffnen
+            </button>
+          </>
         )}
 
         {hasBuilding && (
@@ -579,6 +702,15 @@ function ConfiguratorEditorInner({ modules: moduleTemplates, configuration, setC
           }}
         />
       )}
+
+      {/* Hidden File Input für Import */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".json"
+        onChange={handleImportConfiguration}
+        style={{ display: 'none' }}
+      />
     </div>
   );
 }
