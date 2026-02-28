@@ -106,7 +106,8 @@ export default function InputOutputEditor({ connector, type, onUpdate, onDelete 
           {moduleTypeOptions.map(moduleType => (
             <button
               key={moduleType}
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
                 toggleModuleType(moduleType);
                 setTimeout(handleSave, 0);
               }}
@@ -130,7 +131,10 @@ export default function InputOutputEditor({ connector, type, onUpdate, onDelete 
 
       {/* Delete Button */}
       <button
-        onClick={onDelete}
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete();
+        }}
         style={{
           width: '100%',
           padding: '6px',
