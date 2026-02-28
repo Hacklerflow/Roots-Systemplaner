@@ -328,7 +328,12 @@ function App() {
 
           {activeTab === 'liste' && <ListView configuration={configuration} />}
 
-          {activeTab === 'stueckliste' && <Stueckliste configuration={configuration} />}
+          {activeTab === 'stueckliste' && (
+            <Stueckliste
+              configuration={configuration}
+              setConfiguration={setConfiguration}
+            />
+          )}
 
           {activeTab === 'datenbank' && (
             <ModuleDatabase modules={modules} setModules={setModules} />

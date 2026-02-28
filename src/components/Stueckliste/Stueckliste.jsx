@@ -1,8 +1,32 @@
 import { utils, writeFile } from 'xlsx';
 import { isBuilding, CONNECTION_TYPE_LABELS } from '../../data/types';
 
-export default function Stueckliste({ configuration }) {
+export default function Stueckliste({ configuration, setConfiguration }) {
   const { building, modules = [], connections = [] } = configuration || {};
+
+  // Handler für Preis-Änderungen bei Modulen
+  const handleModulePriceChange = (moduleId, newPrice) => {
+    setConfiguration({
+      ...configuration,
+      modules: modules.map(m =>
+        m.id === moduleId
+          ? { ...m, properties: { ...m.properties, preis_euro: newPrice ? parseFloat(newPrice) : null } }
+          : m
+      ),
+    });
+  };
+
+  // Handler für Preis-pro-Meter-Änderungen bei Verbindungen
+  const handleConnectionPriceChange = (connectionId, newPrice) => {
+    setConfiguration({
+      ...configuration,
+      connections: connections.map(c =>
+        c.id === connectionId
+          ? { ...c, preis_pro_meter: newPrice ? parseFloat(newPrice) : null }
+          : c
+      ),
+    });
+  };
 
   const handleExportExcel = () => {
     // Erstelle Arbeitsblätter
@@ -167,7 +191,23 @@ export default function Stueckliste({ configuration }) {
                   {module.properties?.gewicht_kg ? `${module.properties.gewicht_kg} kg` : '—'}
                 </td>
                 <td style={tableCellStyle}>
-                  {module.properties?.preis_euro ? module.properties.preis_euro : '—'}
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={module.properties?.preis_euro ?? ''}
+                    onChange={(e) => handleModulePriceChange(module.id, e.target.value)}
+                    placeholder="—"
+                    style={{
+                      width: '80px',
+                      padding: '4px 8px',
+                      background: 'var(--bg-tertiary)',
+                      border: '1px solid var(--border)',
+                      borderRadius: '4px',
+                      color: 'var(--text-primary)',
+                      fontFamily: 'inherit',
+                      fontSize: '13px',
+                    }}
+                  />
                 </td>
                 <td style={tableCellStyle}>
                   {module.inputs?.length || 0} / {module.outputs?.length || 0}
@@ -231,7 +271,25 @@ export default function Stueckliste({ configuration }) {
                     <td style={tableCellStyle}>{CONNECTION_TYPE_LABELS[output?.connectionType] || '—'}</td>
                     <td style={tableCellStyle}>{conn.laenge_meter ? `${conn.laenge_meter} m` : '—'}</td>
                     <td style={tableCellStyle}>{conn.dimension || '—'}</td>
-                    <td style={tableCellStyle}>{conn.preis_pro_meter || '—'}</td>
+                    <td style={tableCellStyle}>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={conn.preis_pro_meter ?? ''}
+                        onChange={(e) => handleConnectionPriceChange(conn.id, e.target.value)}
+                        placeholder="—"
+                        style={{
+                          width: '80px',
+                          padding: '4px 8px',
+                          background: 'var(--bg-tertiary)',
+                          border: '1px solid var(--border)',
+                          borderRadius: '4px',
+                          color: 'var(--text-primary)',
+                          fontFamily: 'inherit',
+                          fontSize: '13px',
+                        }}
+                      />
+                    </td>
                     <td style={tableCellStyle}>
                       {conn.preis_pro_meter && conn.laenge_meter
                         ? (conn.preis_pro_meter * conn.laenge_meter).toFixed(2)
