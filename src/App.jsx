@@ -3,6 +3,7 @@ import ConfiguratorEditor from './components/ConfiguratorEditor/ConfiguratorEdit
 import ListView from './components/ListView/ListView';
 import ModuleDatabase from './components/ModuleDatabase/ModuleDatabase';
 import Stueckliste from './components/Stueckliste/Stueckliste';
+import Verbindungen from './components/Verbindungen/Verbindungen';
 import Leitungen from './components/Leitungen/Leitungen';
 import ErrorBoundary from './components/ErrorBoundary';
 import { initialModules } from './data/moduleDatabase';
@@ -328,6 +329,12 @@ function App() {
           Stückliste
         </button>
         <button
+          className={`tab ${activeTab === 'verbindungen' ? 'active' : ''}`}
+          onClick={() => setActiveTab('verbindungen')}
+        >
+          Verbindungen
+        </button>
+        <button
           className={`tab ${activeTab === 'leitungen' ? 'active' : ''}`}
           onClick={() => setActiveTab('leitungen')}
         >
@@ -357,6 +364,13 @@ function App() {
 
           {activeTab === 'stueckliste' && (
             <Stueckliste
+              configuration={configuration}
+              setConfiguration={setConfiguration}
+            />
+          )}
+
+          {activeTab === 'verbindungen' && (
+            <Verbindungen
               configuration={configuration}
               setConfiguration={setConfiguration}
             />

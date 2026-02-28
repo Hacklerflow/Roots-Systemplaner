@@ -102,7 +102,7 @@ export function getConnectionTypeColor(connectionType) {
 /**
  * Formatiert ConnectionType für Anzeige
  */
-function formatConnectionType(type) {
+export function formatConnectionType(type) {
   switch (type) {
     case CONNECTION_TYPES.HYDRAULIC:
       return 'Hydraulisch';
