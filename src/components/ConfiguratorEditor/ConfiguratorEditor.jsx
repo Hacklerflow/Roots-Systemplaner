@@ -250,7 +250,7 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
   const hasBuilding = !!configuration?.building;
 
   return (
-    <div style={{ display: 'flex', height: '100%', position: 'relative' }}>
+    <div style={{ display: 'flex', height: '100%', width: '100%', position: 'relative' }}>
       {/* Toolbar */}
       <div
         style={{
@@ -319,7 +319,7 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
       </div>
 
       {/* React Flow Canvas */}
-      <div style={{ flex: 1 }}>
+      <div style={{ flex: 1, position: 'relative' }}>
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -329,7 +329,8 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
           onEdgesDelete={handleEdgesDelete}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
-          fitView
+          fitView={nodes.length > 0}
+          fitViewOptions={{ padding: 0.2 }}
           minZoom={0.3}
           maxZoom={2}
           deleteKeyCode="Delete"
@@ -346,6 +347,23 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
             }}
           />
         </ReactFlow>
+        {/* Platzhalter wenn keine Module */}
+        {hasBuilding && nodes.length === 0 && (
+          <div
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              textAlign: 'center',
+              color: 'var(--text-secondary)',
+              pointerEvents: 'none',
+            }}
+          >
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>📦</div>
+            <div>Füge Module über die Sidebar hinzu</div>
+          </div>
+        )}
       </div>
 
       {/* Sidebar mit Modulen */}

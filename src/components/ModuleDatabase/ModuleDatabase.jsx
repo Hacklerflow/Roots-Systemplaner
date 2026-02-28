@@ -33,7 +33,7 @@ export default function ModuleDatabase({ modules, setModules }) {
   };
 
   return (
-    <div style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto' }}>
+    <div style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto', minHeight: '100%' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <h2 style={{ margin: 0 }}>Moduldatenbank</h2>
         <button

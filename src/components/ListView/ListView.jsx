@@ -14,7 +14,7 @@ export default function ListView({ configuration }) {
   }
 
   return (
-    <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
+    <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto', minHeight: '100%' }}>
       <h2 style={{ marginTop: 0, marginBottom: '24px' }}>System-Übersicht</h2>
 
       {/* Gebäude */}

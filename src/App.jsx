@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import ConfiguratorEditor from './components/ConfiguratorEditor/ConfiguratorEditor';
 import ListView from './components/ListView/ListView';
 import ModuleDatabase from './components/ModuleDatabase/ModuleDatabase';
+import ErrorBoundary from './components/ErrorBoundary';
 import { initialModules } from './data/moduleDatabase';
 
 function App() {
@@ -103,19 +104,21 @@ function App() {
 
       {/* Tab Content */}
       <div style={{ flex: 1, overflow: 'auto' }}>
-        {activeTab === 'konfigurator' && (
-          <ConfiguratorEditor
-            modules={modules}
-            configuration={configuration}
-            setConfiguration={setConfiguration}
-          />
-        )}
+        <ErrorBoundary>
+          {activeTab === 'konfigurator' && (
+            <ConfiguratorEditor
+              modules={modules}
+              configuration={configuration}
+              setConfiguration={setConfiguration}
+            />
+          )}
 
-        {activeTab === 'liste' && <ListView configuration={configuration} />}
+          {activeTab === 'liste' && <ListView configuration={configuration} />}
 
-        {activeTab === 'datenbank' && (
-          <ModuleDatabase modules={modules} setModules={setModules} />
-        )}
+          {activeTab === 'datenbank' && (
+            <ModuleDatabase modules={modules} setModules={setModules} />
+          )}
+        </ErrorBoundary>
       </div>
     </div>
   );
