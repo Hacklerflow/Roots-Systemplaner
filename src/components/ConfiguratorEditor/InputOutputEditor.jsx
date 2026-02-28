@@ -11,21 +11,24 @@ export default function InputOutputEditor({ connector, type, onUpdate, onDelete 
   const [connectionType, setConnectionType] = useState(connector.connectionType || CONNECTION_TYPES.HYDRAULIC);
   const [allowedModuleTypes, setAllowedModuleTypes] = useState(connector.allowedModuleTypes || []);
 
-  const handleSave = () => {
+  const handleSave = (updatedAllowedTypes) => {
     onUpdate({
       ...connector,
       label,
       connectionType,
-      allowedModuleTypes,
+      allowedModuleTypes: updatedAllowedTypes !== undefined ? updatedAllowedTypes : allowedModuleTypes,
     });
   };
 
   const toggleModuleType = (moduleType) => {
+    let newAllowedTypes;
     if (allowedModuleTypes.includes(moduleType)) {
-      setAllowedModuleTypes(allowedModuleTypes.filter(t => t !== moduleType));
+      newAllowedTypes = allowedModuleTypes.filter(t => t !== moduleType);
     } else {
-      setAllowedModuleTypes([...allowedModuleTypes, moduleType]);
+      newAllowedTypes = [...allowedModuleTypes, moduleType];
     }
+    setAllowedModuleTypes(newAllowedTypes);
+    return newAllowedTypes;
   };
 
   const moduleTypeOptions = getModuleTypeOptions();
@@ -72,8 +75,16 @@ export default function InputOutputEditor({ connector, type, onUpdate, onDelete 
         <select
           value={connectionType}
           onChange={(e) => {
-            setConnectionType(e.target.value);
-            setTimeout(handleSave, 0);
+            const newType = e.target.value;
+            setConnectionType(newType);
+            setTimeout(() => {
+              onUpdate({
+                ...connector,
+                label,
+                connectionType: newType,
+                allowedModuleTypes,
+              });
+            }, 0);
           }}
           style={{
             width: '100%',
@@ -109,8 +120,8 @@ export default function InputOutputEditor({ connector, type, onUpdate, onDelete 
               key={moduleType}
               onClick={(e) => {
                 e.stopPropagation();
-                toggleModuleType(moduleType);
-                setTimeout(handleSave, 0);
+                const newAllowedTypes = toggleModuleType(moduleType);
+                handleSave(newAllowedTypes);
               }}
               style={{
                 padding: '4px 8px',
