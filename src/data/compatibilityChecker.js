@@ -37,6 +37,27 @@ export function checkConnection(sourceModule, sourceOutputId, targetModule, targ
     };
   }
 
+  // Dimension muss übereinstimmen (wenn beide gesetzt sind)
+  const outputDimension = output.dimension || '';
+  const inputDimension = input.dimension || '';
+
+  if (outputDimension && inputDimension && outputDimension !== inputDimension) {
+    return {
+      valid: false,  // BLOCKIEREN
+      warning: true,
+      reason: `Dimensionen stimmen nicht überein (${outputDimension} → ${inputDimension})`
+    };
+  }
+
+  // Warnung wenn nur eine Seite eine Dimension hat
+  if ((outputDimension && !inputDimension) || (!outputDimension && inputDimension)) {
+    return {
+      valid: true,  // Erlauben, aber warnen
+      warning: true,
+      reason: `Dimension nur auf einer Seite definiert (${outputDimension || 'keine'} → ${inputDimension || 'keine'})`
+    };
+  }
+
   // Prüfe ob Ziel-Modul-Typ in erlaubten Typen des Outputs ist
   const outputAllowed = output.allowedModuleTypes.length === 0 ||
                         output.allowedModuleTypes.includes(targetModule.moduleType);
