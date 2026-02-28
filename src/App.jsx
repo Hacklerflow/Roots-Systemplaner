@@ -376,6 +376,7 @@ function App() {
               configuration={configuration}
               setConfiguration={setConfiguration}
               leitungskatalog={leitungskatalog}
+              verbindungsartenkatalog={verbindungsartenkatalog}
             />
           )}
 

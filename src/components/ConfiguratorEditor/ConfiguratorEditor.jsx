@@ -31,7 +31,7 @@ const edgeTypes = {
 };
 
 // Wrapper Komponente mit ReactFlowProvider
-export default function ConfiguratorEditor({ modules: moduleTemplates, configuration, setConfiguration, leitungskatalog }) {
+export default function ConfiguratorEditor({ modules: moduleTemplates, configuration, setConfiguration, leitungskatalog, verbindungsartenkatalog }) {
   return (
     <ReactFlowProvider>
       <ConfiguratorEditorInner
@@ -39,13 +39,14 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
         configuration={configuration}
         setConfiguration={setConfiguration}
         leitungskatalog={leitungskatalog}
+        verbindungsartenkatalog={verbindungsartenkatalog}
       />
     </ReactFlowProvider>
   );
 }
 
 // Innere Komponente die useReactFlow verwenden kann
-function ConfiguratorEditorInner({ modules: moduleTemplates, configuration, setConfiguration, leitungskatalog }) {
+function ConfiguratorEditorInner({ modules: moduleTemplates, configuration, setConfiguration, leitungskatalog, verbindungsartenkatalog }) {
   const reactFlowInstance = useReactFlow();
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -571,6 +572,7 @@ function ConfiguratorEditorInner({ modules: moduleTemplates, configuration, setC
             (configuration?.junctions || []).find(j => j.id === selectedConnection.target)
           }
           leitungskatalog={leitungskatalog}
+          verbindungsartenkatalog={verbindungsartenkatalog}
           onClose={() => setConnectionModalOpen(false)}
           onSave={handleSaveConnection}
           onDelete={() => {

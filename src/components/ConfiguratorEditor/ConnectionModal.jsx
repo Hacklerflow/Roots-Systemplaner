@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { isJunction } from '../../data/types';
 
-export default function ConnectionModal({ connection, sourceModule, targetModule, leitungskatalog = [], onClose, onSave, onDelete }) {
+export default function ConnectionModal({ connection, sourceModule, targetModule, leitungskatalog = [], verbindungsartenkatalog = [], onClose, onSave, onDelete }) {
   const [formData, setFormData] = useState({
     laenge_meter: connection.laenge_meter || null,
     dimension: connection.dimension || '',
@@ -9,6 +9,7 @@ export default function ConnectionModal({ connection, sourceModule, targetModule
     anschluss_ausgang: connection.anschluss_ausgang || '',
     preis_pro_meter: connection.preis_pro_meter || null,
     leitungskatalog_id: connection.leitungskatalog_id || '',
+    verbindungsart_id: connection.verbindungsart_id || '',
   });
 
   useEffect(() => {
@@ -19,8 +20,32 @@ export default function ConnectionModal({ connection, sourceModule, targetModule
       anschluss_ausgang: connection.anschluss_ausgang || '',
       preis_pro_meter: connection.preis_pro_meter || null,
       leitungskatalog_id: connection.leitungskatalog_id || '',
+      verbindungsart_id: connection.verbindungsart_id || '',
     });
   }, [connection]);
+
+  // Handler für Verbindungsart-Auswahl
+  const handleVerbindungsartSelect = (verbindungsartId) => {
+    if (!verbindungsartId) {
+      // Keine Verbindungsart gewählt
+      setFormData({
+        ...formData,
+        verbindungsart_id: '',
+        leitungskatalog_id: '',
+        dimension: '',
+        preis_pro_meter: null,
+      });
+      return;
+    }
+
+    setFormData({
+      ...formData,
+      verbindungsart_id: verbindungsartId,
+      leitungskatalog_id: '',
+      dimension: '',
+      preis_pro_meter: null,
+    });
+  };
 
   // Handler für Leitungsauswahl aus Katalog
   const handleLeitungSelect = (leitungId) => {
@@ -44,6 +69,24 @@ export default function ConnectionModal({ connection, sourceModule, targetModule
         preis_pro_meter: leitung.preis_pro_meter,
       });
     }
+  };
+
+  // Filtere Leitungen basierend auf Verbindungsart
+  const getAvailableLeitungen = () => {
+    if (!formData.verbindungsart_id) {
+      // Keine Verbindungsart gewählt: zeige alle Leitungen des Verbindungstyps
+      return leitungskatalog.filter(l => l.connectionType === connection.connectionType);
+    }
+
+    const verbindungsart = verbindungsartenkatalog.find(v => v.id === formData.verbindungsart_id);
+    if (!verbindungsart) {
+      return leitungskatalog.filter(l => l.connectionType === connection.connectionType);
+    }
+
+    // Nur kompatible Leitungen zeigen
+    return leitungskatalog.filter(l =>
+      verbindungsart.kompatible_leitungen.includes(l.id)
+    );
   };
 
   if (!connection || !sourceModule || !targetModule) return null;
@@ -167,10 +210,45 @@ export default function ConnectionModal({ connection, sourceModule, targetModule
             />
           </div>
 
+          {/* Verbindungsart aus Katalog */}
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '13px' }}>
+              Verbindungsart
+            </label>
+            <select
+              value={formData.verbindungsart_id}
+              onChange={(e) => handleVerbindungsartSelect(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '10px',
+                background: 'var(--bg-tertiary)',
+                border: '1px solid var(--border)',
+                borderRadius: '4px',
+                color: 'var(--text-primary)',
+                fontFamily: 'inherit',
+                fontSize: '14px',
+              }}
+            >
+              <option value="">Keine / Benutzerdefiniert</option>
+              {verbindungsartenkatalog
+                .filter(v => v.connectionType === connection.connectionType)
+                .map((verbindungsart) => (
+                  <option key={verbindungsart.id} value={verbindungsart.id}>
+                    {verbindungsart.name}
+                  </option>
+                ))}
+            </select>
+          </div>
+
           {/* Leitungstyp aus Katalog */}
           <div>
             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '13px' }}>
               Leitungstyp
+              {formData.verbindungsart_id && (
+                <span style={{ fontWeight: 400, fontSize: '11px', color: 'var(--text-secondary)', marginLeft: '8px' }}>
+                  (nur kompatible Leitungen)
+                </span>
+              )}
             </label>
             <select
               value={formData.leitungskatalog_id}
@@ -187,7 +265,7 @@ export default function ConnectionModal({ connection, sourceModule, targetModule
               }}
             >
               <option value="">Benutzerdefiniert</option>
-              {leitungskatalog.map((leitung) => (
+              {getAvailableLeitungen().map((leitung) => (
                 <option key={leitung.id} value={leitung.id}>
                   {leitung.dimension} ({leitung.preis_pro_meter ? `${leitung.preis_pro_meter} €/m` : 'kein Preis'})
                 </option>
