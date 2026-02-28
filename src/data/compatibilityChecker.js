@@ -1,6 +1,6 @@
 // Kompatibilitätsprüfung für Ein-/Ausgangs-System
 
-import { CONNECTION_TYPES } from './types';
+import { CONNECTION_TYPES, isJunction } from './types';
 
 /**
  * Prüft ob eine Verbindung zwischen Output und Input erlaubt/empfohlen ist
@@ -12,6 +12,11 @@ import { CONNECTION_TYPES } from './types';
  * @returns {Object} { valid: boolean, warning: boolean, reason: string }
  */
 export function checkConnection(sourceModule, sourceOutputId, targetModule, targetInputId) {
+  // Junctions erlauben alle Verbindungen
+  if (isJunction(sourceModule) || isJunction(targetModule)) {
+    return { valid: true, warning: false, reason: '' };
+  }
+
   const output = sourceModule.outputs?.find(o => o.id === sourceOutputId);
   const input = targetModule.inputs?.find(i => i.id === targetInputId);
 

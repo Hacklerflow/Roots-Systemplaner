@@ -81,8 +81,11 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
 
     // Connections zu Edges konvertieren
     connections.forEach((conn) => {
-      const sourceModule = modules.find(m => m.id === conn.source);
-      const targetModule = modules.find(m => m.id === conn.target);
+      const sourceModule = modules.find(m => m.id === conn.source) ||
+                          junctions.find(j => j.id === conn.source) ||
+                          (configuration?.building?.id === conn.source ? configuration.building : null);
+      const targetModule = modules.find(m => m.id === conn.target) ||
+                          junctions.find(j => j.id === conn.target);
 
       if (!sourceModule || !targetModule) return;
 
@@ -95,9 +98,10 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
       );
 
       // Ermittle connectionType und Labels vom Output/Input
+      // Bei Junctions gibt es keine outputs/inputs, daher Fallback
       const output = sourceModule.outputs?.find(o => o.id === conn.sourceHandle);
       const input = targetModule.inputs?.find(i => i.id === conn.targetHandle);
-      const connectionType = output?.connectionType || 'hydraulic';
+      const connectionType = output?.connectionType || input?.connectionType || 'hydraulic';
 
       const edgeId = conn.id || `${conn.source}-${conn.sourceHandle}-${conn.target}-${conn.targetHandle}`;
       newEdges.push({
@@ -233,10 +237,14 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
   const handleConnect = useCallback(
     (params) => {
       const modules = configuration?.modules || [];
+      const junctions = configuration?.junctions || [];
       const connections = configuration?.connections || [];
 
-      const sourceModule = modules.find(m => m.id === params.source);
-      const targetModule = modules.find(m => m.id === params.target);
+      const sourceModule = modules.find(m => m.id === params.source) ||
+                          junctions.find(j => j.id === params.source) ||
+                          (configuration?.building?.id === params.source ? configuration.building : null);
+      const targetModule = modules.find(m => m.id === params.target) ||
+                          junctions.find(j => j.id === params.target);
 
       if (!sourceModule || !targetModule) return;
 
