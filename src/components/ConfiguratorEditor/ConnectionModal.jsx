@@ -7,6 +7,7 @@ export default function ConnectionModal({ connection, sourceModule, targetModule
     dimension: connection.dimension || '',
     anschluss_eingang: connection.anschluss_eingang || '',
     anschluss_ausgang: connection.anschluss_ausgang || '',
+    preis_pro_meter: connection.preis_pro_meter || null,
   });
 
   useEffect(() => {
@@ -15,6 +16,7 @@ export default function ConnectionModal({ connection, sourceModule, targetModule
       dimension: connection.dimension || '',
       anschluss_eingang: connection.anschluss_eingang || '',
       anschluss_ausgang: connection.anschluss_ausgang || '',
+      preis_pro_meter: connection.preis_pro_meter || null,
     });
   }, [connection]);
 
@@ -149,6 +151,33 @@ export default function ConnectionModal({ connection, sourceModule, targetModule
               value={formData.dimension}
               onChange={(e) => setFormData({ ...formData, dimension: e.target.value })}
               placeholder="z.B. DN50, 3/4 Zoll"
+              style={{
+                width: '100%',
+                padding: '10px',
+                background: 'var(--bg-tertiary)',
+                border: '1px solid var(--border)',
+                borderRadius: '4px',
+                color: 'var(--text-primary)',
+                fontFamily: 'inherit',
+                fontSize: '14px',
+              }}
+            />
+          </div>
+
+          {/* Preis pro Meter */}
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '13px' }}>
+              Preis pro Meter (€)
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              value={formData.preis_pro_meter ?? ''}
+              onChange={(e) => setFormData({
+                ...formData,
+                preis_pro_meter: e.target.value ? parseFloat(e.target.value) : null
+              })}
+              placeholder="z.B. 15.50"
               style={{
                 width: '100%',
                 padding: '10px',

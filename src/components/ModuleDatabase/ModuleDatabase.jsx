@@ -308,6 +308,13 @@ function ModuleForm({ module, onSave, onCancel, isCreating }) {
             onChange={(v) => handleChange('properties', 'gewicht_kg', v)}
           />
           <FormField
+            label="Preis (€)"
+            type="number"
+            step="0.01"
+            value={formData.properties.preis_euro}
+            onChange={(v) => handleChange('properties', 'preis_euro', v)}
+          />
+          <FormField
             label="Leistung nominal (kW)"
             type="number"
             value={formData.properties.leistung_nominal_kw}

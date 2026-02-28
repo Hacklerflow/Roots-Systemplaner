@@ -105,6 +105,7 @@ export function createModuleTemplate(name = 'Neues Modul', moduleType = MODULE_T
       hersteller: 'Roots Energy',
       abmessungen: '',
       gewicht_kg: null,
+      preis_euro: null,
     },
     inputs: [],
     outputs: [],

@@ -13,6 +13,7 @@ export const initialModules = [
       leistung_nominal_kw: 12,
       abmessungen: '800 x 600 x 1200 mm',
       gewicht_kg: 180,
+      preis_euro: null,
     },
     inputs: [
       {
@@ -53,6 +54,7 @@ export const initialModules = [
       leistung_nominal_kw: 20,
       abmessungen: '900 x 700 x 1300 mm',
       gewicht_kg: 240,
+      preis_euro: null,
     },
     inputs: [
       {
@@ -93,6 +95,7 @@ export const initialModules = [
       leistung_nominal_kw: 35,
       abmessungen: '1000 x 800 x 1400 mm',
       gewicht_kg: 320,
+      preis_euro: null,
     },
     inputs: [
       {
@@ -133,6 +136,7 @@ export const initialModules = [
       leistung_nominal_kw: 50,
       abmessungen: '1200 x 800 x 1800 mm',
       gewicht_kg: 280,
+      preis_euro: null,
     },
     inputs: [],
     outputs: [
@@ -155,6 +159,7 @@ export const initialModules = [
       leistung_nominal_kw: 8,
       abmessungen: '2000 x 1200 x 100 mm',
       gewicht_kg: 85,
+      preis_euro: null,
     },
     inputs: [],
     outputs: [
@@ -177,6 +182,7 @@ export const initialModules = [
       abmessungen: '600 x 600 x 1800 mm',
       gewicht_kg: 120,
       speicherkapazität_kwh: 29,
+      preis_euro: null,
     },
     inputs: [
       {
@@ -212,6 +218,7 @@ export const initialModules = [
       abmessungen: '800 x 800 x 2000 mm',
       gewicht_kg: 210,
       speicherkapazität_kwh: 58,
+      preis_euro: null,
     },
     inputs: [
       {

@@ -18,6 +18,7 @@ export default function Stueckliste({ configuration }) {
       'Volumen (L)': module.properties?.volumen_liter || '',
       'Abmessungen': module.properties?.abmessungen || '',
       'Gewicht (kg)': module.properties?.gewicht_kg || '',
+      'Preis (€)': module.properties?.preis_euro || '',
       'Eingänge': module.inputs?.length || 0,
       'Ausgänge': module.outputs?.length || 0,
     }));
@@ -41,6 +42,10 @@ export default function Stueckliste({ configuration }) {
         'Verbindungstyp': CONNECTION_TYPE_LABELS[output?.connectionType] || '',
         'Länge (m)': conn.laenge_meter || '',
         'Dimension': conn.dimension || '',
+        'Preis/m (€)': conn.preis_pro_meter || '',
+        'Gesamtpreis (€)': conn.preis_pro_meter && conn.laenge_meter
+          ? (conn.preis_pro_meter * conn.laenge_meter).toFixed(2)
+          : '',
         'Anschluss Ausgang': conn.anschluss_ausgang || '',
         'Anschluss Eingang': conn.anschluss_eingang || '',
       };
@@ -134,6 +139,7 @@ export default function Stueckliste({ configuration }) {
               <th style={tableHeaderStyle}>Volumen</th>
               <th style={tableHeaderStyle}>Abmessungen</th>
               <th style={tableHeaderStyle}>Gewicht</th>
+              <th style={tableHeaderStyle}>Preis (€)</th>
               <th style={tableHeaderStyle}>Ein/Aus</th>
             </tr>
           </thead>
@@ -161,6 +167,9 @@ export default function Stueckliste({ configuration }) {
                   {module.properties?.gewicht_kg ? `${module.properties.gewicht_kg} kg` : '—'}
                 </td>
                 <td style={tableCellStyle}>
+                  {module.properties?.preis_euro ? module.properties.preis_euro : '—'}
+                </td>
+                <td style={tableCellStyle}>
                   {module.inputs?.length || 0} / {module.outputs?.length || 0}
                 </td>
               </tr>
@@ -185,6 +194,8 @@ export default function Stueckliste({ configuration }) {
                 <th style={tableHeaderStyle}>Typ</th>
                 <th style={tableHeaderStyle}>Länge</th>
                 <th style={tableHeaderStyle}>Dimension</th>
+                <th style={tableHeaderStyle}>Preis/m (€)</th>
+                <th style={tableHeaderStyle}>Gesamtpreis (€)</th>
                 <th style={tableHeaderStyle}>Anschluss Aus</th>
                 <th style={tableHeaderStyle}>Anschluss Ein</th>
               </tr>
@@ -220,6 +231,12 @@ export default function Stueckliste({ configuration }) {
                     <td style={tableCellStyle}>{CONNECTION_TYPE_LABELS[output?.connectionType] || '—'}</td>
                     <td style={tableCellStyle}>{conn.laenge_meter ? `${conn.laenge_meter} m` : '—'}</td>
                     <td style={tableCellStyle}>{conn.dimension || '—'}</td>
+                    <td style={tableCellStyle}>{conn.preis_pro_meter || '—'}</td>
+                    <td style={tableCellStyle}>
+                      {conn.preis_pro_meter && conn.laenge_meter
+                        ? (conn.preis_pro_meter * conn.laenge_meter).toFixed(2)
+                        : '—'}
+                    </td>
                     <td style={tableCellStyle}>{conn.anschluss_ausgang || '—'}</td>
                     <td style={tableCellStyle}>{conn.anschluss_eingang || '—'}</td>
                   </tr>
