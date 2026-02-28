@@ -5,10 +5,10 @@
  */
 export const MODULE_TYPES = {
   HEAT_PUMP: 'Wärmepumpe',
-  RECOOLER: 'Rückkühler',
-  STORAGE: 'Pufferspeicher',
-  SOLAR: 'Solarthermie',
-  CONSUMER: 'Verbraucher',
+  HUB: 'Hub',
+  SOURCE: 'Quelle',
+  STORAGE: 'Speicher',
+  SOLAR_THERMAL: 'Soletherme',
   BUILDING: 'Gebäude',
 };
 
@@ -72,8 +72,8 @@ export function createBuilding(name = 'Neues Gebäude') {
     inputs: [], // Gebäude hat keine Eingänge
     outputs: [
       // Standard-Ausgänge
-      createOutput('Heizung', CONNECTION_TYPES.HYDRAULIC, [MODULE_TYPES.HEAT_PUMP, MODULE_TYPES.STORAGE]),
-      createOutput('Strom 400V', CONNECTION_TYPES.ELECTRIC, [MODULE_TYPES.HEAT_PUMP]),
+      createOutput('Heizung', CONNECTION_TYPES.HYDRAULIC, [MODULE_TYPES.HUB, MODULE_TYPES.HEAT_PUMP, MODULE_TYPES.STORAGE]),
+      createOutput('Strom 400V', CONNECTION_TYPES.ELECTRIC, [MODULE_TYPES.HUB, MODULE_TYPES.HEAT_PUMP]),
     ],
   };
 }
@@ -94,7 +94,7 @@ export function createModuleInstance(moduleTemplate) {
 /**
  * Factory-Funktion für ein neues Modul-Template
  */
-export function createModuleTemplate(name = 'Neues Modul', moduleType = MODULE_TYPES.CONSUMER) {
+export function createModuleTemplate(name = 'Neues Modul', moduleType = MODULE_TYPES.HUB) {
   return {
     id: `template-${Date.now()}`,
     type: 'module',

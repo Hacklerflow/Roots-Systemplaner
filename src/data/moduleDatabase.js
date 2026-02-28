@@ -7,7 +7,7 @@ export const initialModules = [
     id: 'roots-hub-12',
     type: 'module',
     name: 'Roots Hub 12',
-    moduleType: MODULE_TYPES.HEAT_PUMP,
+    moduleType: MODULE_TYPES.HUB,
     properties: {
       hersteller: 'Roots Energy',
       leistung_nominal_kw: 12,
@@ -19,7 +19,7 @@ export const initialModules = [
         id: 'hub12-in-1',
         label: 'DN50 Quelle',
         connectionType: CONNECTION_TYPES.HYDRAULIC,
-        allowedModuleTypes: [MODULE_TYPES.RECOOLER, MODULE_TYPES.BUILDING],
+        allowedModuleTypes: [MODULE_TYPES.SOURCE, MODULE_TYPES.BUILDING],
       },
       {
         id: 'hub12-in-2',
@@ -33,7 +33,7 @@ export const initialModules = [
         id: 'hub12-out-1',
         label: 'DN50 Heizung',
         connectionType: CONNECTION_TYPES.HYDRAULIC,
-        allowedModuleTypes: [MODULE_TYPES.STORAGE, MODULE_TYPES.CONSUMER],
+        allowedModuleTypes: [MODULE_TYPES.STORAGE],
       },
       {
         id: 'hub12-out-2',
@@ -47,7 +47,7 @@ export const initialModules = [
     id: 'roots-hub-20',
     type: 'module',
     name: 'Roots Hub 20',
-    moduleType: MODULE_TYPES.HEAT_PUMP,
+    moduleType: MODULE_TYPES.HUB,
     properties: {
       hersteller: 'Roots Energy',
       leistung_nominal_kw: 20,
@@ -59,7 +59,7 @@ export const initialModules = [
         id: 'hub20-in-1',
         label: 'DN65 Quelle',
         connectionType: CONNECTION_TYPES.HYDRAULIC,
-        allowedModuleTypes: [MODULE_TYPES.RECOOLER, MODULE_TYPES.BUILDING],
+        allowedModuleTypes: [MODULE_TYPES.SOURCE, MODULE_TYPES.BUILDING],
       },
       {
         id: 'hub20-in-2',
@@ -73,7 +73,7 @@ export const initialModules = [
         id: 'hub20-out-1',
         label: 'DN65 Heizung',
         connectionType: CONNECTION_TYPES.HYDRAULIC,
-        allowedModuleTypes: [MODULE_TYPES.STORAGE, MODULE_TYPES.CONSUMER],
+        allowedModuleTypes: [MODULE_TYPES.STORAGE],
       },
       {
         id: 'hub20-out-2',
@@ -87,7 +87,7 @@ export const initialModules = [
     id: 'roots-hub-35',
     type: 'module',
     name: 'Roots Hub 35',
-    moduleType: MODULE_TYPES.HEAT_PUMP,
+    moduleType: MODULE_TYPES.HUB,
     properties: {
       hersteller: 'Roots Energy',
       leistung_nominal_kw: 35,
@@ -99,7 +99,7 @@ export const initialModules = [
         id: 'hub35-in-1',
         label: 'DN80 Quelle',
         connectionType: CONNECTION_TYPES.HYDRAULIC,
-        allowedModuleTypes: [MODULE_TYPES.RECOOLER, MODULE_TYPES.BUILDING],
+        allowedModuleTypes: [MODULE_TYPES.SOURCE, MODULE_TYPES.BUILDING],
       },
       {
         id: 'hub35-in-2',
@@ -113,7 +113,7 @@ export const initialModules = [
         id: 'hub35-out-1',
         label: 'DN80 Heizung',
         connectionType: CONNECTION_TYPES.HYDRAULIC,
-        allowedModuleTypes: [MODULE_TYPES.STORAGE, MODULE_TYPES.CONSUMER],
+        allowedModuleTypes: [MODULE_TYPES.STORAGE],
       },
       {
         id: 'hub35-out-2',
@@ -124,10 +124,10 @@ export const initialModules = [
     ],
   },
   {
-    id: 'rueckkuehler-basic',
+    id: 'quelle-basic',
     type: 'module',
-    name: 'Rückkühler Basic',
-    moduleType: MODULE_TYPES.RECOOLER,
+    name: 'Quelle Basic',
+    moduleType: MODULE_TYPES.SOURCE,
     properties: {
       hersteller: 'Roots Energy',
       leistung_nominal_kw: 50,
@@ -137,18 +137,18 @@ export const initialModules = [
     inputs: [],
     outputs: [
       {
-        id: 'recooler-out-1',
-        label: 'DN50 Kühlkreis',
+        id: 'quelle-out-1',
+        label: 'DN50 Quellkreis',
         connectionType: CONNECTION_TYPES.HYDRAULIC,
-        allowedModuleTypes: [MODULE_TYPES.HEAT_PUMP],
+        allowedModuleTypes: [MODULE_TYPES.HUB, MODULE_TYPES.HEAT_PUMP],
       },
     ],
   },
   {
-    id: 'solarthermie',
+    id: 'soletherme',
     type: 'module',
-    name: 'Solarthermie-Modul',
-    moduleType: MODULE_TYPES.SOLAR,
+    name: 'Soletherme-Modul',
+    moduleType: MODULE_TYPES.SOLAR_THERMAL,
     properties: {
       hersteller: 'Roots Energy',
       kollektorfläche_m2: 12,
@@ -159,7 +159,7 @@ export const initialModules = [
     inputs: [],
     outputs: [
       {
-        id: 'solar-out-1',
+        id: 'soletherme-out-1',
         label: 'DN32 Solar',
         connectionType: CONNECTION_TYPES.HYDRAULIC,
         allowedModuleTypes: [MODULE_TYPES.STORAGE],
@@ -183,13 +183,13 @@ export const initialModules = [
         id: 'puffer500-in-1',
         label: 'DN50 Ladung',
         connectionType: CONNECTION_TYPES.HYDRAULIC,
-        allowedModuleTypes: [MODULE_TYPES.HEAT_PUMP, MODULE_TYPES.SOLAR],
+        allowedModuleTypes: [MODULE_TYPES.HUB, MODULE_TYPES.HEAT_PUMP, MODULE_TYPES.SOLAR_THERMAL],
       },
       {
         id: 'puffer500-in-2',
         label: 'Steuerung',
         connectionType: CONNECTION_TYPES.CONTROL,
-        allowedModuleTypes: [MODULE_TYPES.HEAT_PUMP],
+        allowedModuleTypes: [MODULE_TYPES.HUB, MODULE_TYPES.HEAT_PUMP],
       },
     ],
     outputs: [
@@ -197,7 +197,7 @@ export const initialModules = [
         id: 'puffer500-out-1',
         label: 'DN50 Heizkreis',
         connectionType: CONNECTION_TYPES.HYDRAULIC,
-        allowedModuleTypes: [MODULE_TYPES.CONSUMER],
+        allowedModuleTypes: [],
       },
     ],
   },
@@ -218,13 +218,13 @@ export const initialModules = [
         id: 'puffer1000-in-1',
         label: 'DN65 Ladung',
         connectionType: CONNECTION_TYPES.HYDRAULIC,
-        allowedModuleTypes: [MODULE_TYPES.HEAT_PUMP, MODULE_TYPES.SOLAR],
+        allowedModuleTypes: [MODULE_TYPES.HUB, MODULE_TYPES.HEAT_PUMP, MODULE_TYPES.SOLAR_THERMAL],
       },
       {
         id: 'puffer1000-in-2',
         label: 'Steuerung',
         connectionType: CONNECTION_TYPES.CONTROL,
-        allowedModuleTypes: [MODULE_TYPES.HEAT_PUMP],
+        allowedModuleTypes: [MODULE_TYPES.HUB, MODULE_TYPES.HEAT_PUMP],
       },
     ],
     outputs: [
@@ -232,7 +232,7 @@ export const initialModules = [
         id: 'puffer1000-out-1',
         label: 'DN65 Heizkreis',
         connectionType: CONNECTION_TYPES.HYDRAULIC,
-        allowedModuleTypes: [MODULE_TYPES.CONSUMER],
+        allowedModuleTypes: [],
       },
     ],
   },
