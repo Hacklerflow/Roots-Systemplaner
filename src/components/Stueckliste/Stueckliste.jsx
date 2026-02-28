@@ -4,16 +4,13 @@ import { isBuilding, CONNECTION_TYPE_LABELS } from '../../data/types';
 export default function Stueckliste({ configuration }) {
   const { building, modules = [], connections = [] } = configuration || {};
 
-  const allModules = building ? [building, ...modules] : modules;
-
   const handleExportExcel = () => {
     // Erstelle Arbeitsblätter
     const wb = utils.book_new();
 
-    // Sheet 1: Module/Komponenten
-    const moduleData = allModules.map((module, index) => ({
+    // Sheet 1: Module/Komponenten (ohne Gebäude)
+    const moduleData = modules.map((module, index) => ({
       'Pos.': index + 1,
-      'Typ': isBuilding(module) ? 'Gebäude' : 'Modul',
       'Name': module.name || '',
       'Modultyp': module.moduleType || '',
       'Hersteller': module.properties?.hersteller || '',
@@ -30,8 +27,8 @@ export default function Stueckliste({ configuration }) {
 
     // Sheet 2: Verbindungen/Leitungen
     const connectionData = connections.map((conn, index) => {
-      const sourceModule = allModules.find(m => m.id === conn.source);
-      const targetModule = allModules.find(m => m.id === conn.target);
+      const sourceModule = modules.find(m => m.id === conn.source) || building;
+      const targetModule = modules.find(m => m.id === conn.target);
       const output = sourceModule?.outputs?.find(o => o.id === conn.sourceHandle);
       const input = targetModule?.inputs?.find(i => i.id === conn.targetHandle);
 
@@ -70,17 +67,43 @@ export default function Stueckliste({ configuration }) {
 
   return (
     <div style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto' }}>
-      {/* Header mit Export-Button */}
+      {/* Header mit Gebäude-Info */}
+      {building && (
+        <div style={{
+          background: 'var(--bg-secondary)',
+          border: '2px solid var(--accent)',
+          borderRadius: '8px',
+          padding: '24px',
+          marginBottom: '32px'
+        }}>
+          <h2 style={{ margin: 0, marginBottom: '16px', color: 'var(--accent)' }}>
+            {building.name}
+          </h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', fontSize: '13px' }}>
+            {building.properties?.baujahr && (
+              <div><span style={{ color: 'var(--text-secondary)' }}>Baujahr:</span> <strong>{building.properties.baujahr}</strong></div>
+            )}
+            {building.properties?.strasse && building.properties?.hausnummer && (
+              <div><span style={{ color: 'var(--text-secondary)' }}>Adresse:</span> <strong>{building.properties.strasse} {building.properties.hausnummer}</strong></div>
+            )}
+            {building.properties?.stockwerke && (
+              <div><span style={{ color: 'var(--text-secondary)' }}>Stockwerke:</span> <strong>{building.properties.stockwerke}</strong></div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Export-Button und Zusammenfassung */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
         <div>
-          <h2 style={{ margin: 0, marginBottom: '8px' }}>Stückliste</h2>
+          <h3 style={{ margin: 0, marginBottom: '8px' }}>Stückliste</h3>
           <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-            {building?.name || 'System'} • {allModules.length} Komponenten • {connections.length} Leitungen
+            {modules.length} Komponenten • {connections.length} Leitungen
           </div>
         </div>
         <button
           onClick={handleExportExcel}
-          disabled={allModules.length === 0 && connections.length === 0}
+          disabled={modules.length === 0 && connections.length === 0}
           style={{
             padding: '12px 24px',
             background: 'var(--success)',
@@ -88,10 +111,10 @@ export default function Stueckliste({ configuration }) {
             border: 'none',
             borderRadius: '4px',
             fontWeight: 600,
-            cursor: allModules.length === 0 && connections.length === 0 ? 'not-allowed' : 'pointer',
+            cursor: modules.length === 0 && connections.length === 0 ? 'not-allowed' : 'pointer',
             fontFamily: 'inherit',
             fontSize: '14px',
-            opacity: allModules.length === 0 && connections.length === 0 ? 0.5 : 1,
+            opacity: modules.length === 0 && connections.length === 0 ? 0.5 : 1,
           }}
         >
           📥 Excel Export
@@ -104,7 +127,6 @@ export default function Stueckliste({ configuration }) {
           <thead>
             <tr style={{ background: 'var(--bg-secondary)', borderBottom: '2px solid var(--border)' }}>
               <th style={tableHeaderStyle}>Pos.</th>
-              <th style={tableHeaderStyle}>Typ</th>
               <th style={tableHeaderStyle}>Name</th>
               <th style={tableHeaderStyle}>Modultyp</th>
               <th style={tableHeaderStyle}>Hersteller</th>
@@ -116,7 +138,7 @@ export default function Stueckliste({ configuration }) {
             </tr>
           </thead>
           <tbody>
-            {allModules.map((module, index) => (
+            {modules.map((module, index) => (
               <tr
                 key={module.id}
                 style={{
@@ -125,7 +147,6 @@ export default function Stueckliste({ configuration }) {
                 }}
               >
                 <td style={tableCellStyle}>{index + 1}</td>
-                <td style={tableCellStyle}>{isBuilding(module) ? 'Gebäude' : 'Modul'}</td>
                 <td style={{ ...tableCellStyle, fontWeight: 600 }}>{module.name}</td>
                 <td style={tableCellStyle}>{module.moduleType}</td>
                 <td style={tableCellStyle}>{module.properties?.hersteller || '—'}</td>
@@ -170,8 +191,8 @@ export default function Stueckliste({ configuration }) {
             </thead>
             <tbody>
               {connections.map((conn, index) => {
-                const sourceModule = allModules.find(m => m.id === conn.source);
-                const targetModule = allModules.find(m => m.id === conn.target);
+                const sourceModule = modules.find(m => m.id === conn.source) || building;
+                const targetModule = modules.find(m => m.id === conn.target);
                 const output = sourceModule?.outputs?.find(o => o.id === conn.sourceHandle);
                 const input = targetModule?.inputs?.find(i => i.id === conn.targetHandle);
 
