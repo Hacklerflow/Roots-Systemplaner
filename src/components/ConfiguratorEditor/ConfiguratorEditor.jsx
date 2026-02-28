@@ -386,7 +386,7 @@ function ConfiguratorEditorInner({ modules: moduleTemplates, configuration, setC
         style={{
           position: 'absolute',
           top: '16px',
-          right: '16px',
+          left: '16px',
           zIndex: 10,
           display: 'flex',
           gap: '8px',
