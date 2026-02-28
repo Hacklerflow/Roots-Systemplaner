@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import {
   ReactFlow,
+  ReactFlowProvider,
   Background,
   Controls,
   MiniMap,
@@ -29,7 +30,21 @@ const edgeTypes = {
   warning: WarningEdge,
 };
 
+// Wrapper Komponente mit ReactFlowProvider
 export default function ConfiguratorEditor({ modules: moduleTemplates, configuration, setConfiguration }) {
+  return (
+    <ReactFlowProvider>
+      <ConfiguratorEditorInner
+        modules={moduleTemplates}
+        configuration={configuration}
+        setConfiguration={setConfiguration}
+      />
+    </ReactFlowProvider>
+  );
+}
+
+// Innere Komponente die useReactFlow verwenden kann
+function ConfiguratorEditorInner({ modules: moduleTemplates, configuration, setConfiguration }) {
   const reactFlowInstance = useReactFlow();
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
