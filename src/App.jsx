@@ -8,6 +8,7 @@ import Leitungen from './components/Leitungen/Leitungen';
 import ErrorBoundary from './components/ErrorBoundary';
 import { initialModules } from './data/moduleDatabase';
 import { initialLeitungen } from './data/leitungskatalog';
+import { initialVerbindungsarten } from './data/verbindungsartenkatalog';
 
 function App() {
   const [activeTab, setActiveTab] = useState('konfigurator');
@@ -69,6 +70,24 @@ function App() {
   useEffect(() => {
     localStorage.setItem('roots-leitungskatalog', JSON.stringify(leitungskatalog));
   }, [leitungskatalog]);
+
+  // Verbindungsarten-Katalog State (mit localStorage Persistenz)
+  const [verbindungsartenkatalog, setVerbindungsartenkatalog] = useState(() => {
+    try {
+      const stored = localStorage.getItem('roots-verbindungsartenkatalog');
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch (e) {
+      console.error('Fehler beim Laden des Verbindungsartenkatalogs:', e);
+      localStorage.removeItem('roots-verbindungsartenkatalog');
+    }
+    return initialVerbindungsarten;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('roots-verbindungsartenkatalog', JSON.stringify(verbindungsartenkatalog));
+  }, [verbindungsartenkatalog]);
 
   // Konfigurations State (STRUKTUR: building + modules + connections)
   const [configuration, setConfiguration] = useState(() => {
@@ -371,8 +390,9 @@ function App() {
 
           {activeTab === 'verbindungen' && (
             <Verbindungen
-              configuration={configuration}
-              setConfiguration={setConfiguration}
+              verbindungsartenkatalog={verbindungsartenkatalog}
+              setVerbindungsartenkatalog={setVerbindungsartenkatalog}
+              leitungskatalog={leitungskatalog}
             />
           )}
 
