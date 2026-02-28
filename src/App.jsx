@@ -428,6 +428,7 @@ function App() {
             <Leitungen
               leitungskatalog={leitungskatalog}
               setLeitungskatalog={setLeitungskatalog}
+              dimensionskatalog={dimensionskatalog}
             />
           )}
 

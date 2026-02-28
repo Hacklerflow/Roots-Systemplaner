@@ -1,9 +1,14 @@
 import { useState } from 'react';
 import { CONNECTION_TYPES, CONNECTION_TYPE_LABELS } from '../../data/types';
 
-export default function Leitungen({ leitungskatalog, setLeitungskatalog }) {
+export default function Leitungen({ leitungskatalog, setLeitungskatalog, dimensionskatalog = [] }) {
   const [editingLeitung, setEditingLeitung] = useState(null);
-  const [newLeitung, setNewLeitung] = useState({ connectionType: CONNECTION_TYPES.HYDRAULIC, dimension: '', preis_pro_meter: null });
+  const [newLeitung, setNewLeitung] = useState({
+    connectionType: CONNECTION_TYPES.HYDRAULIC,
+    dimension: '',
+    material: '',
+    preis_pro_meter: null
+  });
 
   const handleAdd = () => {
     if (!newLeitung.dimension || !newLeitung.preis_pro_meter) {
@@ -17,7 +22,12 @@ export default function Leitungen({ leitungskatalog, setLeitungskatalog }) {
     };
 
     setLeitungskatalog([...leitungskatalog, leitung]);
-    setNewLeitung({ connectionType: CONNECTION_TYPES.HYDRAULIC, dimension: '', preis_pro_meter: null });
+    setNewLeitung({
+      connectionType: CONNECTION_TYPES.HYDRAULIC,
+      dimension: '',
+      material: '',
+      preis_pro_meter: null
+    });
   };
 
   const handleUpdate = (id, updates) => {
@@ -34,11 +44,18 @@ export default function Leitungen({ leitungskatalog, setLeitungskatalog }) {
     return leitungskatalog.filter(l => l.connectionType === type);
   };
 
+  // Verfügbare Dimensionen für den ausgewählten Verbindungstyp
+  const getAvailableDimensionen = (connectionType) => {
+    return dimensionskatalog
+      .filter(d => d.connectionType === connectionType)
+      .map(d => d.name);
+  };
+
   return (
     <div style={{ padding: '32px', maxWidth: '1400px', margin: '0 auto' }}>
       <h2 style={{ marginTop: 0, marginBottom: '8px' }}>Leitungskatalog</h2>
       <p style={{ color: 'var(--text-secondary)', marginBottom: '32px', fontSize: '14px' }}>
-        Verwalte verfügbare Leitungstypen mit Dimensionen und Preisen pro Meter
+        Verwalte verfügbare Leitungstypen mit Dimensionen, Material und Preisen pro Meter
       </p>
 
       {/* Hydraulische Leitungen */}
@@ -46,6 +63,7 @@ export default function Leitungen({ leitungskatalog, setLeitungskatalog }) {
         title="Hydraulische Leitungen"
         leitungen={getLeitungenByType(CONNECTION_TYPES.HYDRAULIC)}
         connectionType={CONNECTION_TYPES.HYDRAULIC}
+        dimensionen={getAvailableDimensionen(CONNECTION_TYPES.HYDRAULIC)}
         editingLeitung={editingLeitung}
         setEditingLeitung={setEditingLeitung}
         onUpdate={handleUpdate}
@@ -57,6 +75,7 @@ export default function Leitungen({ leitungskatalog, setLeitungskatalog }) {
         title="Elektrische Leitungen"
         leitungen={getLeitungenByType(CONNECTION_TYPES.ELECTRIC)}
         connectionType={CONNECTION_TYPES.ELECTRIC}
+        dimensionen={getAvailableDimensionen(CONNECTION_TYPES.ELECTRIC)}
         editingLeitung={editingLeitung}
         setEditingLeitung={setEditingLeitung}
         onUpdate={handleUpdate}
@@ -68,6 +87,7 @@ export default function Leitungen({ leitungskatalog, setLeitungskatalog }) {
         title="Steuerungsleitungen"
         leitungen={getLeitungenByType(CONNECTION_TYPES.CONTROL)}
         connectionType={CONNECTION_TYPES.CONTROL}
+        dimensionen={getAvailableDimensionen(CONNECTION_TYPES.CONTROL)}
         editingLeitung={editingLeitung}
         setEditingLeitung={setEditingLeitung}
         onUpdate={handleUpdate}
@@ -85,14 +105,14 @@ export default function Leitungen({ leitungskatalog, setLeitungskatalog }) {
         }}
       >
         <h3 style={{ marginTop: 0, marginBottom: '16px' }}>Neue Leitung hinzufügen</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr 200px 120px', gap: '12px', alignItems: 'end' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr 1fr 150px 120px', gap: '12px', alignItems: 'end' }}>
           <div>
             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '13px' }}>
               Verbindungstyp
             </label>
             <select
               value={newLeitung.connectionType}
-              onChange={(e) => setNewLeitung({ ...newLeitung, connectionType: e.target.value })}
+              onChange={(e) => setNewLeitung({ ...newLeitung, connectionType: e.target.value, dimension: '' })}
               style={{
                 width: '100%',
                 padding: '10px',
@@ -114,11 +134,41 @@ export default function Leitungen({ leitungskatalog, setLeitungskatalog }) {
             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '13px' }}>
               Dimension
             </label>
-            <input
-              type="text"
+            <select
               value={newLeitung.dimension}
               onChange={(e) => setNewLeitung({ ...newLeitung, dimension: e.target.value })}
-              placeholder="z.B. DN50, NYM 3x1.5mm²"
+              style={{
+                width: '100%',
+                padding: '10px',
+                background: 'var(--bg-tertiary)',
+                border: '1px solid var(--border)',
+                borderRadius: '4px',
+                color: 'var(--text-primary)',
+                fontFamily: 'inherit',
+                fontSize: '14px',
+              }}
+            >
+              <option value="">Bitte wählen</option>
+              {getAvailableDimensionen(newLeitung.connectionType).map(dim => (
+                <option key={dim} value={dim}>{dim}</option>
+              ))}
+            </select>
+            {getAvailableDimensionen(newLeitung.connectionType).length === 0 && (
+              <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                Keine Dimensionen im Dimensionskatalog
+              </div>
+            )}
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '13px' }}>
+              Material
+            </label>
+            <input
+              type="text"
+              value={newLeitung.material}
+              onChange={(e) => setNewLeitung({ ...newLeitung, material: e.target.value })}
+              placeholder="z.B. Kupfer, Stahl"
               style={{
                 width: '100%',
                 padding: '10px',
@@ -177,7 +227,7 @@ export default function Leitungen({ leitungskatalog, setLeitungskatalog }) {
   );
 }
 
-function Section({ title, leitungen, connectionType, editingLeitung, setEditingLeitung, onUpdate, onDelete }) {
+function Section({ title, leitungen, connectionType, dimensionen, editingLeitung, setEditingLeitung, onUpdate, onDelete }) {
   return (
     <div style={{ marginBottom: '32px' }}>
       <h3 style={{ marginBottom: '16px', color: 'var(--accent)' }}>{title}</h3>
@@ -190,6 +240,7 @@ function Section({ title, leitungen, connectionType, editingLeitung, setEditingL
           <thead>
             <tr style={{ background: 'var(--bg-tertiary)', borderBottom: '2px solid var(--border)' }}>
               <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600, fontSize: '13px' }}>Dimension</th>
+              <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600, fontSize: '13px' }}>Material</th>
               <th style={{ padding: '12px', textAlign: 'right', fontWeight: 600, fontSize: '13px' }}>Preis/m (€)</th>
               <th style={{ padding: '12px', textAlign: 'right', fontWeight: 600, fontSize: '13px' }}>Aktionen</th>
             </tr>
@@ -197,10 +248,10 @@ function Section({ title, leitungen, connectionType, editingLeitung, setEditingL
           <tbody>
             {leitungen.map((leitung) => (
               <tr key={leitung.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                {/* Dimension */}
                 <td style={{ padding: '12px' }}>
                   {editingLeitung === leitung.id ? (
-                    <input
-                      type="text"
+                    <select
                       value={leitung.dimension}
                       onChange={(e) => onUpdate(leitung.id, { dimension: e.target.value })}
                       style={{
@@ -213,11 +264,42 @@ function Section({ title, leitungen, connectionType, editingLeitung, setEditingL
                         fontFamily: 'inherit',
                         fontSize: '13px',
                       }}
-                    />
+                    >
+                      <option value="">Bitte wählen</option>
+                      {dimensionen.map(dim => (
+                        <option key={dim} value={dim}>{dim}</option>
+                      ))}
+                    </select>
                   ) : (
-                    <span style={{ fontSize: '14px' }}>{leitung.dimension}</span>
+                    <span style={{ fontSize: '14px' }}>{leitung.dimension || '—'}</span>
                   )}
                 </td>
+
+                {/* Material */}
+                <td style={{ padding: '12px' }}>
+                  {editingLeitung === leitung.id ? (
+                    <input
+                      type="text"
+                      value={leitung.material || ''}
+                      onChange={(e) => onUpdate(leitung.id, { material: e.target.value })}
+                      placeholder="z.B. Kupfer"
+                      style={{
+                        width: '100%',
+                        padding: '6px 8px',
+                        background: 'var(--bg-tertiary)',
+                        border: '1px solid var(--border)',
+                        borderRadius: '4px',
+                        color: 'var(--text-primary)',
+                        fontFamily: 'inherit',
+                        fontSize: '13px',
+                      }}
+                    />
+                  ) : (
+                    <span style={{ fontSize: '14px' }}>{leitung.material || '—'}</span>
+                  )}
+                </td>
+
+                {/* Preis */}
                 <td style={{ padding: '12px', textAlign: 'right' }}>
                   {editingLeitung === leitung.id ? (
                     <input
@@ -241,6 +323,8 @@ function Section({ title, leitungen, connectionType, editingLeitung, setEditingL
                     <span style={{ fontSize: '14px' }}>{leitung.preis_pro_meter ?? '—'}</span>
                   )}
                 </td>
+
+                {/* Aktionen */}
                 <td style={{ padding: '12px', textAlign: 'right' }}>
                   <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                     {editingLeitung === leitung.id ? (
