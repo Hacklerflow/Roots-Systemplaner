@@ -8,10 +8,39 @@ import { initialModules } from './data/moduleDatabase';
 function App() {
   const [activeTab, setActiveTab] = useState('konfigurator');
 
+  // Keyboard shortcut: Cmd+Shift+K or Ctrl+Shift+K zum Zurücksetzen
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'K') {
+        if (confirm('Alle Daten löschen und App zurücksetzen? Diese Aktion kann nicht rückgängig gemacht werden.')) {
+          localStorage.clear();
+          window.location.reload();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   // Moduldatenbank State (mit localStorage Persistenz)
   const [modules, setModules] = useState(() => {
-    const stored = localStorage.getItem('roots-modules');
-    return stored ? JSON.parse(stored) : initialModules;
+    try {
+      const stored = localStorage.getItem('roots-modules');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        // Validiere dass es ein Array ist und jedes Modul inputs/outputs hat
+        if (Array.isArray(parsed) && parsed.every(m => Array.isArray(m.inputs) && Array.isArray(m.outputs))) {
+          return parsed;
+        } else {
+          console.warn('Ungültige Moduldaten in localStorage, verwende Standardmodule');
+          localStorage.removeItem('roots-modules');
+        }
+      }
+    } catch (e) {
+      console.error('Fehler beim Laden der Module:', e);
+      localStorage.removeItem('roots-modules');
+    }
+    return initialModules;
   });
 
   useEffect(() => {
@@ -20,10 +49,10 @@ function App() {
 
   // Konfigurations State (STRUKTUR: building + modules + connections)
   const [configuration, setConfiguration] = useState(() => {
-    const stored = localStorage.getItem('roots-configuration');
+    try {
+      const stored = localStorage.getItem('roots-configuration');
 
-    if (stored) {
-      try {
+      if (stored) {
         const parsed = JSON.parse(stored);
 
         // Migration: Altes Format zu neuem Format
@@ -39,15 +68,53 @@ function App() {
 
         // Neues Format validieren
         if (parsed.hasOwnProperty('modules') && parsed.hasOwnProperty('connections')) {
+          // Validiere dass modules ein Array ist
+          if (!Array.isArray(parsed.modules) || !Array.isArray(parsed.connections)) {
+            console.warn('Ungültige Konfiguration in localStorage, wird zurückgesetzt');
+            localStorage.removeItem('roots-configuration');
+            return {
+              building: null,
+              modules: [],
+              connections: [],
+            };
+          }
+
+          // Validiere dass jedes Modul inputs/outputs hat
+          const allModulesValid = parsed.modules.every(m =>
+            m && Array.isArray(m.inputs) && Array.isArray(m.outputs)
+          );
+
+          if (!allModulesValid) {
+            console.warn('Module haben ungültige Struktur, Konfiguration wird zurückgesetzt');
+            localStorage.removeItem('roots-configuration');
+            return {
+              building: null,
+              modules: [],
+              connections: [],
+            };
+          }
+
+          // Validiere building falls vorhanden
+          if (parsed.building && (!Array.isArray(parsed.building.inputs) || !Array.isArray(parsed.building.outputs))) {
+            console.warn('Gebäude hat ungültige Struktur, Konfiguration wird zurückgesetzt');
+            localStorage.removeItem('roots-configuration');
+            return {
+              building: null,
+              modules: [],
+              connections: [],
+            };
+          }
+
           return {
             building: parsed.building || null,
             modules: parsed.modules || [],
             connections: parsed.connections || [],
           };
         }
-      } catch (e) {
-        console.error('Fehler beim Laden der Konfiguration:', e);
       }
+    } catch (e) {
+      console.error('Fehler beim Laden der Konfiguration:', e);
+      localStorage.removeItem('roots-configuration');
     }
 
     // Default: leere Konfiguration
