@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import ConfiguratorEditor from './components/ConfiguratorEditor/ConfiguratorEditor';
 import ListView from './components/ListView/ListView';
 import ModuleDatabase from './components/ModuleDatabase/ModuleDatabase';
+import Stueckliste from './components/Stueckliste/Stueckliste';
 import ErrorBoundary from './components/ErrorBoundary';
 import { initialModules } from './data/moduleDatabase';
 
@@ -162,6 +163,12 @@ function App() {
           Listenansicht
         </button>
         <button
+          className={`tab ${activeTab === 'stueckliste' ? 'active' : ''}`}
+          onClick={() => setActiveTab('stueckliste')}
+        >
+          Stückliste
+        </button>
+        <button
           className={`tab ${activeTab === 'datenbank' ? 'active' : ''}`}
           onClick={() => setActiveTab('datenbank')}
         >
@@ -181,6 +188,8 @@ function App() {
           )}
 
           {activeTab === 'liste' && <ListView configuration={configuration} />}
+
+          {activeTab === 'stueckliste' && <Stueckliste configuration={configuration} />}
 
           {activeTab === 'datenbank' && (
             <ModuleDatabase modules={modules} setModules={setModules} />
