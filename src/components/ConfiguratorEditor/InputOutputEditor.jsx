@@ -105,6 +105,7 @@ export default function InputOutputEditor({ connector, type, onUpdate, onDelete 
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
           {moduleTypeOptions.map(moduleType => (
             <button
+              type="button"
               key={moduleType}
               onClick={(e) => {
                 e.stopPropagation();
@@ -131,6 +132,7 @@ export default function InputOutputEditor({ connector, type, onUpdate, onDelete 
 
       {/* Delete Button */}
       <button
+        type="button"
         onClick={(e) => {
           e.stopPropagation();
           onDelete();

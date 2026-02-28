@@ -190,6 +190,7 @@ export default function ElementModal({ element, onClose, onSave, onDelete }) {
                   />
                 ))}
                 <button
+                  type="button"
                   onClick={handleAddInput}
                   disabled={formData.inputs.length >= 12}
                   style={{
@@ -224,6 +225,7 @@ export default function ElementModal({ element, onClose, onSave, onDelete }) {
                 />
               ))}
               <button
+                type="button"
                 onClick={handleAddOutput}
                 disabled={formData.outputs.length >= 36}
                 style={{
