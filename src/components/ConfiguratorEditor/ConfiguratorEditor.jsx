@@ -578,15 +578,6 @@ function ConfiguratorEditorInner({ modules: moduleTemplates, configuration, setC
           }}
         />
       )}
-
-      {/* Hidden File Input für Import */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept=".json"
-        onChange={handleImportConfiguration}
-        style={{ display: 'none' }}
-      />
     </div>
   );
 }
