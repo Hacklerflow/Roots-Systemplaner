@@ -57,29 +57,6 @@ export default function ModuleNode({ data }) {
         );
       })}
 
-      {/* Eingänge - Labels (außerhalb links) */}
-      {inputs.map((input, index) => {
-        const total = inputs.length;
-        const yOffset = total === 1 ? 50 : (100 / (total + 1)) * (index + 1);
-
-        return (
-          <div
-            key={`label-${input.id}`}
-            style={{
-              position: 'absolute',
-              right: 'calc(100% + 8px)',
-              top: `calc(${yOffset}% - 8px)`,
-              fontSize: '10px',
-              color: 'var(--text-secondary)',
-              pointerEvents: 'none',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {input.label}
-          </div>
-        );
-      })}
-
       {/* Ausgänge - Handles */}
       {outputs.map((output, index) => {
         const total = outputs.length;
@@ -99,29 +76,6 @@ export default function ModuleNode({ data }) {
               border: '2px solid var(--bg-primary)',
             }}
           />
-        );
-      })}
-
-      {/* Ausgänge - Labels (außerhalb rechts) */}
-      {outputs.map((output, index) => {
-        const total = outputs.length;
-        const yOffset = total === 1 ? 50 : (100 / (total + 1)) * (index + 1);
-
-        return (
-          <div
-            key={`label-${output.id}`}
-            style={{
-              position: 'absolute',
-              left: 'calc(100% + 8px)',
-              top: `calc(${yOffset}% - 8px)`,
-              fontSize: '10px',
-              color: 'var(--text-secondary)',
-              pointerEvents: 'none',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {output.label}
-          </div>
         );
       })}
     </div>

@@ -75,8 +75,9 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
         conn.targetHandle
       );
 
-      // Ermittle connectionType vom Output
+      // Ermittle connectionType und Labels vom Output/Input
       const output = sourceModule.outputs?.find(o => o.id === conn.sourceHandle);
+      const input = targetModule.inputs?.find(i => i.id === conn.targetHandle);
       const connectionType = output?.connectionType || 'hydraulic';
 
       const edgeId = conn.id || `${conn.source}-${conn.sourceHandle}-${conn.target}-${conn.targetHandle}`;
@@ -93,6 +94,8 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
           warning: check.warning,
           warningReason: check.reason,
           onClick: openConnectionModal,
+          sourceLabel: output?.label || '',
+          targetLabel: input?.label || '',
         },
       });
     });

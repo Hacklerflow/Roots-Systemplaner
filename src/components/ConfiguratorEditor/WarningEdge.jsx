@@ -27,6 +27,10 @@ export default function WarningEdge({
     }
   };
 
+  // Labels für Ausgang und Eingang
+  const sourceLabel = data.sourceLabel || '';
+  const targetLabel = data.targetLabel || '';
+
   return (
     <>
       <BaseEdge
@@ -49,7 +53,49 @@ export default function WarningEdge({
       />
 
       <EdgeLabelRenderer>
-        {/* Warning Icon - nur bei Warnung */}
+        {/* Source Label (Ausgang) - näher am Start */}
+        {sourceLabel && (
+          <div
+            style={{
+              position: 'absolute',
+              transform: `translate(-50%, -50%) translate(${sourceX + (labelX - sourceX) * 0.25}px, ${sourceY + (labelY - sourceY) * 0.25 - 20}px)`,
+              background: '#000000',
+              color: 'var(--text-primary)',
+              padding: '4px 8px',
+              borderRadius: '4px',
+              fontSize: '11px',
+              fontWeight: 500,
+              pointerEvents: 'none',
+              whiteSpace: 'nowrap',
+              border: '1px solid var(--border)',
+            }}
+          >
+            {sourceLabel}
+          </div>
+        )}
+
+        {/* Target Label (Eingang) - näher am Ende */}
+        {targetLabel && (
+          <div
+            style={{
+              position: 'absolute',
+              transform: `translate(-50%, -50%) translate(${targetX + (labelX - targetX) * 0.25}px, ${targetY + (labelY - targetY) * 0.25 - 20}px)`,
+              background: '#000000',
+              color: 'var(--text-primary)',
+              padding: '4px 8px',
+              borderRadius: '4px',
+              fontSize: '11px',
+              fontWeight: 500,
+              pointerEvents: 'none',
+              whiteSpace: 'nowrap',
+              border: '1px solid var(--border)',
+            }}
+          >
+            {targetLabel}
+          </div>
+        )}
+
+        {/* Warning Icon - in der Mitte */}
         {data.warning && (
           <div
             style={{
