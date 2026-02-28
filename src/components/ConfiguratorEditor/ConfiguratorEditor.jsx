@@ -6,6 +6,7 @@ import {
   MiniMap,
   useNodesState,
   useEdgesState,
+  useReactFlow,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
@@ -29,6 +30,7 @@ const edgeTypes = {
 };
 
 export default function ConfiguratorEditor({ modules: moduleTemplates, configuration, setConfiguration }) {
+  const reactFlowInstance = useReactFlow();
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [selectedElement, setSelectedElement] = useState(null);
@@ -75,6 +77,7 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
         data: {
           label: junction.label || '',
           onLabelChange: (newLabel) => handleJunctionLabelChange(junction.id, newLabel),
+          onDelete: () => handleDeleteJunction(junction.id),
         },
       });
     });
@@ -171,6 +174,14 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
 
   const handleAddModule = (moduleTemplate) => {
     const moduleInstance = createModuleInstance(moduleTemplate);
+
+    // Platziere in der Mitte der aktuellen Ansicht
+    const viewport = reactFlowInstance.getViewport();
+    const centerX = (window.innerWidth / 2 - viewport.x) / viewport.zoom;
+    const centerY = (window.innerHeight / 2 - viewport.y) / viewport.zoom;
+
+    moduleInstance.position = { x: centerX - 110, y: centerY - 60 }; // Zentriert am Modul
+
     setConfiguration({
       ...configuration,
       modules: [...(configuration?.modules || []), moduleInstance],
@@ -202,10 +213,30 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
 
   const handleAddJunction = () => {
     const junction = createJunction();
+
+    // Platziere in der Mitte der aktuellen Ansicht
+    const viewport = reactFlowInstance.getViewport();
+    const centerX = (window.innerWidth / 2 - viewport.x) / viewport.zoom;
+    const centerY = (window.innerHeight / 2 - viewport.y) / viewport.zoom;
+
+    junction.position = { x: centerX - 12, y: centerY - 12 }; // Zentriert am Punkt
+
     setConfiguration({
       ...configuration,
       junctions: [...(configuration?.junctions || []), junction],
     });
+  };
+
+  const handleDeleteJunction = (junctionId) => {
+    if (confirm('Knotenpunkt wirklich löschen?')) {
+      setConfiguration({
+        ...configuration,
+        junctions: (configuration?.junctions || []).filter((j) => j.id !== junctionId),
+        connections: (configuration?.connections || []).filter(
+          (c) => c.source !== junctionId && c.target !== junctionId
+        ),
+      });
+    }
   };
 
   const handleJunctionLabelChange = (junctionId, newLabel) => {
@@ -383,40 +414,22 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
         )}
 
         {hasBuilding && (
-          <>
-            <button
-              onClick={handleAddJunction}
-              style={{
-                padding: '10px 16px',
-                background: 'var(--accent)',
-                color: 'var(--bg-primary)',
-                border: 'none',
-                borderRadius: '4px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-                fontSize: '13px',
-              }}
-            >
-              + Knotenpunkt
-            </button>
-            <button
-              onClick={handleClearConfiguration}
-              style={{
-                padding: '10px 16px',
-                background: 'var(--error)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-                fontSize: '13px',
-              }}
-            >
-              Konfiguration löschen
-            </button>
-          </>
+          <button
+            onClick={handleClearConfiguration}
+            style={{
+              padding: '10px 16px',
+              background: 'var(--error)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              fontSize: '13px',
+            }}
+          >
+            Konfiguration löschen
+          </button>
         )}
       </div>
 
@@ -480,11 +493,31 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
           }}
         >
           <h3 style={{ marginTop: 0, marginBottom: '16px', fontSize: '14px' }}>
-            Module hinzufügen
+            Elemente hinzufügen
           </h3>
 
-          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
-            Ziehe eine Verbindung von einem Ausgang zu einem Eingang
+          {/* Knotenpunkt Button */}
+          <button
+            onClick={handleAddJunction}
+            style={{
+              width: '100%',
+              padding: '10px',
+              marginBottom: '16px',
+              background: 'var(--accent)',
+              color: 'var(--bg-primary)',
+              border: 'none',
+              borderRadius: '4px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              fontSize: '13px',
+            }}
+          >
+            + Knotenpunkt
+          </button>
+
+          <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '12px', fontWeight: 600 }}>
+            MODULE
           </div>
 
           {moduleTemplates.map((template) => (

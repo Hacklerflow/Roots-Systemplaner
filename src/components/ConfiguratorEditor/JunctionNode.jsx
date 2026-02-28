@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { Handle, Position } from '@xyflow/react';
 
 export default function JunctionNode({ data }) {
-  const { label = '', onLabelChange } = data;
+  const { label = '', onLabelChange, onDelete } = data;
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(label);
+  const [isHovered, setIsHovered] = useState(false);
 
   const handleClick = () => {
     setIsEditing(true);
@@ -34,7 +35,11 @@ export default function JunctionNode({ data }) {
   ];
 
   return (
-    <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '12px' }}>
+    <div
+      style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '12px' }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       {/* Knotenpunkt (Punkt) */}
       <div
         onClick={handleClick}
@@ -78,6 +83,38 @@ export default function JunctionNode({ data }) {
             />
           </div>
         ))}
+
+        {/* Delete Button (erscheint bei Hover) */}
+        {isHovered && onDelete && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+            style={{
+              position: 'absolute',
+              top: '-8px',
+              right: '-8px',
+              width: '16px',
+              height: '16px',
+              borderRadius: '50%',
+              background: '#ff4444',
+              border: '2px solid var(--bg-primary)',
+              color: '#fff',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '10px',
+              fontWeight: 'bold',
+              padding: 0,
+              zIndex: 10,
+            }}
+            title="Knotenpunkt löschen"
+          >
+            ×
+          </button>
+        )}
       </div>
 
       {/* Label (rechts vom Punkt) */}
