@@ -53,12 +53,12 @@ export default function WarningEdge({
       />
 
       <EdgeLabelRenderer>
-        {/* Source Label (Ausgang) - näher am Start */}
+        {/* Source Label (Ausgang) - mit mehr Abstand zum Modul */}
         {sourceLabel && (
           <div
             style={{
               position: 'absolute',
-              transform: `translate(-50%, -50%) translate(${sourceX + (labelX - sourceX) * 0.25}px, ${sourceY + (labelY - sourceY) * 0.25 - 20}px)`,
+              transform: `translate(-50%, -50%) translate(${sourceX + (labelX - sourceX) * 0.4}px, ${sourceY + (labelY - sourceY) * 0.4 - 20}px)`,
               background: '#000000',
               color: 'var(--text-primary)',
               padding: '4px 8px',
@@ -74,12 +74,12 @@ export default function WarningEdge({
           </div>
         )}
 
-        {/* Target Label (Eingang) - näher am Ende */}
+        {/* Target Label (Eingang) - mit mehr Abstand zum Modul */}
         {targetLabel && (
           <div
             style={{
               position: 'absolute',
-              transform: `translate(-50%, -50%) translate(${targetX + (labelX - targetX) * 0.25}px, ${targetY + (labelY - targetY) * 0.25 - 20}px)`,
+              transform: `translate(-50%, -50%) translate(${targetX + (labelX - targetX) * 0.4}px, ${targetY + (labelY - targetY) * 0.4 - 20}px)`,
               background: '#000000',
               color: 'var(--text-primary)',
               padding: '4px 8px',
