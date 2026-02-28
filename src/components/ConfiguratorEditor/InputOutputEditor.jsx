@@ -6,7 +6,7 @@ import {
   getConnectionTypeOptions,
 } from '../../data/types';
 
-export default function InputOutputEditor({ connector, type, onUpdate, onDelete, leitungskatalog = [], verbindungsartenkatalog = [] }) {
+export default function InputOutputEditor({ connector, type, onUpdate, onDelete, leitungskatalog = [], verbindungsartenkatalog = [], dimensionskatalog = [] }) {
   const [dimension, setDimension] = useState(connector.dimension || '');
   const [verbindungsart, setVerbindungsart] = useState(connector.verbindungsart || '');
   const [connectionType, setConnectionType] = useState(connector.connectionType || CONNECTION_TYPES.HYDRAULIC);
@@ -42,11 +42,12 @@ export default function InputOutputEditor({ connector, type, onUpdate, onDelete,
     return newAllowedTypes;
   };
 
-  // Verfügbare Dimensionen basierend auf connectionType
+  // Verfügbare Dimensionen basierend auf connectionType (aus Dimensionskatalog)
   const getAvailableDimensions = () => {
-    const leitungen = leitungskatalog.filter(l => l.connectionType === connectionType);
-    const dimensions = [...new Set(leitungen.map(l => l.dimension))].filter(Boolean).sort();
-    return dimensions;
+    return dimensionskatalog
+      .filter(d => d.connectionType === connectionType)
+      .map(d => d.name)
+      .sort();
   };
 
   // Verfügbare Verbindungsarten basierend auf connectionType und Dimension

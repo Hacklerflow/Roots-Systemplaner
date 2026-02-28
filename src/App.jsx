@@ -5,10 +5,12 @@ import ModuleDatabase from './components/ModuleDatabase/ModuleDatabase';
 import Stueckliste from './components/Stueckliste/Stueckliste';
 import Verbindungen from './components/Verbindungen/Verbindungen';
 import Leitungen from './components/Leitungen/Leitungen';
+import Dimensionen from './components/Dimensionen/Dimensionen';
 import ErrorBoundary from './components/ErrorBoundary';
 import { initialModules } from './data/moduleDatabase';
 import { initialLeitungen } from './data/leitungskatalog';
 import { initialVerbindungsarten } from './data/verbindungsartenkatalog';
+import { initialDimensionen } from './data/dimensionskatalog';
 
 function App() {
   const [activeTab, setActiveTab] = useState('konfigurator');
@@ -88,6 +90,24 @@ function App() {
   useEffect(() => {
     localStorage.setItem('roots-verbindungsartenkatalog', JSON.stringify(verbindungsartenkatalog));
   }, [verbindungsartenkatalog]);
+
+  // Dimensionskatalog State (mit localStorage Persistenz)
+  const [dimensionskatalog, setDimensionskatalog] = useState(() => {
+    try {
+      const stored = localStorage.getItem('roots-dimensionskatalog');
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch (e) {
+      console.error('Fehler beim Laden des Dimensionskatalogs:', e);
+      localStorage.removeItem('roots-dimensionskatalog');
+    }
+    return initialDimensionen;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('roots-dimensionskatalog', JSON.stringify(dimensionskatalog));
+  }, [dimensionskatalog]);
 
   // Konfigurations State (STRUKTUR: building + modules + connections)
   const [configuration, setConfiguration] = useState(() => {
@@ -360,6 +380,12 @@ function App() {
           Leitungen
         </button>
         <button
+          className={`tab ${activeTab === 'dimensionen' ? 'active' : ''}`}
+          onClick={() => setActiveTab('dimensionen')}
+        >
+          Dimensionen
+        </button>
+        <button
           className={`tab ${activeTab === 'datenbank' ? 'active' : ''}`}
           onClick={() => setActiveTab('datenbank')}
         >
@@ -377,6 +403,7 @@ function App() {
               setConfiguration={setConfiguration}
               leitungskatalog={leitungskatalog}
               verbindungsartenkatalog={verbindungsartenkatalog}
+              dimensionskatalog={dimensionskatalog}
             />
           )}
 
@@ -401,6 +428,13 @@ function App() {
             <Leitungen
               leitungskatalog={leitungskatalog}
               setLeitungskatalog={setLeitungskatalog}
+            />
+          )}
+
+          {activeTab === 'dimensionen' && (
+            <Dimensionen
+              dimensionskatalog={dimensionskatalog}
+              setDimensionskatalog={setDimensionskatalog}
             />
           )}
 
