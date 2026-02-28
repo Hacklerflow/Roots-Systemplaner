@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   CONNECTION_TYPES,
   CONNECTION_TYPE_LABELS,
@@ -6,17 +6,28 @@ import {
   getConnectionTypeOptions,
 } from '../../data/types';
 
-export default function InputOutputEditor({ connector, type, onUpdate, onDelete }) {
-  const [label, setLabel] = useState(connector.label || '');
+export default function InputOutputEditor({ connector, type, onUpdate, onDelete, leitungskatalog = [], verbindungsartenkatalog = [] }) {
+  const [dimension, setDimension] = useState(connector.dimension || '');
+  const [verbindungsart, setVerbindungsart] = useState(connector.verbindungsart || '');
   const [connectionType, setConnectionType] = useState(connector.connectionType || CONNECTION_TYPES.HYDRAULIC);
   const [allowedModuleTypes, setAllowedModuleTypes] = useState(connector.allowedModuleTypes || []);
 
-  const handleSave = (updatedAllowedTypes) => {
+  // Automatisch generiertes Label aus Dimension + Verbindungsart
+  const generatedLabel = [dimension, verbindungsart].filter(Boolean).join(' ');
+
+  const handleSave = (updates = {}) => {
+    const label = [
+      updates.dimension !== undefined ? updates.dimension : dimension,
+      updates.verbindungsart !== undefined ? updates.verbindungsart : verbindungsart
+    ].filter(Boolean).join(' ');
+
     onUpdate({
       ...connector,
       label,
-      connectionType,
-      allowedModuleTypes: updatedAllowedTypes !== undefined ? updatedAllowedTypes : allowedModuleTypes,
+      dimension: updates.dimension !== undefined ? updates.dimension : dimension,
+      verbindungsart: updates.verbindungsart !== undefined ? updates.verbindungsart : verbindungsart,
+      connectionType: updates.connectionType !== undefined ? updates.connectionType : connectionType,
+      allowedModuleTypes: updates.allowedModuleTypes !== undefined ? updates.allowedModuleTypes : allowedModuleTypes,
     });
   };
 
@@ -31,7 +42,28 @@ export default function InputOutputEditor({ connector, type, onUpdate, onDelete 
     return newAllowedTypes;
   };
 
+  // Verfügbare Dimensionen basierend auf connectionType
+  const getAvailableDimensions = () => {
+    const leitungen = leitungskatalog.filter(l => l.connectionType === connectionType);
+    const dimensions = [...new Set(leitungen.map(l => l.dimension))].filter(Boolean).sort();
+    return dimensions;
+  };
+
+  // Verfügbare Verbindungsarten basierend auf connectionType und Dimension
+  const getAvailableVerbindungsarten = () => {
+    let filtered = verbindungsartenkatalog.filter(v => v.connectionType === connectionType);
+
+    // Wenn Dimension gewählt, filtere Verbindungsarten die diese Dimension im Namen haben
+    if (dimension) {
+      filtered = filtered.filter(v => v.name.includes(dimension));
+    }
+
+    return filtered;
+  };
+
   const moduleTypeOptions = getModuleTypeOptions();
+  const availableDimensions = getAvailableDimensions();
+  const availableVerbindungsarten = getAvailableVerbindungsarten();
 
   return (
     <div
@@ -43,30 +75,6 @@ export default function InputOutputEditor({ connector, type, onUpdate, onDelete 
         marginBottom: '12px',
       }}
     >
-      {/* Label */}
-      <div style={{ marginBottom: '12px' }}>
-        <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', fontWeight: 500 }}>
-          Label (z.B. "DN50")
-        </label>
-        <input
-          type="text"
-          value={label}
-          onChange={(e) => setLabel(e.target.value)}
-          onBlur={handleSave}
-          placeholder={type === 'input' ? 'Eingang' : 'Ausgang'}
-          style={{
-            width: '100%',
-            padding: '6px',
-            background: 'var(--bg-primary)',
-            border: '1px solid var(--border)',
-            borderRadius: '4px',
-            color: 'var(--text-primary)',
-            fontFamily: 'inherit',
-            fontSize: '12px',
-          }}
-        />
-      </div>
-
       {/* Connection Type */}
       <div style={{ marginBottom: '12px' }}>
         <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', fontWeight: 500 }}>
@@ -77,14 +85,10 @@ export default function InputOutputEditor({ connector, type, onUpdate, onDelete 
           onChange={(e) => {
             const newType = e.target.value;
             setConnectionType(newType);
-            setTimeout(() => {
-              onUpdate({
-                ...connector,
-                label,
-                connectionType: newType,
-                allowedModuleTypes,
-              });
-            }, 0);
+            // Reset Dimension und Verbindungsart bei Typ-Wechsel
+            setDimension('');
+            setVerbindungsart('');
+            handleSave({ connectionType: newType, dimension: '', verbindungsart: '' });
           }}
           style={{
             width: '100%',
@@ -105,6 +109,105 @@ export default function InputOutputEditor({ connector, type, onUpdate, onDelete 
         </select>
       </div>
 
+      {/* Dimension */}
+      <div style={{ marginBottom: '12px' }}>
+        <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', fontWeight: 500 }}>
+          Dimension
+        </label>
+        <select
+          value={dimension}
+          onChange={(e) => {
+            const newDimension = e.target.value;
+            setDimension(newDimension);
+            // Reset Verbindungsart bei Dimensions-Wechsel
+            setVerbindungsart('');
+            handleSave({ dimension: newDimension, verbindungsart: '' });
+          }}
+          style={{
+            width: '100%',
+            padding: '6px',
+            background: 'var(--bg-primary)',
+            border: '1px solid var(--border)',
+            borderRadius: '4px',
+            color: 'var(--text-primary)',
+            fontFamily: 'inherit',
+            fontSize: '12px',
+          }}
+        >
+          <option value="">Keine / Benutzerdefiniert</option>
+          {availableDimensions.map(dim => (
+            <option key={dim} value={dim}>
+              {dim}
+            </option>
+          ))}
+        </select>
+        {availableDimensions.length === 0 && (
+          <div style={{ fontSize: '10px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+            Keine Leitungen für {CONNECTION_TYPE_LABELS[connectionType]} verfügbar
+          </div>
+        )}
+      </div>
+
+      {/* Verbindungsart */}
+      <div style={{ marginBottom: '12px' }}>
+        <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', fontWeight: 500 }}>
+          Verbindungsart
+          {dimension && (
+            <span style={{ fontWeight: 400, fontSize: '10px', color: 'var(--text-secondary)', marginLeft: '6px' }}>
+              (für {dimension})
+            </span>
+          )}
+        </label>
+        <select
+          value={verbindungsart}
+          onChange={(e) => {
+            const newVerbindungsart = e.target.value;
+            setVerbindungsart(newVerbindungsart);
+            handleSave({ verbindungsart: newVerbindungsart });
+          }}
+          style={{
+            width: '100%',
+            padding: '6px',
+            background: 'var(--bg-primary)',
+            border: '1px solid var(--border)',
+            borderRadius: '4px',
+            color: 'var(--text-primary)',
+            fontFamily: 'inherit',
+            fontSize: '12px',
+          }}
+        >
+          <option value="">Keine / Benutzerdefiniert</option>
+          {availableVerbindungsarten.map(v => (
+            <option key={v.id} value={v.name}>
+              {v.name}
+            </option>
+          ))}
+        </select>
+        {availableVerbindungsarten.length === 0 && dimension && (
+          <div style={{ fontSize: '10px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+            Keine Verbindungsarten für {dimension} verfügbar
+          </div>
+        )}
+      </div>
+
+      {/* Generiertes Label (Vorschau) */}
+      {generatedLabel && (
+        <div style={{
+          marginBottom: '12px',
+          padding: '8px',
+          background: 'var(--bg-primary)',
+          border: '1px solid var(--border)',
+          borderRadius: '4px',
+        }}>
+          <div style={{ fontSize: '10px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
+            Label (automatisch):
+          </div>
+          <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--accent)' }}>
+            {generatedLabel}
+          </div>
+        </div>
+      )}
+
       {/* Allowed Module Types */}
       <div style={{ marginBottom: '12px' }}>
         <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', fontWeight: 500 }}>
@@ -121,7 +224,7 @@ export default function InputOutputEditor({ connector, type, onUpdate, onDelete 
               onClick={(e) => {
                 e.stopPropagation();
                 const newAllowedTypes = toggleModuleType(moduleType);
-                handleSave(newAllowedTypes);
+                handleSave({ allowedModuleTypes: newAllowedTypes });
               }}
               style={{
                 padding: '4px 8px',

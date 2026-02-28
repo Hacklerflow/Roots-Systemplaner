@@ -555,6 +555,8 @@ function ConfiguratorEditorInner({ modules: moduleTemplates, configuration, setC
             handleDeleteModule(selectedElement.id);
             setModalOpen(false);
           }}
+          leitungskatalog={leitungskatalog}
+          verbindungsartenkatalog={verbindungsartenkatalog}
         />
       )}
 
