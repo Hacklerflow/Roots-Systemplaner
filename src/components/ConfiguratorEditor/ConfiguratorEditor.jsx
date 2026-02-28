@@ -305,7 +305,7 @@ function ConfiguratorEditorInner({ modules: moduleTemplates, configuration, setC
         return;
       }
 
-      // Prüfe Kompatibilität (aber erlaube trotzdem)
+      // Prüfe Kompatibilität
       const check = checkConnection(
         sourceModule,
         params.sourceHandle,
@@ -313,11 +313,10 @@ function ConfiguratorEditorInner({ modules: moduleTemplates, configuration, setC
         params.targetHandle
       );
 
-      if (check.warning) {
-        const proceed = confirm(
-          `Warnung: ${check.reason}\n\nTrotzdem verbinden?`
-        );
-        if (!proceed) return;
+      // Blockiere inkompatible Verbindungen
+      if (!check.valid) {
+        alert(`Verbindung nicht möglich:\n${check.reason}`);
+        return;
       }
 
       // Füge Verbindung hinzu

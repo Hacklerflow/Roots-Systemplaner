@@ -31,7 +31,7 @@ export function checkConnection(sourceModule, sourceOutputId, targetModule, targ
   // ConnectionType muss übereinstimmen
   if (output.connectionType !== input.connectionType) {
     return {
-      valid: true,  // Trotzdem erlauben
+      valid: false,  // BLOCKIEREN
       warning: true,
       reason: `Verbindungstyp passt nicht (${formatConnectionType(output.connectionType)} → ${formatConnectionType(input.connectionType)})`
     };
@@ -47,7 +47,7 @@ export function checkConnection(sourceModule, sourceOutputId, targetModule, targ
 
   if (!outputAllowed || !inputAllowed) {
     return {
-      valid: true,  // Trotzdem erlauben
+      valid: false,  // BLOCKIEREN
       warning: true,
       reason: `Modultyp nicht in erlaubten Verbindungen (${sourceModule.moduleType} → ${targetModule.moduleType})`
     };
