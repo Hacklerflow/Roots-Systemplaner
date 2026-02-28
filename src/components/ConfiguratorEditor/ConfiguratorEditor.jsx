@@ -13,6 +13,7 @@ import BuildingNode from './BuildingNode';
 import ModuleNode from './ModuleNode';
 import WarningEdge from './WarningEdge';
 import ElementModal from './ElementModal';
+import ConnectionModal from './ConnectionModal';
 import { createBuilding, createModuleInstance, isBuilding } from '../../data/types';
 import { checkConnection, getEdgeStyle } from '../../data/compatibilityChecker';
 
@@ -30,6 +31,8 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [selectedElement, setSelectedElement] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [selectedConnection, setSelectedConnection] = useState(null);
+  const [connectionModalOpen, setConnectionModalOpen] = useState(false);
 
   // Synchronisiere configuration mit nodes/edges
   useEffect(() => {
@@ -76,18 +79,20 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
       const output = sourceModule.outputs?.find(o => o.id === conn.sourceHandle);
       const connectionType = output?.connectionType || 'hydraulic';
 
+      const edgeId = conn.id || `${conn.source}-${conn.sourceHandle}-${conn.target}-${conn.targetHandle}`;
       newEdges.push({
-        id: conn.id || `${conn.source}-${conn.sourceHandle}-${conn.target}-${conn.targetHandle}`,
+        id: edgeId,
         source: conn.source,
         sourceHandle: conn.sourceHandle,
         target: conn.target,
         targetHandle: conn.targetHandle,
-        type: 'warning', // Immer warning type für Delete-Button
+        type: 'warning',
         animated: !check.warning,
         style: getEdgeStyle(connectionType),
         data: {
           warning: check.warning,
           warningReason: check.reason,
+          onClick: openConnectionModal,
         },
       });
     });
@@ -99,6 +104,14 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
   const openModal = (element) => {
     setSelectedElement(element);
     setModalOpen(true);
+  };
+
+  const openConnectionModal = (edgeId) => {
+    const connection = (configuration?.connections || []).find(c => c.id === edgeId);
+    if (connection) {
+      setSelectedConnection(connection);
+      setConnectionModalOpen(true);
+    }
   };
 
   const handleSaveElement = (updatedElement) => {
@@ -156,6 +169,22 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
         ),
       });
     }
+  };
+
+  const handleSaveConnection = (updatedConnection) => {
+    setConfiguration({
+      ...configuration,
+      connections: (configuration?.connections || []).map((c) =>
+        c.id === updatedConnection.id ? updatedConnection : c
+      ),
+    });
+  };
+
+  const handleDeleteConnection = (connectionId) => {
+    setConfiguration({
+      ...configuration,
+      connections: (configuration?.connections || []).filter((c) => c.id !== connectionId),
+    });
   };
 
   // Handle neue Verbindung
@@ -395,7 +424,7 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
         </div>
       )}
 
-      {/* Modal */}
+      {/* Element Modal */}
       {modalOpen && (
         <ElementModal
           element={selectedElement}
@@ -404,6 +433,21 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
           onDelete={() => {
             handleDeleteModule(selectedElement.id);
             setModalOpen(false);
+          }}
+        />
+      )}
+
+      {/* Connection Modal */}
+      {connectionModalOpen && selectedConnection && (
+        <ConnectionModal
+          connection={selectedConnection}
+          sourceModule={(configuration?.modules || []).find(m => m.id === selectedConnection.source) || configuration?.building}
+          targetModule={(configuration?.modules || []).find(m => m.id === selectedConnection.target)}
+          onClose={() => setConnectionModalOpen(false)}
+          onSave={handleSaveConnection}
+          onDelete={() => {
+            handleDeleteConnection(selectedConnection.id);
+            setConnectionModalOpen(false);
           }}
         />
       )}

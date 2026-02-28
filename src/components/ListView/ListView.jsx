@@ -59,6 +59,7 @@ export default function ListView({ configuration }) {
             return (
               <ConnectionCard
                 key={conn.id || index}
+                connection={conn}
                 sourceModule={sourceModule}
                 targetModule={targetModule}
                 output={output}
@@ -201,7 +202,7 @@ function ModuleCard({ module }) {
   );
 }
 
-function ConnectionCard({ sourceModule, targetModule, output, input, check }) {
+function ConnectionCard({ connection, sourceModule, targetModule, output, input, check }) {
   return (
     <div
       style={{
@@ -230,8 +231,20 @@ function ConnectionCard({ sourceModule, targetModule, output, input, check }) {
         </div>
       </div>
 
-      <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-        Verbindungstyp: {CONNECTION_TYPE_LABELS[output?.connectionType || 'hydraulic']}
+      <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '8px' }}>
+        <div>Verbindungstyp: {CONNECTION_TYPE_LABELS[output?.connectionType || 'hydraulic']}</div>
+        {connection?.laenge_meter && (
+          <div>Länge: {connection.laenge_meter} m</div>
+        )}
+        {connection?.dimension && (
+          <div>Dimension: {connection.dimension}</div>
+        )}
+        {connection?.anschluss_ausgang && (
+          <div>Anschluss Ausgang: {connection.anschluss_ausgang}</div>
+        )}
+        {connection?.anschluss_eingang && (
+          <div>Anschluss Eingang: {connection.anschluss_eingang}</div>
+        )}
       </div>
 
       {/* Status */}

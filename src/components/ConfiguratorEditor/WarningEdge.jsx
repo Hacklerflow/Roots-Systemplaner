@@ -1,4 +1,4 @@
-import { BaseEdge, EdgeLabelRenderer, getBezierPath, useReactFlow } from '@xyflow/react';
+import { BaseEdge, EdgeLabelRenderer, getBezierPath } from '@xyflow/react';
 
 export default function WarningEdge({
   id,
@@ -11,8 +11,6 @@ export default function WarningEdge({
   style = {},
   data = {},
 }) {
-  const { setEdges } = useReactFlow();
-
   const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
     sourceY,
@@ -22,48 +20,41 @@ export default function WarningEdge({
     targetPosition,
   });
 
-  const handleDelete = (e) => {
+  const handleClick = (e) => {
     e.stopPropagation();
-    setEdges((edges) => edges.filter((edge) => edge.id !== id));
+    if (data.onClick) {
+      data.onClick(id);
+    }
   };
 
   return (
     <>
-      <BaseEdge id={id} path={edgePath} style={style} />
+      <BaseEdge
+        id={id}
+        path={edgePath}
+        style={{
+          ...style,
+          cursor: 'pointer',
+          strokeWidth: style.strokeWidth || 3,
+        }}
+      />
+      {/* Invisible wider path for easier clicking */}
+      <path
+        d={edgePath}
+        fill="none"
+        stroke="transparent"
+        strokeWidth="20"
+        style={{ cursor: 'pointer', pointerEvents: 'stroke' }}
+        onClick={handleClick}
+      />
 
       <EdgeLabelRenderer>
-        {/* Delete Button - immer sichtbar */}
-        <button
-          onClick={handleDelete}
-          style={{
-            position: 'absolute',
-            transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
-            background: 'var(--bg-secondary)',
-            border: '2px solid var(--error)',
-            borderRadius: '50%',
-            width: '24px',
-            height: '24px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '12px',
-            fontWeight: 'bold',
-            pointerEvents: 'all',
-            cursor: 'pointer',
-            color: 'var(--error)',
-            padding: 0,
-          }}
-          title="Verbindung löschen (oder Delete-Taste)"
-        >
-          ✕
-        </button>
-
         {/* Warning Icon - nur bei Warnung */}
         {data.warning && (
           <div
             style={{
               position: 'absolute',
-              transform: `translate(-50%, -50%) translate(${labelX + 30}px, ${labelY}px)`,
+              transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
               background: 'var(--bg-secondary)',
               border: '2px solid var(--error)',
               borderRadius: '50%',
@@ -73,8 +64,7 @@ export default function WarningEdge({
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: '14px',
-              pointerEvents: 'all',
-              cursor: 'help',
+              pointerEvents: 'none',
             }}
             title={data.warningReason || 'Warnung'}
           >
