@@ -126,6 +126,25 @@ export function isModule(element) {
 }
 
 /**
+ * Hilfsfunktion: Prüft ob ein Element ein Junction ist
+ */
+export function isJunction(element) {
+  return element && element.type === 'junction';
+}
+
+/**
+ * Factory-Funktion für einen Junction/Knotenpunkt
+ */
+export function createJunction(label = '') {
+  return {
+    id: `junction-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    type: 'junction',
+    label,
+    position: { x: 0, y: 0 },
+  };
+}
+
+/**
  * Gibt alle Modul-Typen als Array zurück (für UI Select)
  */
 export function getModuleTypeOptions() {

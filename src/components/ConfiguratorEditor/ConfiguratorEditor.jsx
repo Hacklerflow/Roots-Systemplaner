@@ -11,15 +11,17 @@ import '@xyflow/react/dist/style.css';
 
 import BuildingNode from './BuildingNode';
 import ModuleNode from './ModuleNode';
+import JunctionNode from './JunctionNode';
 import WarningEdge from './WarningEdge';
 import ElementModal from './ElementModal';
 import ConnectionModal from './ConnectionModal';
-import { createBuilding, createModuleInstance, isBuilding } from '../../data/types';
+import { createBuilding, createModuleInstance, createJunction, isBuilding, isJunction } from '../../data/types';
 import { checkConnection, getEdgeStyle } from '../../data/compatibilityChecker';
 
 const nodeTypes = {
   building: BuildingNode,
   module: ModuleNode,
+  junction: JunctionNode,
 };
 
 const edgeTypes = {
@@ -40,6 +42,7 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
     const newEdges = [];
 
     const modules = configuration?.modules || [];
+    const junctions = configuration?.junctions || [];
     const connections = configuration?.connections || [];
 
     // Module zu Nodes konvertieren (OHNE Gebäude)
@@ -59,6 +62,22 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
           },
         });
       });
+
+    // Junctions zu Nodes konvertieren
+    junctions.forEach((junction, index) => {
+      newNodes.push({
+        id: junction.id,
+        type: 'junction',
+        position: junction.position || {
+          x: 400,
+          y: 100 + index * 100,
+        },
+        data: {
+          label: junction.label || '',
+          onLabelChange: (newLabel) => handleJunctionLabelChange(junction.id, newLabel),
+        },
+      });
+    });
 
     // Connections zu Edges konvertieren
     connections.forEach((conn) => {
@@ -159,6 +178,7 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
       setConfiguration({
         building: null,
         modules: [],
+        junctions: [],
         connections: [],
       });
     }
@@ -174,6 +194,23 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
         ),
       });
     }
+  };
+
+  const handleAddJunction = () => {
+    const junction = createJunction();
+    setConfiguration({
+      ...configuration,
+      junctions: [...(configuration?.junctions || []), junction],
+    });
+  };
+
+  const handleJunctionLabelChange = (junctionId, newLabel) => {
+    setConfiguration({
+      ...configuration,
+      junctions: (configuration?.junctions || []).map((j) =>
+        j.id === junctionId ? { ...j, label: newLabel } : j
+      ),
+    });
   };
 
   const handleSaveConnection = (updatedConnection) => {
@@ -274,6 +311,11 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
                 ? { ...m, position: change.position }
                 : m
             ),
+            junctions: (prev?.junctions || []).map(j =>
+              j.id === change.id
+                ? { ...j, position: change.position }
+                : j
+            ),
           }));
         }
       });
@@ -333,22 +375,40 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
         )}
 
         {hasBuilding && (
-          <button
-            onClick={handleClearConfiguration}
-            style={{
-              padding: '10px 16px',
-              background: 'var(--error)',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              fontSize: '13px',
-            }}
-          >
-            Konfiguration löschen
-          </button>
+          <>
+            <button
+              onClick={handleAddJunction}
+              style={{
+                padding: '10px 16px',
+                background: 'var(--accent)',
+                color: 'var(--bg-primary)',
+                border: 'none',
+                borderRadius: '4px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                fontSize: '13px',
+              }}
+            >
+              + Knotenpunkt
+            </button>
+            <button
+              onClick={handleClearConfiguration}
+              style={{
+                padding: '10px 16px',
+                background: 'var(--error)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                fontSize: '13px',
+              }}
+            >
+              Konfiguration löschen
+            </button>
+          </>
         )}
       </div>
 

@@ -63,6 +63,7 @@ function App() {
           return {
             building: null,
             modules: [],
+            junctions: [],
             connections: [],
           };
         }
@@ -76,6 +77,7 @@ function App() {
             return {
               building: null,
               modules: [],
+              junctions: [],
               connections: [],
             };
           }
@@ -91,6 +93,7 @@ function App() {
             return {
               building: null,
               modules: [],
+              junctions: [],
               connections: [],
             };
           }
@@ -102,6 +105,7 @@ function App() {
             return {
               building: null,
               modules: [],
+              junctions: [],
               connections: [],
             };
           }
@@ -109,6 +113,7 @@ function App() {
           return {
             building: parsed.building || null,
             modules: parsed.modules || [],
+            junctions: parsed.junctions || [],
             connections: parsed.connections || [],
           };
         }
@@ -122,6 +127,7 @@ function App() {
     return {
       building: null,   // Gebäude (nicht als Node)
       modules: [],      // Array von Modulen
+      junctions: [],    // Array von Knotenpunkten
       connections: [],  // Array von Verbindungen
     };
   });
