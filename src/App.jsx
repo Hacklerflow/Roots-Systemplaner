@@ -149,9 +149,6 @@ function App() {
         <h1 style={{ margin: 0, fontSize: '20px', fontWeight: 600 }}>
           Roots Systemkonfigurator
         </h1>
-        <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-          Modulare Wärmepumpen-Planung mit Ein-/Ausgangs-System
-        </div>
       </header>
 
       {/* Tab Navigation */}
