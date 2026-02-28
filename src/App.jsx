@@ -220,66 +220,62 @@ function App() {
         </h1>
 
         {/* Buttons */}
-        <div style={{ display: 'flex', gap: '8px' }}>
-          {activeTab === 'konfigurator' && (
-            <>
-              {!hasBuilding && (
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  style={{
-                    padding: '10px 16px',
-                    background: 'var(--bg-secondary)',
-                    color: 'var(--text-primary)',
-                    border: '2px solid var(--accent)',
-                    borderRadius: '4px',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    fontFamily: 'inherit',
-                    fontSize: '13px',
-                  }}
-                >
-                  📂 Öffnen
-                </button>
-              )}
-              {hasBuilding && (
-                <>
-                  <button
-                    onClick={handleExportConfiguration}
-                    style={{
-                      padding: '10px 16px',
-                      background: 'var(--success)',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      fontFamily: 'inherit',
-                      fontSize: '13px',
-                    }}
-                  >
-                    💾 Speichern
-                  </button>
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    style={{
-                      padding: '10px 16px',
-                      background: 'var(--bg-secondary)',
-                      color: 'var(--text-primary)',
-                      border: '2px solid var(--accent)',
-                      borderRadius: '4px',
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      fontFamily: 'inherit',
-                      fontSize: '13px',
-                    }}
-                  >
-                    📂 Öffnen
-                  </button>
-                </>
-              )}
-            </>
-          )}
-        </div>
+        {activeTab === 'konfigurator' && hasBuilding && (
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              onClick={handleExportConfiguration}
+              style={{
+                padding: '10px 16px',
+                background: 'var(--success)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                fontSize: '13px',
+              }}
+            >
+              💾 Speichern
+            </button>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              style={{
+                padding: '10px 16px',
+                background: 'var(--bg-secondary)',
+                color: 'var(--text-primary)',
+                border: '2px solid var(--accent)',
+                borderRadius: '4px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                fontSize: '13px',
+              }}
+            >
+              📂 Öffnen
+            </button>
+          </div>
+        )}
+        {activeTab === 'konfigurator' && !hasBuilding && (
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              style={{
+                padding: '10px 16px',
+                background: 'var(--bg-secondary)',
+                color: 'var(--text-primary)',
+                border: '2px solid var(--accent)',
+                borderRadius: '4px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                fontSize: '13px',
+              }}
+            >
+              📂 Öffnen
+            </button>
+          </div>
+        )}
       </header>
 
       {/* Hidden File Input */}
