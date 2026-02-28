@@ -562,8 +562,15 @@ function ConfiguratorEditorInner({ modules: moduleTemplates, configuration, setC
       {connectionModalOpen && selectedConnection && (
         <ConnectionModal
           connection={selectedConnection}
-          sourceModule={(configuration?.modules || []).find(m => m.id === selectedConnection.source) || configuration?.building}
-          targetModule={(configuration?.modules || []).find(m => m.id === selectedConnection.target)}
+          sourceModule={
+            (configuration?.modules || []).find(m => m.id === selectedConnection.source) ||
+            (configuration?.junctions || []).find(j => j.id === selectedConnection.source) ||
+            configuration?.building
+          }
+          targetModule={
+            (configuration?.modules || []).find(m => m.id === selectedConnection.target) ||
+            (configuration?.junctions || []).find(j => j.id === selectedConnection.target)
+          }
           onClose={() => setConnectionModalOpen(false)}
           onSave={handleSaveConnection}
           onDelete={() => {

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { isJunction } from '../../data/types';
 
 export default function ConnectionModal({ connection, sourceModule, targetModule, onClose, onSave, onDelete }) {
   const [formData, setFormData] = useState({
@@ -37,6 +38,15 @@ export default function ConnectionModal({ connection, sourceModule, targetModule
   // Finde die Output/Input Labels
   const output = sourceModule.outputs?.find(o => o.id === connection.sourceHandle);
   const input = targetModule.inputs?.find(i => i.id === connection.targetHandle);
+
+  // Namen für Source/Target (Junction hat nur label, Module haben name)
+  const sourceName = isJunction(sourceModule)
+    ? (sourceModule.label || 'Knotenpunkt')
+    : sourceModule.name;
+
+  const targetName = isJunction(targetModule)
+    ? (targetModule.label || 'Knotenpunkt')
+    : targetModule.name;
 
   return (
     <div
@@ -82,19 +92,19 @@ export default function ConnectionModal({ connection, sourceModule, targetModule
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '4px' }}>
-                {sourceModule.name}
+                {sourceName}
               </div>
               <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-                {output?.label || 'Ausgang'}
+                {output?.label || (isJunction(sourceModule) ? connection.sourceHandle : 'Ausgang')}
               </div>
             </div>
             <div style={{ fontSize: '20px', color: 'var(--accent)' }}>→</div>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '4px' }}>
-                {targetModule.name}
+                {targetName}
               </div>
               <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-                {input?.label || 'Eingang'}
+                {input?.label || (isJunction(targetModule) ? connection.targetHandle : 'Eingang')}
               </div>
             </div>
           </div>
