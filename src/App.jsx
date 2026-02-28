@@ -3,8 +3,10 @@ import ConfiguratorEditor from './components/ConfiguratorEditor/ConfiguratorEdit
 import ListView from './components/ListView/ListView';
 import ModuleDatabase from './components/ModuleDatabase/ModuleDatabase';
 import Stueckliste from './components/Stueckliste/Stueckliste';
+import Leitungen from './components/Leitungen/Leitungen';
 import ErrorBoundary from './components/ErrorBoundary';
 import { initialModules } from './data/moduleDatabase';
+import { initialLeitungen } from './data/leitungskatalog';
 
 function App() {
   const [activeTab, setActiveTab] = useState('konfigurator');
@@ -48,6 +50,24 @@ function App() {
   useEffect(() => {
     localStorage.setItem('roots-modules', JSON.stringify(modules));
   }, [modules]);
+
+  // Leitungskatalog State (mit localStorage Persistenz)
+  const [leitungskatalog, setLeitungskatalog] = useState(() => {
+    try {
+      const stored = localStorage.getItem('roots-leitungskatalog');
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch (e) {
+      console.error('Fehler beim Laden des Leitungskatalogs:', e);
+      localStorage.removeItem('roots-leitungskatalog');
+    }
+    return initialLeitungen;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('roots-leitungskatalog', JSON.stringify(leitungskatalog));
+  }, [leitungskatalog]);
 
   // Konfigurations State (STRUKTUR: building + modules + connections)
   const [configuration, setConfiguration] = useState(() => {
@@ -308,6 +328,12 @@ function App() {
           Stückliste
         </button>
         <button
+          className={`tab ${activeTab === 'leitungen' ? 'active' : ''}`}
+          onClick={() => setActiveTab('leitungen')}
+        >
+          Leitungen
+        </button>
+        <button
           className={`tab ${activeTab === 'datenbank' ? 'active' : ''}`}
           onClick={() => setActiveTab('datenbank')}
         >
@@ -323,6 +349,7 @@ function App() {
               modules={modules}
               configuration={configuration}
               setConfiguration={setConfiguration}
+              leitungskatalog={leitungskatalog}
             />
           )}
 
@@ -332,6 +359,13 @@ function App() {
             <Stueckliste
               configuration={configuration}
               setConfiguration={setConfiguration}
+            />
+          )}
+
+          {activeTab === 'leitungen' && (
+            <Leitungen
+              leitungskatalog={leitungskatalog}
+              setLeitungskatalog={setLeitungskatalog}
             />
           )}
 

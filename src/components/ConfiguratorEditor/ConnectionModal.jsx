@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { isJunction } from '../../data/types';
 
-export default function ConnectionModal({ connection, sourceModule, targetModule, onClose, onSave, onDelete }) {
+export default function ConnectionModal({ connection, sourceModule, targetModule, leitungskatalog = [], onClose, onSave, onDelete }) {
   const [formData, setFormData] = useState({
     laenge_meter: connection.laenge_meter || null,
     dimension: connection.dimension || '',
     anschluss_eingang: connection.anschluss_eingang || '',
     anschluss_ausgang: connection.anschluss_ausgang || '',
     preis_pro_meter: connection.preis_pro_meter || null,
+    leitungskatalog_id: connection.leitungskatalog_id || '',
   });
 
   useEffect(() => {
@@ -17,8 +18,33 @@ export default function ConnectionModal({ connection, sourceModule, targetModule
       anschluss_eingang: connection.anschluss_eingang || '',
       anschluss_ausgang: connection.anschluss_ausgang || '',
       preis_pro_meter: connection.preis_pro_meter || null,
+      leitungskatalog_id: connection.leitungskatalog_id || '',
     });
   }, [connection]);
+
+  // Handler für Leitungsauswahl aus Katalog
+  const handleLeitungSelect = (leitungId) => {
+    if (!leitungId) {
+      // "Benutzerdefiniert" gewählt
+      setFormData({
+        ...formData,
+        leitungskatalog_id: '',
+        dimension: '',
+        preis_pro_meter: null,
+      });
+      return;
+    }
+
+    const leitung = leitungskatalog.find(l => l.id === leitungId);
+    if (leitung) {
+      setFormData({
+        ...formData,
+        leitungskatalog_id: leitungId,
+        dimension: leitung.dimension,
+        preis_pro_meter: leitung.preis_pro_meter,
+      });
+    }
+  };
 
   if (!connection || !sourceModule || !targetModule) return null;
 
@@ -141,16 +167,14 @@ export default function ConnectionModal({ connection, sourceModule, targetModule
             />
           </div>
 
-          {/* Dimension */}
+          {/* Leitungstyp aus Katalog */}
           <div>
             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '13px' }}>
-              Dimension
+              Leitungstyp
             </label>
-            <input
-              type="text"
-              value={formData.dimension}
-              onChange={(e) => setFormData({ ...formData, dimension: e.target.value })}
-              placeholder="z.B. DN50, 3/4 Zoll"
+            <select
+              value={formData.leitungskatalog_id}
+              onChange={(e) => handleLeitungSelect(e.target.value)}
               style={{
                 width: '100%',
                 padding: '10px',
@@ -161,10 +185,43 @@ export default function ConnectionModal({ connection, sourceModule, targetModule
                 fontFamily: 'inherit',
                 fontSize: '14px',
               }}
+            >
+              <option value="">Benutzerdefiniert</option>
+              {leitungskatalog.map((leitung) => (
+                <option key={leitung.id} value={leitung.id}>
+                  {leitung.dimension} ({leitung.preis_pro_meter ? `${leitung.preis_pro_meter} €/m` : 'kein Preis'})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Dimension (automatisch oder manuell) */}
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '13px' }}>
+              Dimension
+            </label>
+            <input
+              type="text"
+              value={formData.dimension}
+              onChange={(e) => setFormData({ ...formData, dimension: e.target.value })}
+              placeholder="z.B. DN50, 3/4 Zoll"
+              disabled={!!formData.leitungskatalog_id}
+              style={{
+                width: '100%',
+                padding: '10px',
+                background: formData.leitungskatalog_id ? 'var(--bg-secondary)' : 'var(--bg-tertiary)',
+                border: '1px solid var(--border)',
+                borderRadius: '4px',
+                color: 'var(--text-primary)',
+                fontFamily: 'inherit',
+                fontSize: '14px',
+                opacity: formData.leitungskatalog_id ? 0.7 : 1,
+                cursor: formData.leitungskatalog_id ? 'not-allowed' : 'text',
+              }}
             />
           </div>
 
-          {/* Preis pro Meter */}
+          {/* Preis pro Meter (automatisch oder manuell) */}
           <div>
             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '13px' }}>
               Preis pro Meter (€)
@@ -178,15 +235,18 @@ export default function ConnectionModal({ connection, sourceModule, targetModule
                 preis_pro_meter: e.target.value ? parseFloat(e.target.value) : null
               })}
               placeholder="z.B. 15.50"
+              disabled={!!formData.leitungskatalog_id}
               style={{
                 width: '100%',
                 padding: '10px',
-                background: 'var(--bg-tertiary)',
+                background: formData.leitungskatalog_id ? 'var(--bg-secondary)' : 'var(--bg-tertiary)',
                 border: '1px solid var(--border)',
                 borderRadius: '4px',
                 color: 'var(--text-primary)',
                 fontFamily: 'inherit',
                 fontSize: '14px',
+                opacity: formData.leitungskatalog_id ? 0.7 : 1,
+                cursor: formData.leitungskatalog_id ? 'not-allowed' : 'text',
               }}
             />
           </div>
