@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import ConfiguratorEditor from './components/ConfiguratorEditor/ConfiguratorEditor';
 import ListView from './components/ListView/ListView';
 import ModuleDatabase from './components/ModuleDatabase/ModuleDatabase';
@@ -8,6 +8,7 @@ import { initialModules } from './data/moduleDatabase';
 
 function App() {
   const [activeTab, setActiveTab] = useState('konfigurator');
+  const fileInputRef = useRef(null);
 
   // Keyboard shortcut: Cmd+Shift+K or Ctrl+Shift+K zum Zurücksetzen
   useEffect(() => {
@@ -136,6 +137,71 @@ function App() {
     localStorage.setItem('roots-configuration', JSON.stringify(configuration));
   }, [configuration]);
 
+  // Export Konfiguration als JSON
+  const handleExportConfiguration = () => {
+    if (!configuration?.building) {
+      alert('Bitte erstelle zuerst ein Gebäude!');
+      return;
+    }
+
+    const buildingName = configuration.building.name || 'Konfiguration';
+    const fileName = `${buildingName.replace(/[^a-zA-Z0-9]/g, '_')}.json`;
+
+    const dataStr = JSON.stringify(configuration, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // Import Konfiguration aus JSON
+  const handleImportConfiguration = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const imported = JSON.parse(e.target.result);
+
+        if (!imported.building) {
+          alert('Ungültige Konfigurationsdatei: Kein Gebäude gefunden!');
+          return;
+        }
+
+        if (imported.modules && !imported.modules.every(m =>
+          Array.isArray(m.inputs) && Array.isArray(m.outputs)
+        )) {
+          alert('Ungültige Konfigurationsdatei: Module haben ungültige Struktur!');
+          return;
+        }
+
+        setConfiguration({
+          building: imported.building || null,
+          modules: imported.modules || [],
+          junctions: imported.junctions || [],
+          connections: imported.connections || [],
+        });
+
+        alert(`Konfiguration "${imported.building.name}" erfolgreich geladen!`);
+      } catch (error) {
+        console.error('Fehler beim Laden der Konfiguration:', error);
+        alert('Fehler beim Laden der Datei. Bitte überprüfe das Format.');
+      }
+    };
+    reader.readAsText(file);
+
+    event.target.value = '';
+  };
+
+  const hasBuilding = !!configuration?.building;
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
       {/* Header */}
@@ -144,11 +210,85 @@ function App() {
           background: 'var(--bg-secondary)',
           borderBottom: '1px solid var(--border)',
           padding: '16px 24px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
         }}
       >
         <h1 style={{ margin: 0, fontSize: '20px', fontWeight: 600 }}>
           Roots Systemkonfigurator
         </h1>
+
+        {/* Buttons */}
+        <div style={{ display: 'flex', gap: '8px' }}>
+          {activeTab === 'konfigurator' && (
+            <>
+              {!hasBuilding && (
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  style={{
+                    padding: '10px 16px',
+                    background: 'var(--bg-secondary)',
+                    color: 'var(--text-primary)',
+                    border: '2px solid var(--accent)',
+                    borderRadius: '4px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                    fontSize: '13px',
+                  }}
+                >
+                  📂 Öffnen
+                </button>
+              )}
+              {hasBuilding && (
+                <>
+                  <button
+                    onClick={handleExportConfiguration}
+                    style={{
+                      padding: '10px 16px',
+                      background: 'var(--success)',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      fontFamily: 'inherit',
+                      fontSize: '13px',
+                    }}
+                  >
+                    💾 Speichern
+                  </button>
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    style={{
+                      padding: '10px 16px',
+                      background: 'var(--bg-secondary)',
+                      color: 'var(--text-primary)',
+                      border: '2px solid var(--accent)',
+                      borderRadius: '4px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      fontFamily: 'inherit',
+                      fontSize: '13px',
+                    }}
+                  >
+                    📂 Öffnen
+                  </button>
+                </>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Hidden File Input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".json"
+          onChange={handleImportConfiguration}
+          style={{ display: 'none' }}
+        />
       </header>
 
       {/* Tab Navigation */}
