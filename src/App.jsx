@@ -116,6 +116,14 @@ function App() {
     localStorage.setItem('roots-dimensionskatalog', JSON.stringify(dimensionskatalog));
   }, [dimensionskatalog]);
 
+  // Runtime-Check: Falls Dimensionskatalog leer ist, Initial-Daten laden
+  useEffect(() => {
+    if (dimensionskatalog.length === 0) {
+      console.warn('Runtime: Dimensionskatalog ist leer, lade Initial-Daten');
+      setDimensionskatalog(initialDimensionen);
+    }
+  }, []);
+
   // Konfigurations State (STRUKTUR: building + modules + connections)
   const [configuration, setConfiguration] = useState(() => {
     try {
@@ -447,7 +455,13 @@ function App() {
           )}
 
           {activeTab === 'datenbank' && (
-            <ModuleDatabase modules={modules} setModules={setModules} />
+            <ModuleDatabase
+              modules={modules}
+              setModules={setModules}
+              leitungskatalog={leitungskatalog}
+              verbindungsartenkatalog={verbindungsartenkatalog}
+              dimensionskatalog={dimensionskatalog}
+            />
           )}
         </ErrorBoundary>
       </div>

@@ -42,12 +42,12 @@ export default function InputOutputEditor({ connector, type, onUpdate, onDelete,
     return newAllowedTypes;
   };
 
-  // Verfügbare Dimensionen: ALLE aus Dimensionskatalog (nicht nach Type filtern)
+  // Verfügbare Dimensionen: Nur für den gewählten Verbindungstyp
   const getAvailableDimensions = () => {
-    console.log('dimensionskatalog:', dimensionskatalog);
-    console.log('dimensionskatalog.length:', dimensionskatalog?.length);
-    const uniqueDimensions = [...new Set(dimensionskatalog.map(d => d.name))];
-    console.log('uniqueDimensions:', uniqueDimensions);
+    const filteredDimensions = dimensionskatalog
+      .filter(d => d.connectionType === connectionType)
+      .map(d => d.name);
+    const uniqueDimensions = [...new Set(filteredDimensions)];
     return uniqueDimensions.filter(Boolean).sort();
   };
 

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { createModuleTemplate, createInput, createOutput, getModuleTypeOptions, MODULE_TYPES } from '../../data/types';
 import InputOutputEditor from '../ConfiguratorEditor/InputOutputEditor';
 
-export default function ModuleDatabase({ modules, setModules }) {
+export default function ModuleDatabase({ modules, setModules, leitungskatalog = [], verbindungsartenkatalog = [], dimensionskatalog = [] }) {
   const [editingModule, setEditingModule] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
 
@@ -62,6 +62,9 @@ export default function ModuleDatabase({ modules, setModules }) {
           onSave={handleSave}
           onCancel={handleCancel}
           isCreating={isCreating}
+          leitungskatalog={leitungskatalog}
+          verbindungsartenkatalog={verbindungsartenkatalog}
+          dimensionskatalog={dimensionskatalog}
         />
       )}
 
@@ -156,7 +159,7 @@ function ModuleCard({ module, onEdit, onDelete, disabled }) {
   );
 }
 
-function ModuleForm({ module, onSave, onCancel, isCreating }) {
+function ModuleForm({ module, onSave, onCancel, isCreating, leitungskatalog = [], verbindungsartenkatalog = [], dimensionskatalog = [] }) {
   const [formData, setFormData] = useState(module);
 
   const handleChange = (section, key, value) => {
@@ -341,6 +344,9 @@ function ModuleForm({ module, onSave, onCancel, isCreating }) {
                 type="input"
                 onUpdate={(updated) => handleUpdateInput(idx, updated)}
                 onDelete={() => handleDeleteInput(idx)}
+                leitungskatalog={leitungskatalog}
+                verbindungsartenkatalog={verbindungsartenkatalog}
+                dimensionskatalog={dimensionskatalog}
               />
             ))}
           </div>
@@ -379,6 +385,9 @@ function ModuleForm({ module, onSave, onCancel, isCreating }) {
                 type="output"
                 onUpdate={(updated) => handleUpdateOutput(idx, updated)}
                 onDelete={() => handleDeleteOutput(idx)}
+                leitungskatalog={leitungskatalog}
+                verbindungsartenkatalog={verbindungsartenkatalog}
+                dimensionskatalog={dimensionskatalog}
               />
             ))}
           </div>
