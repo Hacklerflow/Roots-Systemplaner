@@ -2,11 +2,10 @@ import { useState, useEffect } from 'react';
 import {
   CONNECTION_TYPES,
   CONNECTION_TYPE_LABELS,
-  getModuleTypeOptions,
   getConnectionTypeOptions,
 } from '../../data/types';
 
-export default function InputOutputEditor({ connector, type, onUpdate, onDelete, leitungskatalog = [], verbindungsartenkatalog = [], dimensionskatalog = [] }) {
+export default function InputOutputEditor({ connector, type, onUpdate, onDelete, leitungskatalog = [], verbindungsartenkatalog = [], dimensionskatalog = [], modultypen = [] }) {
   const [dimension, setDimension] = useState(connector.dimension || '');
   const [verbindungsart, setVerbindungsart] = useState(connector.verbindungsart || '');
   const [connectionType, setConnectionType] = useState(connector.connectionType || CONNECTION_TYPES.HYDRAULIC);
@@ -78,7 +77,6 @@ export default function InputOutputEditor({ connector, type, onUpdate, onDelete,
     });
   };
 
-  const moduleTypeOptions = getModuleTypeOptions();
   const availableDimensions = getAvailableDimensions();
   const availableVerbindungsarten = getAvailableVerbindungsarten();
 
@@ -234,20 +232,20 @@ export default function InputOutputEditor({ connector, type, onUpdate, onDelete,
           Leer = alle erlaubt
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-          {moduleTypeOptions.map(moduleType => (
+          {modultypen.map(moduleType => (
             <button
               type="button"
-              key={moduleType}
+              key={moduleType.id}
               onClick={(e) => {
                 e.stopPropagation();
-                const newAllowedTypes = toggleModuleType(moduleType);
+                const newAllowedTypes = toggleModuleType(moduleType.name);
                 handleSave({ allowedModuleTypes: newAllowedTypes });
               }}
               style={{
                 padding: '4px 8px',
-                background: allowedModuleTypes.includes(moduleType) ? 'var(--accent)' : 'var(--bg-primary)',
-                color: allowedModuleTypes.includes(moduleType) ? 'var(--bg-primary)' : 'var(--text-secondary)',
-                border: `1px solid ${allowedModuleTypes.includes(moduleType) ? 'var(--accent)' : 'var(--border)'}`,
+                background: allowedModuleTypes.includes(moduleType.name) ? 'var(--accent)' : 'var(--bg-primary)',
+                color: allowedModuleTypes.includes(moduleType.name) ? 'var(--bg-primary)' : 'var(--text-secondary)',
+                border: `1px solid ${allowedModuleTypes.includes(moduleType.name) ? 'var(--accent)' : 'var(--border)'}`,
                 borderRadius: '3px',
                 fontSize: '10px',
                 fontWeight: 500,
@@ -255,7 +253,7 @@ export default function InputOutputEditor({ connector, type, onUpdate, onDelete,
                 fontFamily: 'inherit',
               }}
             >
-              {moduleType}
+              {moduleType.name}
             </button>
           ))}
         </div>

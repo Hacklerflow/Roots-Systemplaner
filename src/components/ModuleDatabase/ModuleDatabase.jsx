@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { createModuleTemplate, createInput, createOutput, getModuleTypeOptions, MODULE_TYPES } from '../../data/types';
+import { createModuleTemplate, createInput, createOutput } from '../../data/types';
 import InputOutputEditor from '../ConfiguratorEditor/InputOutputEditor';
 
-export default function ModuleDatabase({ modules, setModules, leitungskatalog = [], verbindungsartenkatalog = [], dimensionskatalog = [] }) {
+export default function ModuleDatabase({ modules, setModules, leitungskatalog = [], verbindungsartenkatalog = [], dimensionskatalog = [], modultypen = [] }) {
   const [editingModule, setEditingModule] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
 
@@ -66,6 +66,7 @@ export default function ModuleDatabase({ modules, setModules, leitungskatalog = 
           leitungskatalog={leitungskatalog}
           verbindungsartenkatalog={verbindungsartenkatalog}
           dimensionskatalog={dimensionskatalog}
+          modultypen={modultypen}
         />
       )}
 
@@ -149,7 +150,7 @@ function ModuleCard({ module, onEdit, disabled }) {
   );
 }
 
-function ModuleForm({ module, onSave, onCancel, onDelete, isCreating, leitungskatalog = [], verbindungsartenkatalog = [], dimensionskatalog = [] }) {
+function ModuleForm({ module, onSave, onCancel, onDelete, isCreating, leitungskatalog = [], verbindungsartenkatalog = [], dimensionskatalog = [], modultypen = [] }) {
   const [formData, setFormData] = useState(module);
 
   const handleChange = (section, key, value) => {
@@ -261,7 +262,7 @@ function ModuleForm({ module, onSave, onCancel, onDelete, isCreating, leitungska
           </label>
           <select
             required
-            value={formData.moduleType || MODULE_TYPES.CONSUMER}
+            value={formData.moduleType || (modultypen.length > 0 ? modultypen[0].name : '')}
             onChange={(e) => setFormData({ ...formData, moduleType: e.target.value })}
             style={{
               width: '100%',
@@ -274,10 +275,19 @@ function ModuleForm({ module, onSave, onCancel, onDelete, isCreating, leitungska
               fontSize: '14px',
             }}
           >
-            {getModuleTypeOptions().map(type => (
-              <option key={type} value={type}>{type}</option>
-            ))}
+            {modultypen.length === 0 ? (
+              <option value="">Keine Modultypen verfügbar</option>
+            ) : (
+              modultypen.map(type => (
+                <option key={type.id} value={type.name}>{type.name}</option>
+              ))
+            )}
           </select>
+          {modultypen.length === 0 && (
+            <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+              Bitte erstelle zuerst Modultypen im Tab "Modultypen"
+            </div>
+          )}
         </div>
       </div>
 

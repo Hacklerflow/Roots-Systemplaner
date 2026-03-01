@@ -6,11 +6,13 @@ import Stueckliste from './components/Stueckliste/Stueckliste';
 import Verbindungen from './components/Verbindungen/Verbindungen';
 import Leitungen from './components/Leitungen/Leitungen';
 import Dimensionen from './components/Dimensionen/Dimensionen';
+import Modultypen from './components/Modultypen/Modultypen';
 import ErrorBoundary from './components/ErrorBoundary';
 import { initialModules } from './data/moduleDatabase';
 import { initialLeitungen } from './data/leitungskatalog';
 import { initialVerbindungsarten } from './data/verbindungsartenkatalog';
 import { initialDimensionen } from './data/dimensionskatalog';
+import { initialModultypen } from './data/modultypenkatalog';
 
 function App() {
   const [activeTab, setActiveTab] = useState('konfigurator');
@@ -121,6 +123,38 @@ function App() {
     if (dimensionskatalog.length === 0) {
       console.warn('Runtime: Dimensionskatalog ist leer, lade Initial-Daten');
       setDimensionskatalog(initialDimensionen);
+    }
+  }, []);
+
+  // Modultypen State (mit localStorage Persistenz)
+  const [modultypen, setModultypen] = useState(() => {
+    try {
+      const stored = localStorage.getItem('roots-modultypen');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        } else {
+          console.warn('Modultypen ist leer, verwende Initial-Daten');
+          localStorage.removeItem('roots-modultypen');
+        }
+      }
+    } catch (e) {
+      console.error('Fehler beim Laden der Modultypen:', e);
+      localStorage.removeItem('roots-modultypen');
+    }
+    return initialModultypen;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('roots-modultypen', JSON.stringify(modultypen));
+  }, [modultypen]);
+
+  // Runtime-Check: Falls Modultypen leer, Initial-Daten laden
+  useEffect(() => {
+    if (modultypen.length === 0) {
+      console.warn('Runtime: Modultypen ist leer, lade Initial-Daten');
+      setModultypen(initialModultypen);
     }
   }, []);
 
@@ -401,6 +435,12 @@ function App() {
           Dimensionen
         </button>
         <button
+          className={`tab ${activeTab === 'modultypen' ? 'active' : ''}`}
+          onClick={() => setActiveTab('modultypen')}
+        >
+          Modultypen
+        </button>
+        <button
           className={`tab ${activeTab === 'datenbank' ? 'active' : ''}`}
           onClick={() => setActiveTab('datenbank')}
         >
@@ -419,6 +459,7 @@ function App() {
               leitungskatalog={leitungskatalog}
               verbindungsartenkatalog={verbindungsartenkatalog}
               dimensionskatalog={dimensionskatalog}
+              modultypen={modultypen}
             />
           )}
 
@@ -454,6 +495,13 @@ function App() {
             />
           )}
 
+          {activeTab === 'modultypen' && (
+            <Modultypen
+              modultypen={modultypen}
+              setModultypen={setModultypen}
+            />
+          )}
+
           {activeTab === 'datenbank' && (
             <ModuleDatabase
               modules={modules}
@@ -461,6 +509,7 @@ function App() {
               leitungskatalog={leitungskatalog}
               verbindungsartenkatalog={verbindungsartenkatalog}
               dimensionskatalog={dimensionskatalog}
+              modultypen={modultypen}
             />
           )}
         </ErrorBoundary>
