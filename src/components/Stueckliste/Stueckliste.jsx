@@ -1,8 +1,12 @@
+import { useState } from 'react';
 import { utils, writeFile } from 'xlsx';
 import { isBuilding, CONNECTION_TYPE_LABELS } from '../../data/types';
+import AirtableSettings from '../Settings/AirtableSettings';
 
 export default function Stueckliste({ configuration, setConfiguration, modultypen = [] }) {
   const { building, modules = [], connections = [] } = configuration || {};
+  const [showAirtableSettings, setShowAirtableSettings] = useState(false);
+  const [isSendingToAirtable, setIsSendingToAirtable] = useState(false);
 
   // Handler für Preis-Änderungen bei Modulen
   const handleModulePriceChange = (moduleId, newPrice) => {
@@ -38,6 +42,144 @@ export default function Stueckliste({ configuration, setConfiguration, modultype
           : c
       ),
     });
+  };
+
+  const handleSendToAirtable = async () => {
+    // Lade Airtable-Einstellungen
+    const savedSettings = localStorage.getItem('airtable_settings');
+    if (!savedSettings) {
+      alert('Bitte konfiguriere zuerst die Airtable-Einstellungen!');
+      setShowAirtableSettings(true);
+      return;
+    }
+
+    const settings = JSON.parse(savedSettings);
+    const { personalAccessToken, baseId, tableName } = settings;
+
+    if (!personalAccessToken || !baseId || !tableName) {
+      alert('Airtable-Einstellungen sind unvollständig!');
+      setShowAirtableSettings(true);
+      return;
+    }
+
+    setIsSendingToAirtable(true);
+
+    try {
+      // Erstelle Airtable-Record
+      const exportData = {
+        // Metadaten
+        exportDatum: new Date().toISOString(),
+        projektName: building?.name || 'Unbenanntes System',
+
+        // Gebäude-Informationen
+        gebaeude: building ? {
+          name: building.name || '',
+          baujahr: building.properties?.baujahr || '',
+          strasse: building.properties?.strasse || '',
+          hausnummer: building.properties?.hausnummer || '',
+          stockwerke: building.properties?.stockwerke || '',
+        } : null,
+
+        // Komponenten/Module
+        komponenten: modules.map((module, index) => {
+          const moduleTypeInfo = modultypen?.find(t => t.name === module.moduleType);
+          const isProEinheit = moduleTypeInfo?.berechnungsart === 'pro_einheit';
+          const einheit = moduleTypeInfo?.einheit || '';
+          const menge = module.properties?.menge || null;
+          const preisEuro = module.properties?.preis_euro || null;
+          const gesamtpreis = isProEinheit && menge && preisEuro ? (menge * preisEuro) : preisEuro;
+
+          return {
+            position: index + 1,
+            name: module.name || '',
+            modultyp: module.moduleType || '',
+            hersteller: module.properties?.hersteller || '',
+            abmessungen: module.properties?.abmessungen || '',
+            gewicht_kg: module.properties?.gewicht_kg || null,
+            leistung_nominal_kw: module.properties?.leistung_nominal_kw || null,
+            volumen_liter: module.properties?.volumen_liter || null,
+            ...(isProEinheit ? {
+              berechnungsart: 'pro_einheit',
+              einheit: einheit,
+              menge: menge,
+              preis_pro_einheit_euro: preisEuro,
+              gesamtpreis_euro: gesamtpreis,
+            } : {
+              berechnungsart: 'stueck',
+              preis_euro: preisEuro,
+            }),
+          };
+        }),
+
+        // Leitungen/Verbindungen
+        leitungen: connections.map((conn, index) => {
+          const sourceModule = modules.find(m => m.id === conn.source) || building;
+          const targetModule = modules.find(m => m.id === conn.target);
+          const output = sourceModule?.outputs?.find(o => o.id === conn.sourceHandle);
+          const input = targetModule?.inputs?.find(i => i.id === conn.targetHandle);
+          const gesamtpreis = conn.preis_pro_meter && conn.laenge_meter
+            ? (conn.preis_pro_meter * conn.laenge_meter)
+            : null;
+
+          return {
+            position: index + 1,
+            von_modul: sourceModule?.name || '',
+            von_ausgang: output?.label || '',
+            zu_modul: targetModule?.name || '',
+            zu_eingang: input?.label || '',
+            verbindungstyp: CONNECTION_TYPE_LABELS[output?.connectionType] || '',
+            laenge_meter: conn.laenge_meter || null,
+            dimension: conn.dimension || '',
+            preis_pro_meter_euro: conn.preis_pro_meter || null,
+            gesamtpreis_euro: gesamtpreis,
+          };
+        }),
+
+        // Summen
+        summen: {
+          komponenten_summe_euro: moduleSumme,
+          leitungen_summe_euro: leitungenSumme,
+          gesamtsumme_euro: gesamtsumme,
+          anzahl_komponenten: modules.length,
+          anzahl_leitungen: connections.length,
+        }
+      };
+
+      // Sende an Airtable
+      const response = await fetch(`https://api.airtable.com/v0/${baseId}/${encodeURIComponent(tableName)}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${personalAccessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fields: {
+            'Projektname': exportData.projektName,
+            'Exportdatum': exportData.exportDatum,
+            'Gebaeude': JSON.stringify(exportData.gebaeude),
+            'Komponenten': JSON.stringify(exportData.komponenten),
+            'Leitungen': JSON.stringify(exportData.leitungen),
+            'Komponenten_Summe': exportData.summen.komponenten_summe_euro,
+            'Leitungen_Summe': exportData.summen.leitungen_summe_euro,
+            'Gesamtsumme': exportData.summen.gesamtsumme_euro,
+            'Anzahl_Komponenten': exportData.summen.anzahl_komponenten,
+            'Anzahl_Leitungen': exportData.summen.anzahl_leitungen,
+          }
+        })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error?.message || 'Fehler beim Senden an Airtable');
+      }
+
+      alert('✅ Erfolgreich an Airtable gesendet!');
+    } catch (error) {
+      console.error('Fehler beim Senden an Airtable:', error);
+      alert(`❌ Fehler: ${error.message}\n\nBitte prüfe deine Airtable-Einstellungen.`);
+    } finally {
+      setIsSendingToAirtable(false);
+    }
   };
 
   const handleExportJSON = () => {
@@ -273,13 +415,48 @@ export default function Stueckliste({ configuration, setConfiguration, modultype
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
           <button
-            onClick={handleExportJSON}
-            disabled={modules.length === 0 && connections.length === 0}
+            onClick={() => setShowAirtableSettings(true)}
+            style={{
+              padding: '12px 16px',
+              background: 'var(--bg-tertiary)',
+              color: 'var(--text-primary)',
+              border: '1px solid var(--border)',
+              borderRadius: '4px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              fontSize: '14px',
+            }}
+            title="Airtable-Einstellungen"
+          >
+            ⚙️
+          </button>
+          <button
+            onClick={handleSendToAirtable}
+            disabled={modules.length === 0 && connections.length === 0 || isSendingToAirtable}
             style={{
               padding: '12px 24px',
               background: 'var(--accent)',
               color: 'var(--bg-primary)',
               border: 'none',
+              borderRadius: '4px',
+              fontWeight: 600,
+              cursor: modules.length === 0 && connections.length === 0 || isSendingToAirtable ? 'not-allowed' : 'pointer',
+              fontFamily: 'inherit',
+              fontSize: '14px',
+              opacity: modules.length === 0 && connections.length === 0 || isSendingToAirtable ? 0.5 : 1,
+            }}
+          >
+            {isSendingToAirtable ? '⏳ Sende...' : '📤 An Airtable senden'}
+          </button>
+          <button
+            onClick={handleExportJSON}
+            disabled={modules.length === 0 && connections.length === 0}
+            style={{
+              padding: '12px 24px',
+              background: 'var(--bg-tertiary)',
+              color: 'var(--text-primary)',
+              border: '1px solid var(--border)',
               borderRadius: '4px',
               fontWeight: 600,
               cursor: modules.length === 0 && connections.length === 0 ? 'not-allowed' : 'pointer',
@@ -551,6 +728,11 @@ export default function Stueckliste({ configuration, setConfiguration, modultype
           <span>Leitungen: {leitungenSumme.toFixed(2)} €</span>
         </div>
       </div>
+
+      {/* Airtable Settings Modal */}
+      {showAirtableSettings && (
+        <AirtableSettings onClose={() => setShowAirtableSettings(false)} />
+      )}
     </div>
   );
 }
