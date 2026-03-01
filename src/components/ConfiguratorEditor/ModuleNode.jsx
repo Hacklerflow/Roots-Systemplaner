@@ -19,19 +19,19 @@ export default function ModuleNode({ data }) {
       style={{
         background: 'var(--bg-secondary)',
         border: '2px solid var(--success)',
-        borderRadius: '8px',
-        padding: '16px',
-        minWidth: '220px',
-        minHeight: '120px',
+        borderRadius: '6px',
+        padding: '10px',
+        minWidth: '160px',
+        minHeight: '80px',
         cursor: 'pointer',
         position: 'relative',
       }}
     >
       {/* Modul-Info */}
-      <div style={{ fontWeight: 600, fontSize: '14px', marginBottom: '4px' }}>
+      <div style={{ fontWeight: 600, fontSize: '13px', marginBottom: '2px' }}>
         {name}
       </div>
-      <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
+      <div style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>
         {subtitle}
       </div>
 
@@ -49,8 +49,8 @@ export default function ModuleNode({ data }) {
             style={{
               top: `${yOffset}%`,
               background: getConnectionTypeColor(input.connectionType),
-              width: '12px',
-              height: '12px',
+              width: '10px',
+              height: '10px',
               border: '2px solid var(--bg-primary)',
             }}
           />
@@ -71,8 +71,8 @@ export default function ModuleNode({ data }) {
             style={{
               top: `${yOffset}%`,
               background: getConnectionTypeColor(output.connectionType),
-              width: '12px',
-              height: '12px',
+              width: '10px',
+              height: '10px',
               border: '2px solid var(--bg-primary)',
             }}
           />

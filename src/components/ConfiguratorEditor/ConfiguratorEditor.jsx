@@ -536,13 +536,39 @@ function ConfiguratorEditorInner({ modules: moduleTemplates, configuration, setC
             MODULE
           </div>
 
-          {moduleTemplates.map((template) => (
-            <ModuleCard
-              key={template.id}
-              module={template}
-              onAdd={() => handleAddModule(template)}
-            />
-          ))}
+          {/* Module nach Type gruppieren */}
+          {(() => {
+            // Gruppiere Module nach moduleType
+            const grouped = moduleTemplates.reduce((acc, template) => {
+              const type = template.moduleType || 'Sonstige';
+              if (!acc[type]) acc[type] = [];
+              acc[type].push(template);
+              return acc;
+            }, {});
+
+            // Rendere gruppiert
+            return Object.entries(grouped).map(([type, templates]) => (
+              <div key={type} style={{ marginBottom: '16px' }}>
+                <div style={{
+                  fontSize: '10px',
+                  color: 'var(--accent)',
+                  marginBottom: '6px',
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                }}>
+                  {type}
+                </div>
+                {templates.map((template) => (
+                  <ModuleCard
+                    key={template.id}
+                    module={template}
+                    onAdd={() => handleAddModule(template)}
+                  />
+                ))}
+              </div>
+            ));
+          })()}
         </div>
       )}
 
@@ -596,37 +622,42 @@ function ModuleCard({ module, onAdd }) {
         background: 'var(--bg-tertiary)',
         border: '1px solid var(--border)',
         borderRadius: '4px',
-        padding: '12px',
-        marginBottom: '8px',
+        padding: '8px',
+        marginBottom: '6px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
       }}
     >
-      <div style={{ fontWeight: 600, fontSize: '13px', marginBottom: '4px' }}>
-        {module.name}
-      </div>
-      <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
-        {module.moduleType}
-      </div>
-
-      <div style={{ fontSize: '10px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
-        {module.inputs.length} Ein | {module.outputs.length} Aus
+      <div style={{ flex: 1 }}>
+        <div style={{ fontWeight: 600, fontSize: '12px', marginBottom: '2px' }}>
+          {module.name}
+        </div>
+        <div style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>
+          {module.moduleType}
+        </div>
       </div>
 
       <button
         onClick={onAdd}
         style={{
-          width: '100%',
-          padding: '6px',
+          width: '32px',
+          height: '32px',
+          padding: '0',
           background: 'var(--accent)',
           color: 'var(--bg-primary)',
           border: 'none',
           borderRadius: '4px',
-          fontSize: '12px',
+          fontSize: '18px',
           fontWeight: 600,
           cursor: 'pointer',
           fontFamily: 'inherit',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
         }}
       >
-        Hinzufügen
+        +
       </button>
     </div>
   );
