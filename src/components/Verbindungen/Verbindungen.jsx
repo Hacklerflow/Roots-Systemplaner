@@ -6,12 +6,23 @@ export default function Verbindungen({ verbindungsartenkatalog, setVerbindungsar
   const [newVerbindungsart, setNewVerbindungsart] = useState({
     connectionType: CONNECTION_TYPES.HYDRAULIC,
     name: '',
+    kuerzel: '',
     kompatible_leitungen: [],
   });
 
   const handleAdd = () => {
     if (!newVerbindungsart.name) {
       alert('Bitte Name eingeben!');
+      return;
+    }
+
+    if (!newVerbindungsart.kuerzel) {
+      alert('Bitte Kürzel eingeben!');
+      return;
+    }
+
+    if (newVerbindungsart.kuerzel.length > 6) {
+      alert('Kürzel darf maximal 6 Zeichen haben!');
       return;
     }
 
@@ -24,6 +35,7 @@ export default function Verbindungen({ verbindungsartenkatalog, setVerbindungsar
     setNewVerbindungsart({
       connectionType: CONNECTION_TYPES.HYDRAULIC,
       name: '',
+      kuerzel: '',
       kompatible_leitungen: [],
     });
   };
@@ -103,7 +115,7 @@ export default function Verbindungen({ verbindungsartenkatalog, setVerbindungsar
         }}
       >
         <h3 style={{ marginTop: 0, marginBottom: '16px' }}>Neue Verbindungsart hinzufügen</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr 1fr 120px', gap: '12px', alignItems: 'end' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '180px 1fr 100px 1fr 120px', gap: '12px', alignItems: 'end' }}>
           <div>
             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '13px' }}>
               Verbindungstyp
@@ -146,6 +158,30 @@ export default function Verbindungen({ verbindungsartenkatalog, setVerbindungsar
                 color: 'var(--text-primary)',
                 fontFamily: 'inherit',
                 fontSize: '14px',
+              }}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '13px' }}>
+              Kürzel *
+            </label>
+            <input
+              type="text"
+              value={newVerbindungsart.kuerzel}
+              onChange={(e) => setNewVerbindungsart({ ...newVerbindungsart, kuerzel: e.target.value.toUpperCase().slice(0, 6) })}
+              placeholder="MAX 6"
+              maxLength={6}
+              style={{
+                width: '100%',
+                padding: '10px',
+                background: 'var(--bg-tertiary)',
+                border: '1px solid var(--border)',
+                borderRadius: '4px',
+                color: 'var(--text-primary)',
+                fontFamily: 'inherit',
+                fontSize: '14px',
+                textTransform: 'uppercase',
               }}
             />
           </div>
@@ -219,6 +255,7 @@ function Section({ title, verbindungsarten, leitungen, connectionType, editingVe
           <thead>
             <tr style={{ background: 'var(--bg-tertiary)', borderBottom: '2px solid var(--border)' }}>
               <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600, fontSize: '13px' }}>Name</th>
+              <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600, fontSize: '13px', width: '100px' }}>Kürzel</th>
               <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600, fontSize: '13px' }}>Kompatible Leitungen</th>
               <th style={{ padding: '12px', textAlign: 'right', fontWeight: 600, fontSize: '13px' }}>Aktionen</th>
             </tr>
@@ -245,6 +282,37 @@ function Section({ title, verbindungsarten, leitungen, connectionType, editingVe
                     />
                   ) : (
                     <span style={{ fontSize: '14px', fontWeight: 600 }}>{verbindungsart.name}</span>
+                  )}
+                </td>
+                <td style={{ padding: '12px' }}>
+                  {editingVerbindungsart === verbindungsart.id ? (
+                    <input
+                      type="text"
+                      value={verbindungsart.kuerzel || ''}
+                      onChange={(e) => onUpdate(verbindungsart.id, { kuerzel: e.target.value.toUpperCase().slice(0, 6) })}
+                      maxLength={6}
+                      placeholder="MAX 6"
+                      style={{
+                        width: '100%',
+                        padding: '6px 8px',
+                        background: 'var(--bg-tertiary)',
+                        border: '1px solid var(--border)',
+                        borderRadius: '4px',
+                        color: 'var(--text-primary)',
+                        fontFamily: 'inherit',
+                        fontSize: '13px',
+                        textTransform: 'uppercase',
+                      }}
+                    />
+                  ) : (
+                    <span style={{
+                      fontSize: '13px',
+                      fontWeight: 700,
+                      color: 'var(--accent)',
+                      fontFamily: 'monospace',
+                    }}>
+                      {verbindungsart.kuerzel || '—'}
+                    </span>
                   )}
                 </td>
                 <td style={{ padding: '12px' }}>
