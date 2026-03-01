@@ -7,6 +7,7 @@ import Verbindungen from './components/Verbindungen/Verbindungen';
 import Leitungen from './components/Leitungen/Leitungen';
 import Dimensionen from './components/Dimensionen/Dimensionen';
 import Modultypen from './components/Modultypen/Modultypen';
+import SystemSetsModal from './components/SystemSets/SystemSetsModal';
 import ErrorBoundary from './components/ErrorBoundary';
 import { initialModules } from './data/moduleDatabase';
 import { initialLeitungen } from './data/leitungskatalog';
@@ -18,6 +19,7 @@ function App() {
   const [activeTab, setActiveTab] = useState('konfigurator');
   const [settingsDropdownOpen, setSettingsDropdownOpen] = useState(false);
   const [activeSettingsTab, setActiveSettingsTab] = useState('verbindungen');
+  const [systemSetsModalOpen, setSystemSetsModalOpen] = useState(false);
   const fileInputRef = useRef(null);
   const settingsDropdownRef = useRef(null);
 
@@ -174,6 +176,77 @@ function App() {
       setModultypen(initialModultypen);
     }
   }, []);
+
+  // System Sets State (mit localStorage Persistenz)
+  const [systemSets, setSystemSets] = useState(() => {
+    try {
+      const stored = localStorage.getItem('roots-system-sets');
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch (e) {
+      console.error('Fehler beim Laden der System Sets:', e);
+    }
+    return [];
+  });
+
+  const [activeSetId, setActiveSetId] = useState(() => {
+    try {
+      const stored = localStorage.getItem('roots-active-set-id');
+      return stored || null;
+    } catch (e) {
+      console.error('Fehler beim Laden der aktiven Set-ID:', e);
+    }
+    return null;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('roots-system-sets', JSON.stringify(systemSets));
+  }, [systemSets]);
+
+  useEffect(() => {
+    if (activeSetId) {
+      localStorage.setItem('roots-active-set-id', activeSetId);
+    }
+  }, [activeSetId]);
+
+  // System Sets Functions
+  const handleCreateSystemSet = (name) => {
+    const today = new Date().toISOString().slice(0, 10);
+    const newSet = {
+      id: `set-${Date.now()}`,
+      name: `${name} ${today}`,
+      createdAt: new Date().toISOString(),
+      modules: modules,
+      leitungskatalog: leitungskatalog,
+      verbindungsartenkatalog: verbindungsartenkatalog,
+      dimensionskatalog: dimensionskatalog,
+      modultypen: modultypen,
+    };
+
+    setSystemSets([...systemSets, newSet]);
+    setActiveSetId(newSet.id);
+  };
+
+  const handleSwitchSystemSet = (setId) => {
+    const set = systemSets.find(s => s.id === setId);
+    if (!set) return;
+
+    // Alle Kataloge durch das Set ersetzen
+    setModules(set.modules || []);
+    setLeitungskatalog(set.leitungskatalog || []);
+    setVerbindungsartenkatalog(set.verbindungsartenkatalog || []);
+    setDimensionskatalog(set.dimensionskatalog || []);
+    setModultypen(set.modultypen || []);
+    setActiveSetId(setId);
+  };
+
+  const handleDeleteSystemSet = (setId) => {
+    setSystemSets(systemSets.filter(s => s.id !== setId));
+    if (activeSetId === setId) {
+      setActiveSetId(null);
+    }
+  };
 
   // Konfigurations State (STRUKTUR: building + modules + connections)
   const [configuration, setConfiguration] = useState(() => {
@@ -341,9 +414,35 @@ function App() {
           justifyContent: 'space-between',
         }}
       >
-        <h1 style={{ margin: 0, fontSize: '20px', fontWeight: 600 }}>
-          Roots Systemkonfigurator
-        </h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <h1 style={{ margin: 0, fontSize: '20px', fontWeight: 600 }}>
+            Roots Systemkonfigurator
+          </h1>
+
+          {/* System Set Indicator & Button */}
+          <button
+            onClick={() => setSystemSetsModalOpen(true)}
+            style={{
+              padding: '8px 16px',
+              background: 'var(--bg-tertiary)',
+              color: 'var(--text-primary)',
+              border: '2px solid var(--accent)',
+              borderRadius: '4px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              fontSize: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+            }}
+          >
+            <span>⚙️</span>
+            <span>
+              {systemSets.find(s => s.id === activeSetId)?.name || 'Kein System Set'}
+            </span>
+          </button>
+        </div>
 
         {/* Buttons */}
         {activeTab === 'konfigurator' && hasBuilding && (
@@ -630,6 +729,17 @@ function App() {
           )}
         </ErrorBoundary>
       </div>
+
+      {/* System Sets Modal */}
+      <SystemSetsModal
+        isOpen={systemSetsModalOpen}
+        onClose={() => setSystemSetsModalOpen(false)}
+        systemSets={systemSets}
+        activeSetId={activeSetId}
+        onCreateSet={handleCreateSystemSet}
+        onSwitchSet={handleSwitchSystemSet}
+        onDeleteSet={handleDeleteSystemSet}
+      />
     </div>
   );
 }
