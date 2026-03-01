@@ -16,7 +16,10 @@ import { initialModultypen } from './data/modultypenkatalog';
 
 function App() {
   const [activeTab, setActiveTab] = useState('konfigurator');
+  const [settingsDropdownOpen, setSettingsDropdownOpen] = useState(false);
+  const [activeSettingsTab, setActiveSettingsTab] = useState('verbindungen');
   const fileInputRef = useRef(null);
+  const settingsDropdownRef = useRef(null);
 
   // Keyboard shortcut: Cmd+Shift+K or Ctrl+Shift+K zum Zurücksetzen
   useEffect(() => {
@@ -31,6 +34,20 @@ function App() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  // Click outside to close settings dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (settingsDropdownRef.current && !settingsDropdownRef.current.contains(event.target)) {
+        setSettingsDropdownOpen(false);
+      }
+    };
+
+    if (settingsDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [settingsDropdownOpen]);
 
   // Moduldatenbank State (mit localStorage Persistenz)
   const [modules, setModules] = useState(() => {
@@ -417,35 +434,134 @@ function App() {
           Stückliste
         </button>
         <button
-          className={`tab ${activeTab === 'verbindungen' ? 'active' : ''}`}
-          onClick={() => setActiveTab('verbindungen')}
-        >
-          Verbindungen
-        </button>
-        <button
-          className={`tab ${activeTab === 'leitungen' ? 'active' : ''}`}
-          onClick={() => setActiveTab('leitungen')}
-        >
-          Leitungen
-        </button>
-        <button
-          className={`tab ${activeTab === 'dimensionen' ? 'active' : ''}`}
-          onClick={() => setActiveTab('dimensionen')}
-        >
-          Dimensionen
-        </button>
-        <button
-          className={`tab ${activeTab === 'modultypen' ? 'active' : ''}`}
-          onClick={() => setActiveTab('modultypen')}
-        >
-          Modultypen
-        </button>
-        <button
           className={`tab ${activeTab === 'datenbank' ? 'active' : ''}`}
           onClick={() => setActiveTab('datenbank')}
         >
           Moduldatenbank
         </button>
+
+        {/* Einstellungen Dropdown */}
+        <div
+          ref={settingsDropdownRef}
+          style={{ position: 'relative', display: 'inline-block' }}
+        >
+          <button
+            className={`tab ${activeTab === 'einstellungen' ? 'active' : ''}`}
+            onClick={() => {
+              setSettingsDropdownOpen(!settingsDropdownOpen);
+              if (!settingsDropdownOpen) {
+                setActiveTab('einstellungen');
+              }
+            }}
+          >
+            Einstellungen {settingsDropdownOpen ? '▲' : '▼'}
+          </button>
+
+          {settingsDropdownOpen && (
+            <div
+              style={{
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                background: 'var(--bg-secondary)',
+                border: '1px solid var(--border)',
+                borderRadius: '4px',
+                marginTop: '4px',
+                minWidth: '200px',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                zIndex: 1000,
+              }}
+            >
+              <button
+                className={`settings-dropdown-item ${activeSettingsTab === 'verbindungen' ? 'active' : ''}`}
+                onClick={() => {
+                  setActiveSettingsTab('verbindungen');
+                  setSettingsDropdownOpen(false);
+                }}
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  background: activeSettingsTab === 'verbindungen' ? 'var(--accent)' : 'transparent',
+                  color: activeSettingsTab === 'verbindungen' ? 'var(--bg-primary)' : 'var(--text-primary)',
+                  border: 'none',
+                  borderBottom: '1px solid var(--border)',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  fontSize: '14px',
+                  fontWeight: activeSettingsTab === 'verbindungen' ? 600 : 400,
+                }}
+              >
+                Verbindungen
+              </button>
+              <button
+                className={`settings-dropdown-item ${activeSettingsTab === 'leitungen' ? 'active' : ''}`}
+                onClick={() => {
+                  setActiveSettingsTab('leitungen');
+                  setSettingsDropdownOpen(false);
+                }}
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  background: activeSettingsTab === 'leitungen' ? 'var(--accent)' : 'transparent',
+                  color: activeSettingsTab === 'leitungen' ? 'var(--bg-primary)' : 'var(--text-primary)',
+                  border: 'none',
+                  borderBottom: '1px solid var(--border)',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  fontSize: '14px',
+                  fontWeight: activeSettingsTab === 'leitungen' ? 600 : 400,
+                }}
+              >
+                Leitungen
+              </button>
+              <button
+                className={`settings-dropdown-item ${activeSettingsTab === 'dimensionen' ? 'active' : ''}`}
+                onClick={() => {
+                  setActiveSettingsTab('dimensionen');
+                  setSettingsDropdownOpen(false);
+                }}
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  background: activeSettingsTab === 'dimensionen' ? 'var(--accent)' : 'transparent',
+                  color: activeSettingsTab === 'dimensionen' ? 'var(--bg-primary)' : 'var(--text-primary)',
+                  border: 'none',
+                  borderBottom: '1px solid var(--border)',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  fontSize: '14px',
+                  fontWeight: activeSettingsTab === 'dimensionen' ? 600 : 400,
+                }}
+              >
+                Dimensionen
+              </button>
+              <button
+                className={`settings-dropdown-item ${activeSettingsTab === 'modultypen' ? 'active' : ''}`}
+                onClick={() => {
+                  setActiveSettingsTab('modultypen');
+                  setSettingsDropdownOpen(false);
+                }}
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  background: activeSettingsTab === 'modultypen' ? 'var(--accent)' : 'transparent',
+                  color: activeSettingsTab === 'modultypen' ? 'var(--bg-primary)' : 'var(--text-primary)',
+                  border: 'none',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  fontSize: '14px',
+                  fontWeight: activeSettingsTab === 'modultypen' ? 600 : 400,
+                }}
+              >
+                Modultypen
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Tab Content */}
@@ -472,7 +588,7 @@ function App() {
             />
           )}
 
-          {activeTab === 'verbindungen' && (
+          {activeTab === 'einstellungen' && activeSettingsTab === 'verbindungen' && (
             <Verbindungen
               verbindungsartenkatalog={verbindungsartenkatalog}
               setVerbindungsartenkatalog={setVerbindungsartenkatalog}
@@ -480,7 +596,7 @@ function App() {
             />
           )}
 
-          {activeTab === 'leitungen' && (
+          {activeTab === 'einstellungen' && activeSettingsTab === 'leitungen' && (
             <Leitungen
               leitungskatalog={leitungskatalog}
               setLeitungskatalog={setLeitungskatalog}
@@ -488,14 +604,14 @@ function App() {
             />
           )}
 
-          {activeTab === 'dimensionen' && (
+          {activeTab === 'einstellungen' && activeSettingsTab === 'dimensionen' && (
             <Dimensionen
               dimensionskatalog={dimensionskatalog}
               setDimensionskatalog={setDimensionskatalog}
             />
           )}
 
-          {activeTab === 'modultypen' && (
+          {activeTab === 'einstellungen' && activeSettingsTab === 'modultypen' && (
             <Modultypen
               modultypen={modultypen}
               setModultypen={setModultypen}
