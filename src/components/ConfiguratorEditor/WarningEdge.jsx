@@ -54,21 +54,21 @@ export default function WarningEdge({
       />
 
       <EdgeLabelRenderer>
-        {/* Länge und Dimension - in der Mitte */}
+        {/* Länge und Dimension - direkt auf der Linie */}
         {hasProperties && (
           <div
             style={{
               position: 'absolute',
-              transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY - 20}px)`,
-              background: '#000000',
+              transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
+              background: 'rgba(0, 0, 0, 0.5)',
               color: 'var(--text-primary)',
-              padding: '4px 8px',
-              borderRadius: '4px',
-              fontSize: '11px',
-              fontWeight: 500,
+              padding: '2px 4px',
+              borderRadius: '3px',
+              fontSize: '9px',
+              fontWeight: 600,
               pointerEvents: 'none',
               whiteSpace: 'nowrap',
-              border: '1px solid var(--border)',
+              fontFamily: 'monospace',
               display: 'flex',
               gap: '8px',
             }}
@@ -84,7 +84,7 @@ export default function WarningEdge({
           <div
             style={{
               position: 'absolute',
-              transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY + (hasProperties ? 10 : 0)}px)`,
+              transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY + (hasProperties ? 20 : 0)}px)`,
               background: 'var(--bg-secondary)',
               border: '2px solid var(--error)',
               borderRadius: '50%',
