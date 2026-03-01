@@ -94,6 +94,7 @@ export default function ModuleDatabase({ modules, setModules, leitungskatalog = 
                     setIsCreating(false);
                   }}
                   disabled={!!editingModule}
+                  modultypen={modultypen}
                 />
               ))}
             </div>
@@ -104,7 +105,11 @@ export default function ModuleDatabase({ modules, setModules, leitungskatalog = 
   );
 }
 
-function ModuleCard({ module, onEdit, disabled }) {
+function ModuleCard({ module, onEdit, disabled, modultypen }) {
+  // Find module type info
+  const moduleTypeInfo = modultypen?.find(t => t.name === module.moduleType);
+  const showsUnit = moduleTypeInfo?.berechnungsart === 'pro_einheit' && moduleTypeInfo?.einheit;
+
   return (
     <div
       style={{
@@ -120,6 +125,7 @@ function ModuleCard({ module, onEdit, disabled }) {
       </div>
       <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
         {module.moduleType || 'Modul'}
+        {showsUnit && <span style={{ marginLeft: '4px', color: 'var(--accent)' }}>({moduleTypeInfo.einheit})</span>}
       </div>
 
       {/* Schnellinfo */}
@@ -179,6 +185,11 @@ function ModuleCard({ module, onEdit, disabled }) {
 
 function ModuleForm({ module, onSave, onCancel, onDelete, isCreating, leitungskatalog = [], verbindungsartenkatalog = [], dimensionskatalog = [], modultypen = [] }) {
   const [formData, setFormData] = useState(module);
+
+  // Find module type info to determine if we need quantity field
+  const moduleTypeInfo = modultypen?.find(t => t.name === formData.moduleType);
+  const isProEinheit = moduleTypeInfo?.berechnungsart === 'pro_einheit';
+  const einheit = moduleTypeInfo?.einheit || '';
 
   const handleChange = (section, key, value) => {
     setFormData({
@@ -331,8 +342,17 @@ function ModuleForm({ module, onSave, onCancel, onDelete, isCreating, leitungska
             value={formData.properties.abmessungen}
             onChange={(v) => handleChange('properties', 'abmessungen', v)}
           />
+          {isProEinheit && (
+            <FormField
+              label={`Menge (${einheit})`}
+              type="number"
+              step="0.01"
+              value={formData.properties.menge}
+              onChange={(v) => handleChange('properties', 'menge', v)}
+            />
+          )}
           <FormField
-            label="Preis (€)"
+            label={isProEinheit ? `Preis pro ${einheit} (€)` : "Preis (€)"}
             type="number"
             step="0.01"
             value={formData.properties.preis_euro}
@@ -514,7 +534,7 @@ function FormSection({ title, children }) {
   );
 }
 
-function FormField({ label, value, onChange, type = 'text' }) {
+function FormField({ label, value, onChange, type = 'text', step }) {
   return (
     <div>
       <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px' }}>
@@ -522,6 +542,7 @@ function FormField({ label, value, onChange, type = 'text' }) {
       </label>
       <input
         type={type}
+        step={step}
         value={value ?? ''}
         onChange={(e) => {
           const val = type === 'number' ? (e.target.value ? parseFloat(e.target.value) : null) : e.target.value;

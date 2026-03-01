@@ -3,6 +3,9 @@ import { useState } from 'react';
 export default function Modultypen({ modultypen, setModultypen }) {
   const [editingType, setEditingType] = useState(null);
   const [newTypeName, setNewTypeName] = useState('');
+  const [newBerechnungsart, setNewBerechnungsart] = useState('pro_unit');
+  const [newEinheit, setNewEinheit] = useState('');
+  const [editFormData, setEditFormData] = useState(null);
 
   const handleAdd = () => {
     if (!newTypeName.trim()) {
@@ -18,24 +21,33 @@ export default function Modultypen({ modultypen, setModultypen }) {
     const newType = {
       id: `type-${Date.now()}`,
       name: newTypeName.trim(),
+      berechnungsart: newBerechnungsart,
+      einheit: newBerechnungsart === 'pro_einheit' ? newEinheit.trim() : '',
     };
 
     setModultypen([...modultypen, newType]);
     setNewTypeName('');
+    setNewBerechnungsart('pro_unit');
+    setNewEinheit('');
   };
 
-  const handleUpdate = (id, newName) => {
-    if (!newName.trim()) {
+  const handleUpdate = (id, updates) => {
+    if (!updates.name.trim()) {
       alert('Name darf nicht leer sein!');
       return;
     }
 
-    if (modultypen.some(t => t.id !== id && t.name === newName.trim())) {
+    if (modultypen.some(t => t.id !== id && t.name === updates.name.trim())) {
       alert('Dieser Modultyp existiert bereits!');
       return;
     }
 
-    setModultypen(modultypen.map(t => t.id === id ? { ...t, name: newName.trim() } : t));
+    setModultypen(modultypen.map(t => t.id === id ? {
+      ...t,
+      name: updates.name.trim(),
+      berechnungsart: updates.berechnungsart,
+      einheit: updates.berechnungsart === 'pro_einheit' ? updates.einheit.trim() : '',
+    } : t));
     setEditingType(null);
   };
 
@@ -63,8 +75,8 @@ export default function Modultypen({ modultypen, setModultypen }) {
         }}
       >
         <h3 style={{ marginTop: 0, marginBottom: '16px' }}>Neuen Modultyp hinzufügen</h3>
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'end' }}>
-          <div style={{ flex: 1 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+          <div>
             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '13px' }}>
               Name
             </label>
@@ -90,23 +102,70 @@ export default function Modultypen({ modultypen, setModultypen }) {
               }}
             />
           </div>
-          <button
-            onClick={handleAdd}
-            style={{
-              padding: '10px 16px',
-              background: 'var(--accent)',
-              color: 'var(--bg-primary)',
-              border: 'none',
-              borderRadius: '4px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              fontSize: '14px',
-            }}
-          >
-            + Hinzufügen
-          </button>
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '13px' }}>
+              Berechnungsart
+            </label>
+            <select
+              value={newBerechnungsart}
+              onChange={(e) => setNewBerechnungsart(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '10px',
+                background: 'var(--bg-tertiary)',
+                border: '1px solid var(--border)',
+                borderRadius: '4px',
+                color: 'var(--text-primary)',
+                fontFamily: 'inherit',
+                fontSize: '14px',
+              }}
+            >
+              <option value="pro_unit">Pro Stück</option>
+              <option value="pro_einheit">Pro Einheit</option>
+            </select>
+          </div>
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '13px' }}>
+              Einheit
+            </label>
+            <input
+              type="text"
+              value={newEinheit}
+              onChange={(e) => setNewEinheit(e.target.value)}
+              placeholder={newBerechnungsart === 'pro_einheit' ? 'z.B. lm, m²' : ''}
+              disabled={newBerechnungsart === 'pro_unit'}
+              style={{
+                width: '100%',
+                padding: '10px',
+                background: newBerechnungsart === 'pro_unit' ? 'var(--bg-tertiary)' : 'var(--bg-tertiary)',
+                border: '1px solid var(--border)',
+                borderRadius: '4px',
+                color: 'var(--text-primary)',
+                fontFamily: 'inherit',
+                fontSize: '14px',
+                opacity: newBerechnungsart === 'pro_unit' ? 0.5 : 1,
+                cursor: newBerechnungsart === 'pro_unit' ? 'not-allowed' : 'text',
+              }}
+            />
+          </div>
         </div>
+        <button
+          onClick={handleAdd}
+          style={{
+            width: '100%',
+            padding: '10px 16px',
+            background: 'var(--accent)',
+            color: 'var(--bg-primary)',
+            border: 'none',
+            borderRadius: '4px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            fontFamily: 'inherit',
+            fontSize: '14px',
+          }}
+        >
+          + Hinzufügen
+        </button>
       </div>
 
       {/* Liste der Modultypen */}
@@ -122,61 +181,133 @@ export default function Modultypen({ modultypen, setModultypen }) {
               <div
                 key={type.id}
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
                   padding: '16px',
                   borderBottom: index < modultypen.length - 1 ? '1px solid var(--border)' : 'none',
-                  gap: '12px',
                 }}
               >
                 {editingType === type.id ? (
-                  <>
-                    <input
-                      type="text"
-                      defaultValue={type.name}
-                      autoFocus
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          handleUpdate(type.id, e.target.value);
-                        } else if (e.key === 'Escape') {
+                  <div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+                      <div>
+                        <input
+                          type="text"
+                          value={editFormData.name}
+                          onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                          autoFocus
+                          style={{
+                            width: '100%',
+                            padding: '8px',
+                            background: 'var(--bg-tertiary)',
+                            border: '1px solid var(--accent)',
+                            borderRadius: '4px',
+                            color: 'var(--text-primary)',
+                            fontFamily: 'inherit',
+                            fontSize: '14px',
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <select
+                          value={editFormData.berechnungsart}
+                          onChange={(e) => setEditFormData({ ...editFormData, berechnungsart: e.target.value })}
+                          style={{
+                            width: '100%',
+                            padding: '8px',
+                            background: 'var(--bg-tertiary)',
+                            border: '1px solid var(--border)',
+                            borderRadius: '4px',
+                            color: 'var(--text-primary)',
+                            fontFamily: 'inherit',
+                            fontSize: '14px',
+                          }}
+                        >
+                          <option value="pro_unit">Pro Stück</option>
+                          <option value="pro_einheit">Pro Einheit</option>
+                        </select>
+                      </div>
+                      <div>
+                        <input
+                          type="text"
+                          value={editFormData.einheit}
+                          onChange={(e) => setEditFormData({ ...editFormData, einheit: e.target.value })}
+                          placeholder={editFormData.berechnungsart === 'pro_einheit' ? 'z.B. lm, m²' : ''}
+                          disabled={editFormData.berechnungsart === 'pro_unit'}
+                          style={{
+                            width: '100%',
+                            padding: '8px',
+                            background: 'var(--bg-tertiary)',
+                            border: '1px solid var(--border)',
+                            borderRadius: '4px',
+                            color: 'var(--text-primary)',
+                            fontFamily: 'inherit',
+                            fontSize: '14px',
+                            opacity: editFormData.berechnungsart === 'pro_unit' ? 0.5 : 1,
+                            cursor: editFormData.berechnungsart === 'pro_unit' ? 'not-allowed' : 'text',
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        onClick={() => {
+                          handleUpdate(type.id, editFormData);
+                        }}
+                        style={{
+                          padding: '8px 16px',
+                          background: 'var(--success)',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '12px',
+                          fontWeight: 600,
+                        }}
+                      >
+                        Speichern
+                      </button>
+                      <button
+                        onClick={() => {
                           setEditingType(null);
-                        }
-                      }}
-                      onBlur={(e) => handleUpdate(type.id, e.target.value)}
-                      style={{
-                        flex: 1,
-                        padding: '8px',
-                        background: 'var(--bg-tertiary)',
-                        border: '1px solid var(--accent)',
-                        borderRadius: '4px',
-                        color: 'var(--text-primary)',
-                        fontFamily: 'inherit',
-                        fontSize: '14px',
-                      }}
-                    />
-                    <button
-                      onClick={() => setEditingType(null)}
-                      style={{
-                        padding: '8px 16px',
-                        background: 'var(--success)',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '12px',
-                        fontWeight: 600,
-                      }}
-                    >
-                      Fertig
-                    </button>
-                  </>
+                          setEditFormData(null);
+                        }}
+                        style={{
+                          padding: '8px 16px',
+                          background: 'var(--bg-tertiary)',
+                          color: 'var(--text-primary)',
+                          border: '1px solid var(--border)',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '12px',
+                          fontWeight: 600,
+                        }}
+                      >
+                        Abbrechen
+                      </button>
+                    </div>
+                  </div>
                 ) : (
-                  <>
-                    <div style={{ flex: 1, fontSize: '14px', fontWeight: 500 }}>
-                      {type.name}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: '14px', fontWeight: 500, marginBottom: '4px' }}>
+                        {type.name}
+                      </div>
+                      <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                        {type.berechnungsart === 'pro_einheit' ? (
+                          <>Pro Einheit ({type.einheit})</>
+                        ) : (
+                          <>Pro Stück</>
+                        )}
+                      </div>
                     </div>
                     <button
-                      onClick={() => setEditingType(type.id)}
+                      onClick={() => {
+                        setEditingType(type.id);
+                        setEditFormData({
+                          name: type.name,
+                          berechnungsart: type.berechnungsart || 'pro_unit',
+                          einheit: type.einheit || '',
+                        });
+                      }}
                       style={{
                         padding: '6px 12px',
                         background: 'var(--bg-tertiary)',
@@ -205,7 +336,7 @@ export default function Modultypen({ modultypen, setModultypen }) {
                     >
                       Löschen
                     </button>
-                  </>
+                  </div>
                 )}
               </div>
             ))}

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { checkConnection } from '../../data/compatibilityChecker';
 import { CONNECTION_TYPE_LABELS, isBuilding } from '../../data/types';
 
-export default function ListView({ configuration }) {
+export default function ListView({ configuration, setConfiguration, modultypen = [] }) {
   const { building, modules = [], connections = [] } = configuration || {};
 
   if (!building && (!modules || modules.length === 0)) {
@@ -28,7 +28,17 @@ export default function ListView({ configuration }) {
       {modules.length > 0 && (
         <Section title="Module">
           {modules.map((module) => (
-            <ModuleCard key={module.id} module={module} />
+            <ModuleCard
+              key={module.id}
+              module={module}
+              modultypen={modultypen}
+              onUpdateModule={(updatedModule) => {
+                setConfiguration({
+                  ...configuration,
+                  modules: modules.map(m => m.id === updatedModule.id ? updatedModule : m),
+                });
+              }}
+            />
           ))}
         </Section>
       )}
@@ -94,9 +104,26 @@ function Section({ title, children }) {
   );
 }
 
-function ModuleCard({ module }) {
+function ModuleCard({ module, modultypen = [], onUpdateModule }) {
   const [expanded, setExpanded] = useState(false);
   const isBuildingModule = isBuilding(module);
+
+  // Find module type info
+  const moduleTypeInfo = modultypen?.find(t => t.name === module.moduleType);
+  const isProEinheit = moduleTypeInfo?.berechnungsart === 'pro_einheit';
+  const einheit = moduleTypeInfo?.einheit || '';
+
+  const handleMengeChange = (newMenge) => {
+    if (onUpdateModule) {
+      onUpdateModule({
+        ...module,
+        properties: {
+          ...module.properties,
+          menge: newMenge,
+        },
+      });
+    }
+  };
 
   return (
     <div
@@ -166,11 +193,80 @@ function ModuleCard({ module }) {
           {/* Eigenschaften */}
           {Object.keys(module.properties || {}).filter(key => key !== 'produktlink').length > 0 && (
             <DetailSection title="Eigenschaften">
+              {/* Menge field for pro_einheit modules */}
+              {isProEinheit && (
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    padding: '6px 0',
+                    fontSize: '13px',
+                    borderBottom: '1px solid var(--border)',
+                    alignItems: 'center',
+                  }}
+                >
+                  <span style={{ color: 'var(--text-secondary)' }}>Menge ({einheit}):</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={module.properties?.menge ?? ''}
+                    onChange={(e) => handleMengeChange(e.target.value ? parseFloat(e.target.value) : null)}
+                    style={{
+                      width: '100px',
+                      padding: '4px 8px',
+                      background: 'var(--bg-tertiary)',
+                      border: '1px solid var(--border)',
+                      borderRadius: '4px',
+                      color: 'var(--text-primary)',
+                      fontFamily: 'inherit',
+                      fontSize: '13px',
+                      fontWeight: 500,
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* Other properties */}
               {Object.entries(module.properties)
-                .filter(([key]) => key !== 'produktlink')
-                .map(([key, value]) => (
-                  <Property key={key} label={formatLabel(key)} value={value} />
-                ))}
+                .filter(([key]) => key !== 'produktlink' && !(key === 'menge' && isProEinheit))
+                .map(([key, value]) => {
+                  let label = formatLabel(key);
+                  let displayValue = value;
+
+                  // Dynamic label for preis_euro
+                  if (key === 'preis_euro') {
+                    if (isProEinheit) {
+                      label = `Preis pro ${einheit} (€)`;
+                    } else {
+                      label = 'Preis (€)';
+                    }
+                  }
+
+                  return <Property key={key} label={label} value={displayValue} />;
+                })}
+
+              {/* Calculated total price for pro_einheit modules */}
+              {isProEinheit && module.properties?.menge && module.properties?.preis_euro && (
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    padding: '6px 0',
+                    fontSize: '13px',
+                    borderBottom: '1px solid var(--border)',
+                    backgroundColor: 'var(--bg-tertiary)',
+                    marginTop: '4px',
+                    paddingLeft: '8px',
+                    paddingRight: '8px',
+                    borderRadius: '4px',
+                  }}
+                >
+                  <span style={{ color: 'var(--accent)', fontWeight: 600 }}>Gesamtpreis (€):</span>
+                  <span style={{ color: 'var(--accent)', fontWeight: 600 }}>
+                    {(module.properties.menge * module.properties.preis_euro).toFixed(2)}
+                  </span>
+                </div>
+              )}
             </DetailSection>
           )}
 

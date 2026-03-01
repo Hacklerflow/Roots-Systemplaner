@@ -1,7 +1,7 @@
 import { utils, writeFile } from 'xlsx';
 import { isBuilding, CONNECTION_TYPE_LABELS } from '../../data/types';
 
-export default function Stueckliste({ configuration, setConfiguration }) {
+export default function Stueckliste({ configuration, setConfiguration, modultypen = [] }) {
   const { building, modules = [], connections = [] } = configuration || {};
 
   // Handler für Preis-Änderungen bei Modulen
@@ -11,6 +11,18 @@ export default function Stueckliste({ configuration, setConfiguration }) {
       modules: modules.map(m =>
         m.id === moduleId
           ? { ...m, properties: { ...m.properties, preis_euro: newPrice ? parseFloat(newPrice) : null } }
+          : m
+      ),
+    });
+  };
+
+  // Handler für Mengen-Änderungen bei Modulen
+  const handleModuleMengeChange = (moduleId, newMenge) => {
+    setConfiguration({
+      ...configuration,
+      modules: modules.map(m =>
+        m.id === moduleId
+          ? { ...m, properties: { ...m.properties, menge: newMenge ? parseFloat(newMenge) : null } }
           : m
       ),
     });
@@ -33,14 +45,29 @@ export default function Stueckliste({ configuration, setConfiguration }) {
     const wb = utils.book_new();
 
     // Sheet 1: Module/Komponenten (ohne Gebäude)
-    const moduleData = modules.map((module, index) => ({
-      'Pos.': index + 1,
-      'Name': module.name || '',
-      'Modultyp': module.moduleType || '',
-      'Hersteller': module.properties?.hersteller || '',
-      'Abmessungen': module.properties?.abmessungen || '',
-      'Preis (€)': module.properties?.preis_euro || '',
-    }));
+    const moduleData = modules.map((module, index) => {
+      const moduleTypeInfo = modultypen?.find(t => t.name === module.moduleType);
+      const isProEinheit = moduleTypeInfo?.berechnungsart === 'pro_einheit';
+      const einheit = moduleTypeInfo?.einheit || '';
+      const menge = module.properties?.menge || '';
+      const preisEuro = module.properties?.preis_euro || '';
+      const gesamtpreis = isProEinheit && menge && preisEuro ? (menge * preisEuro).toFixed(2) : '';
+
+      return {
+        'Pos.': index + 1,
+        'Name': module.name || '',
+        'Modultyp': module.moduleType || '',
+        'Hersteller': module.properties?.hersteller || '',
+        'Abmessungen': module.properties?.abmessungen || '',
+        ...(isProEinheit ? {
+          [`Menge (${einheit})`]: menge,
+          [`Preis pro ${einheit} (€)`]: preisEuro,
+          'Gesamtpreis (€)': gesamtpreis,
+        } : {
+          'Preis (€)': preisEuro,
+        }),
+      };
+    });
 
     const ws1 = utils.json_to_sheet(moduleData);
     utils.book_append_sheet(wb, ws1, 'Komponenten');
@@ -155,44 +182,83 @@ export default function Stueckliste({ configuration, setConfiguration }) {
               <th style={tableHeaderStyle}>Modultyp</th>
               <th style={tableHeaderStyle}>Hersteller</th>
               <th style={tableHeaderStyle}>Abmessungen</th>
-              <th style={tableHeaderStyle}>Preis (€)</th>
+              <th style={tableHeaderStyle}>Menge</th>
+              <th style={tableHeaderStyle}>Preis</th>
+              <th style={tableHeaderStyle}>Gesamt (€)</th>
             </tr>
           </thead>
           <tbody>
-            {modules.map((module, index) => (
-              <tr
-                key={module.id}
-                style={{
-                  background: index % 2 === 0 ? 'var(--bg-secondary)' : 'var(--bg-tertiary)',
-                  borderBottom: '1px solid var(--border)',
-                }}
-              >
-                <td style={tableCellStyle}>{index + 1}</td>
-                <td style={{ ...tableCellStyle, fontWeight: 600 }}>{module.name}</td>
-                <td style={tableCellStyle}>{module.moduleType}</td>
-                <td style={tableCellStyle}>{module.properties?.hersteller || '—'}</td>
-                <td style={tableCellStyle}>{module.properties?.abmessungen || '—'}</td>
-                <td style={tableCellStyle}>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={module.properties?.preis_euro ?? ''}
-                    onChange={(e) => handleModulePriceChange(module.id, e.target.value)}
-                    placeholder="—"
-                    style={{
-                      width: '80px',
-                      padding: '4px 8px',
-                      background: 'var(--bg-tertiary)',
-                      border: '1px solid var(--border)',
-                      borderRadius: '4px',
-                      color: 'var(--text-primary)',
-                      fontFamily: 'inherit',
-                      fontSize: '13px',
-                    }}
-                  />
-                </td>
-              </tr>
-            ))}
+            {modules.map((module, index) => {
+              const moduleTypeInfo = modultypen?.find(t => t.name === module.moduleType);
+              const isProEinheit = moduleTypeInfo?.berechnungsart === 'pro_einheit';
+              const einheit = moduleTypeInfo?.einheit || '';
+              const menge = module.properties?.menge || null;
+              const preisEuro = module.properties?.preis_euro || null;
+              const gesamtpreis = isProEinheit && menge && preisEuro ? (menge * preisEuro).toFixed(2) : (preisEuro || '—');
+
+              return (
+                <tr
+                  key={module.id}
+                  style={{
+                    background: index % 2 === 0 ? 'var(--bg-secondary)' : 'var(--bg-tertiary)',
+                    borderBottom: '1px solid var(--border)',
+                  }}
+                >
+                  <td style={tableCellStyle}>{index + 1}</td>
+                  <td style={{ ...tableCellStyle, fontWeight: 600 }}>{module.name}</td>
+                  <td style={tableCellStyle}>{module.moduleType}</td>
+                  <td style={tableCellStyle}>{module.properties?.hersteller || '—'}</td>
+                  <td style={tableCellStyle}>{module.properties?.abmessungen || '—'}</td>
+                  <td style={tableCellStyle}>
+                    {isProEinheit ? (
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={menge ?? ''}
+                        onChange={(e) => handleModuleMengeChange(module.id, e.target.value)}
+                        placeholder="—"
+                        style={{
+                          width: '80px',
+                          padding: '4px 8px',
+                          background: 'var(--bg-tertiary)',
+                          border: '1px solid var(--border)',
+                          borderRadius: '4px',
+                          color: 'var(--text-primary)',
+                          fontFamily: 'inherit',
+                          fontSize: '13px',
+                        }}
+                      />
+                    ) : (
+                      '1'
+                    )}
+                    {isProEinheit && <span style={{ marginLeft: '4px', fontSize: '11px', color: 'var(--text-secondary)' }}>{einheit}</span>}
+                  </td>
+                  <td style={tableCellStyle}>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={preisEuro ?? ''}
+                      onChange={(e) => handleModulePriceChange(module.id, e.target.value)}
+                      placeholder="—"
+                      style={{
+                        width: '80px',
+                        padding: '4px 8px',
+                        background: 'var(--bg-tertiary)',
+                        border: '1px solid var(--border)',
+                        borderRadius: '4px',
+                        color: 'var(--text-primary)',
+                        fontFamily: 'inherit',
+                        fontSize: '13px',
+                      }}
+                    />
+                    {isProEinheit && <span style={{ marginLeft: '4px', fontSize: '11px', color: 'var(--text-secondary)' }}>€/{einheit}</span>}
+                  </td>
+                  <td style={{ ...tableCellStyle, fontWeight: 600, color: 'var(--accent)' }}>
+                    {gesamtpreis}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </Section>

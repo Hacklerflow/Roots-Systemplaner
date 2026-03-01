@@ -719,12 +719,19 @@ function App() {
             />
           )}
 
-          {activeTab === 'liste' && <ListView configuration={configuration} />}
+          {activeTab === 'liste' && (
+            <ListView
+              configuration={configuration}
+              setConfiguration={setConfiguration}
+              modultypen={modultypen}
+            />
+          )}
 
           {activeTab === 'stueckliste' && (
             <Stueckliste
               configuration={configuration}
               setConfiguration={setConfiguration}
+              modultypen={modultypen}
             />
           )}
 

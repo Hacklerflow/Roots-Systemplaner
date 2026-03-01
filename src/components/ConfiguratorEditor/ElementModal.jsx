@@ -11,6 +11,11 @@ export default function ElementModal({ element, onClose, onSave, onDelete, leitu
 
   if (!element) return null;
 
+  // Find module type info to determine if we need quantity field
+  const moduleTypeInfo = modultypen?.find(t => t.name === formData.moduleType);
+  const isProEinheit = moduleTypeInfo?.berechnungsart === 'pro_einheit';
+  const einheit = moduleTypeInfo?.einheit || '';
+
   const handleChange = (section, key, value) => {
     setFormData({
       ...formData,
@@ -165,14 +170,35 @@ export default function ElementModal({ element, onClose, onSave, onDelete, leitu
 
         {/* Eigenschaften */}
         <Section title="Eigenschaften">
-          {Object.keys(formData.properties || {}).map((key) => (
+          {isProEinheit && (
             <FormField
-              key={key}
-              label={formatLabel(key)}
-              value={formData.properties[key]}
-              onChange={(value) => handleChange('properties', key, value)}
+              label={`Menge (${einheit})`}
+              type="number"
+              value={formData.properties?.menge ?? null}
+              onChange={(value) => handleChange('properties', 'menge', value)}
             />
-          ))}
+          )}
+          {Object.keys(formData.properties || {}).map((key) => {
+            // Skip menge if it's shown separately above
+            if (key === 'menge' && isProEinheit) return null;
+
+            // Dynamic label for preis_euro
+            let label = formatLabel(key);
+            if (key === 'preis_euro' && isProEinheit) {
+              label = `Preis pro ${einheit} (€)`;
+            } else if (key === 'preis_euro') {
+              label = 'Preis (€)';
+            }
+
+            return (
+              <FormField
+                key={key}
+                label={label}
+                value={formData.properties[key]}
+                onChange={(value) => handleChange('properties', key, value)}
+              />
+            );
+          })}
         </Section>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
