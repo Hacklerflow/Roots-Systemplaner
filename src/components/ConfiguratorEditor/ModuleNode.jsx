@@ -54,7 +54,7 @@ export default function ModuleNode({ data }) {
                 border: '2px solid var(--bg-primary)',
               }}
             />
-            {input.label && (
+            {input.label && input.label.trim() !== '' && (
               <div
                 style={{
                   position: 'absolute',
@@ -95,7 +95,7 @@ export default function ModuleNode({ data }) {
                 border: '2px solid var(--bg-primary)',
               }}
             />
-            {output.label && (
+            {output.label && output.label.trim() !== '' && (
               <div
                 style={{
                   position: 'absolute',
