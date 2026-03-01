@@ -48,7 +48,7 @@ export default function WarningEdge({
         d={edgePath}
         fill="none"
         stroke="transparent"
-        strokeWidth="20"
+        strokeWidth="50"
         style={{ cursor: 'pointer', pointerEvents: 'stroke' }}
         onClick={handleClick}
       />
