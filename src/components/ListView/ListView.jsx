@@ -134,12 +134,43 @@ function ModuleCard({ module }) {
       {/* Expanded Content */}
       {expanded && (
         <div style={{ padding: '0 16px 16px 16px', borderTop: '1px solid var(--border)' }}>
+          {/* Produktlink Button */}
+          {module.properties?.produktlink && (
+            <div style={{ marginTop: '16px', marginBottom: '16px' }}>
+              <a
+                href={module.properties.produktlink}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ textDecoration: 'none' }}
+              >
+                <button
+                  style={{
+                    padding: '10px 16px',
+                    background: 'var(--accent)',
+                    color: 'var(--bg-primary)',
+                    border: 'none',
+                    borderRadius: '4px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                    fontSize: '13px',
+                    width: '100%',
+                  }}
+                >
+                  🔗 Produktlink
+                </button>
+              </a>
+            </div>
+          )}
+
           {/* Eigenschaften */}
-          {Object.keys(module.properties || {}).length > 0 && (
+          {Object.keys(module.properties || {}).filter(key => key !== 'produktlink').length > 0 && (
             <DetailSection title="Eigenschaften">
-              {Object.entries(module.properties).map(([key, value]) => (
-                <Property key={key} label={formatLabel(key)} value={value} />
-              ))}
+              {Object.entries(module.properties)
+                .filter(([key]) => key !== 'produktlink')
+                .map(([key, value]) => (
+                  <Property key={key} label={formatLabel(key)} value={value} />
+                ))}
             </DetailSection>
           )}
 

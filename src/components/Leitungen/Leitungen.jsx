@@ -7,7 +7,8 @@ export default function Leitungen({ leitungskatalog, setLeitungskatalog, dimensi
     connectionType: CONNECTION_TYPES.HYDRAULIC,
     dimension: '',
     material: '',
-    preis_pro_meter: null
+    preis_pro_meter: null,
+    produktlink: ''
   });
 
   const handleAdd = () => {
@@ -26,7 +27,8 @@ export default function Leitungen({ leitungskatalog, setLeitungskatalog, dimensi
       connectionType: CONNECTION_TYPES.HYDRAULIC,
       dimension: '',
       material: '',
-      preis_pro_meter: null
+      preis_pro_meter: null,
+      produktlink: ''
     });
   };
 
@@ -105,7 +107,7 @@ export default function Leitungen({ leitungskatalog, setLeitungskatalog, dimensi
         }}
       >
         <h3 style={{ marginTop: 0, marginBottom: '16px' }}>Neue Leitung hinzufügen</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr 1fr 150px 120px', gap: '12px', alignItems: 'end' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr 1fr 120px', gap: '12px', alignItems: 'end', marginBottom: '12px' }}>
           <div>
             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '13px' }}>
               Verbindungstyp
@@ -204,6 +206,30 @@ export default function Leitungen({ leitungskatalog, setLeitungskatalog, dimensi
               }}
             />
           </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px', gap: '12px', alignItems: 'end' }}>
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '13px' }}>
+              Produktlink (optional)
+            </label>
+            <input
+              type="url"
+              value={newLeitung.produktlink}
+              onChange={(e) => setNewLeitung({ ...newLeitung, produktlink: e.target.value })}
+              placeholder="https://..."
+              style={{
+                width: '100%',
+                padding: '10px',
+                background: 'var(--bg-tertiary)',
+                border: '1px solid var(--border)',
+                borderRadius: '4px',
+                color: 'var(--text-primary)',
+                fontFamily: 'inherit',
+                fontSize: '14px',
+              }}
+            />
+          </div>
 
           <button
             onClick={handleAdd}
@@ -242,6 +268,7 @@ function Section({ title, leitungen, connectionType, dimensionen, editingLeitung
               <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600, fontSize: '13px' }}>Dimension</th>
               <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600, fontSize: '13px' }}>Material</th>
               <th style={{ padding: '12px', textAlign: 'right', fontWeight: 600, fontSize: '13px' }}>Preis/m (€)</th>
+              <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600, fontSize: '13px' }}>Produktlink</th>
               <th style={{ padding: '12px', textAlign: 'right', fontWeight: 600, fontSize: '13px' }}>Aktionen</th>
             </tr>
           </thead>
@@ -321,6 +348,53 @@ function Section({ title, leitungen, connectionType, dimensionen, editingLeitung
                     />
                   ) : (
                     <span style={{ fontSize: '14px' }}>{leitung.preis_pro_meter ?? '—'}</span>
+                  )}
+                </td>
+
+                {/* Produktlink */}
+                <td style={{ padding: '12px' }}>
+                  {editingLeitung === leitung.id ? (
+                    <input
+                      type="url"
+                      value={leitung.produktlink || ''}
+                      onChange={(e) => onUpdate(leitung.id, { produktlink: e.target.value })}
+                      placeholder="https://..."
+                      style={{
+                        width: '100%',
+                        padding: '6px 8px',
+                        background: 'var(--bg-tertiary)',
+                        border: '1px solid var(--border)',
+                        borderRadius: '4px',
+                        color: 'var(--text-primary)',
+                        fontFamily: 'inherit',
+                        fontSize: '13px',
+                      }}
+                    />
+                  ) : leitung.produktlink ? (
+                    <a
+                      href={leitung.produktlink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ textDecoration: 'none' }}
+                    >
+                      <button
+                        style={{
+                          padding: '4px 10px',
+                          background: 'var(--bg-tertiary)',
+                          color: 'var(--text-primary)',
+                          border: '1px solid var(--border)',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '11px',
+                          fontWeight: 500,
+                          fontFamily: 'inherit',
+                        }}
+                      >
+                        🔗 Link
+                      </button>
+                    </a>
+                  ) : (
+                    <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>—</span>
                   )}
                 </td>
 

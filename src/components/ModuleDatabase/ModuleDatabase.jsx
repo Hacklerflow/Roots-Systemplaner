@@ -127,7 +127,34 @@ function ModuleCard({ module, onEdit, disabled }) {
         ⚡ {module.inputs.length} Eingänge | {module.outputs.length} Ausgänge
       </div>
 
-      {/* Button */}
+      {/* Produktlink Button (falls vorhanden) */}
+      {module.properties?.produktlink && (
+        <a
+          href={module.properties.produktlink}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ textDecoration: 'none', display: 'block', marginBottom: '8px' }}
+        >
+          <button
+            style={{
+              width: '100%',
+              padding: '6px',
+              background: 'var(--bg-tertiary)',
+              color: 'var(--text-secondary)',
+              border: '1px solid var(--border)',
+              borderRadius: '4px',
+              fontSize: '11px',
+              fontWeight: 500,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+            }}
+          >
+            🔗 Produktlink
+          </button>
+        </a>
+      )}
+
+      {/* Bearbeiten Button */}
       <button
         onClick={onEdit}
         disabled={disabled}
@@ -310,6 +337,12 @@ function ModuleForm({ module, onSave, onCancel, onDelete, isCreating, leitungska
             step="0.01"
             value={formData.properties.preis_euro}
             onChange={(v) => handleChange('properties', 'preis_euro', v)}
+          />
+          <FormField
+            label="Produktlink"
+            type="url"
+            value={formData.properties.produktlink}
+            onChange={(v) => handleChange('properties', 'produktlink', v)}
           />
         </FormSection>
 
