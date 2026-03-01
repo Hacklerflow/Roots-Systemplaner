@@ -96,7 +96,14 @@ function App() {
     try {
       const stored = localStorage.getItem('roots-dimensionskatalog');
       if (stored) {
-        return JSON.parse(stored);
+        const parsed = JSON.parse(stored);
+        // Validiere dass es ein Array ist und nicht leer
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        } else {
+          console.warn('Dimensionskatalog ist leer, verwende Initial-Daten');
+          localStorage.removeItem('roots-dimensionskatalog');
+        }
       }
     } catch (e) {
       console.error('Fehler beim Laden des Dimensionskatalogs:', e);
