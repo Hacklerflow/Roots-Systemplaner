@@ -216,43 +216,45 @@ export default function ElementModal({ element, onClose, onSave, onDelete, leitu
             </div>
           )}
 
-          {/* Ausgänge */}
-          <div>
-            <Section title={`Ausgänge (${formData.outputs.length}/36)`}>
-              {formData.outputs.map((output, idx) => (
-                <InputOutputEditor
-                  key={output.id}
-                  connector={output}
-                  type="output"
-                  onUpdate={(updated) => handleUpdateOutput(idx, updated)}
-                  onDelete={() => handleDeleteOutput(idx)}
-                  leitungskatalog={leitungskatalog}
-                  verbindungsartenkatalog={verbindungsartenkatalog}
-                  dimensionskatalog={dimensionskatalog}
-                  modultypen={modultypen}
-                />
-              ))}
-              <button
-                type="button"
-                onClick={handleAddOutput}
-                disabled={formData.outputs.length >= 36}
-                style={{
-                  width: '100%',
-                  padding: '8px',
-                  background: formData.outputs.length >= 36 ? 'var(--bg-tertiary)' : 'var(--success)',
-                  color: formData.outputs.length >= 36 ? 'var(--text-secondary)' : 'var(--bg-primary)',
-                  border: 'none',
-                  borderRadius: '4px',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  cursor: formData.outputs.length >= 36 ? 'not-allowed' : 'pointer',
-                  fontFamily: 'inherit',
-                }}
-              >
-                + Ausgang hinzufügen
-              </button>
-            </Section>
-          </div>
+          {/* Ausgänge - nur für Module, nicht für Gebäude */}
+          {!isBuildingElement && (
+            <div>
+              <Section title={`Ausgänge (${formData.outputs.length}/36)`}>
+                {formData.outputs.map((output, idx) => (
+                  <InputOutputEditor
+                    key={output.id}
+                    connector={output}
+                    type="output"
+                    onUpdate={(updated) => handleUpdateOutput(idx, updated)}
+                    onDelete={() => handleDeleteOutput(idx)}
+                    leitungskatalog={leitungskatalog}
+                    verbindungsartenkatalog={verbindungsartenkatalog}
+                    dimensionskatalog={dimensionskatalog}
+                    modultypen={modultypen}
+                  />
+                ))}
+                <button
+                  type="button"
+                  onClick={handleAddOutput}
+                  disabled={formData.outputs.length >= 36}
+                  style={{
+                    width: '100%',
+                    padding: '8px',
+                    background: formData.outputs.length >= 36 ? 'var(--bg-tertiary)' : 'var(--success)',
+                    color: formData.outputs.length >= 36 ? 'var(--text-secondary)' : 'var(--bg-primary)',
+                    border: 'none',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    cursor: formData.outputs.length >= 36 ? 'not-allowed' : 'pointer',
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  + Ausgang hinzufügen
+                </button>
+              </Section>
+            </div>
+          )}
         </div>
 
         {/* Buttons */}

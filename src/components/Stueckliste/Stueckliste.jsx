@@ -38,13 +38,8 @@ export default function Stueckliste({ configuration, setConfiguration }) {
       'Name': module.name || '',
       'Modultyp': module.moduleType || '',
       'Hersteller': module.properties?.hersteller || '',
-      'Leistung (kW)': module.properties?.leistung_nominal_kw || '',
-      'Volumen (L)': module.properties?.volumen_liter || '',
       'Abmessungen': module.properties?.abmessungen || '',
-      'Gewicht (kg)': module.properties?.gewicht_kg || '',
       'Preis (€)': module.properties?.preis_euro || '',
-      'Eingänge': module.inputs?.length || 0,
-      'Ausgänge': module.outputs?.length || 0,
     }));
 
     const ws1 = utils.json_to_sheet(moduleData);
@@ -159,12 +154,8 @@ export default function Stueckliste({ configuration, setConfiguration }) {
               <th style={tableHeaderStyle}>Name</th>
               <th style={tableHeaderStyle}>Modultyp</th>
               <th style={tableHeaderStyle}>Hersteller</th>
-              <th style={tableHeaderStyle}>Leistung</th>
-              <th style={tableHeaderStyle}>Volumen</th>
               <th style={tableHeaderStyle}>Abmessungen</th>
-              <th style={tableHeaderStyle}>Gewicht</th>
               <th style={tableHeaderStyle}>Preis (€)</th>
-              <th style={tableHeaderStyle}>Ein/Aus</th>
             </tr>
           </thead>
           <tbody>
@@ -180,16 +171,7 @@ export default function Stueckliste({ configuration, setConfiguration }) {
                 <td style={{ ...tableCellStyle, fontWeight: 600 }}>{module.name}</td>
                 <td style={tableCellStyle}>{module.moduleType}</td>
                 <td style={tableCellStyle}>{module.properties?.hersteller || '—'}</td>
-                <td style={tableCellStyle}>
-                  {module.properties?.leistung_nominal_kw ? `${module.properties.leistung_nominal_kw} kW` : '—'}
-                </td>
-                <td style={tableCellStyle}>
-                  {module.properties?.volumen_liter ? `${module.properties.volumen_liter} L` : '—'}
-                </td>
                 <td style={tableCellStyle}>{module.properties?.abmessungen || '—'}</td>
-                <td style={tableCellStyle}>
-                  {module.properties?.gewicht_kg ? `${module.properties.gewicht_kg} kg` : '—'}
-                </td>
                 <td style={tableCellStyle}>
                   <input
                     type="number"
@@ -208,9 +190,6 @@ export default function Stueckliste({ configuration, setConfiguration }) {
                       fontSize: '13px',
                     }}
                   />
-                </td>
-                <td style={tableCellStyle}>
-                  {module.inputs?.length || 0} / {module.outputs?.length || 0}
                 </td>
               </tr>
             ))}

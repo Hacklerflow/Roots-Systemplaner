@@ -70,12 +70,8 @@ export function createBuilding(name = 'Neues Gebäude') {
       hausnummer: '',
       stockwerke: null,
     },
-    inputs: [], // Gebäude hat keine Eingänge
-    outputs: [
-      // Standard-Ausgänge
-      createOutput('Heizung', CONNECTION_TYPES.HYDRAULIC, [MODULE_TYPES.HUB, MODULE_TYPES.HEAT_PUMP, MODULE_TYPES.STORAGE]),
-      createOutput('Strom 400V', CONNECTION_TYPES.ELECTRIC, [MODULE_TYPES.HUB, MODULE_TYPES.HEAT_PUMP]),
-    ],
+    inputs: [],  // Gebäude hat keine Eingänge
+    outputs: [], // Gebäude hat keine Ausgänge - ist nur Info-Container
   };
 }
 
