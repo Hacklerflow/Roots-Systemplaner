@@ -42,6 +42,41 @@ export default function ConnectionModal({ connection, sourceModule, targetModule
     }
   };
 
+  // Filtere Leitungen basierend auf Kompatibilität mit beiden Modulen
+  const getCompatibleLeitungen = () => {
+    // Finde Output und Input
+    const output = sourceModule.outputs?.find(o => o.id === connection.sourceHandle);
+    const input = targetModule.inputs?.find(i => i.id === connection.targetHandle);
+
+    if (!output || !input) {
+      // Fallback: Zeige alle Leitungen des ConnectionTypes
+      return leitungskatalog.filter(l => l.connectionType === connection.connectionType);
+    }
+
+    // Finde Verbindungsarten basierend auf Kürzel (label)
+    const outputVerbindungsart = verbindungsartenkatalog.find(v => v.kuerzel === output.label);
+    const inputVerbindungsart = verbindungsartenkatalog.find(v => v.kuerzel === input.label);
+
+    // Sammle alle kompatiblen Leitungs-IDs
+    const compatibleIds = new Set();
+
+    if (outputVerbindungsart?.kompatible_leitungen) {
+      outputVerbindungsart.kompatible_leitungen.forEach(id => compatibleIds.add(id));
+    }
+
+    if (inputVerbindungsart?.kompatible_leitungen) {
+      inputVerbindungsart.kompatible_leitungen.forEach(id => compatibleIds.add(id));
+    }
+
+    // Wenn keine Verbindungsarten gefunden: Zeige alle Leitungen des ConnectionTypes
+    if (compatibleIds.size === 0) {
+      return leitungskatalog.filter(l => l.connectionType === connection.connectionType);
+    }
+
+    // Filtere Leitungen, die in den kompatiblen Listen vorkommen
+    return leitungskatalog.filter(l => compatibleIds.has(l.id));
+  };
+
   if (!connection || !sourceModule || !targetModule) return null;
 
   const handleSave = () => {
@@ -183,7 +218,7 @@ export default function ConnectionModal({ connection, sourceModule, targetModule
               }}
             >
               <option value="">Benutzerdefiniert</option>
-              {leitungskatalog.filter(l => l.connectionType === connection.connectionType).map((leitung) => (
+              {getCompatibleLeitungen().map((leitung) => (
                 <option key={leitung.id} value={leitung.id}>
                   {leitung.dimension} ({leitung.preis_pro_meter ? `${leitung.preis_pro_meter} €/m` : 'kein Preis'})
                 </option>
