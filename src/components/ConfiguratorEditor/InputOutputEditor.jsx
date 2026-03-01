@@ -11,20 +11,25 @@ export default function InputOutputEditor({ connector, type, onUpdate, onDelete,
   const [connectionType, setConnectionType] = useState(connector.connectionType || CONNECTION_TYPES.HYDRAULIC);
   const [allowedModuleTypes, setAllowedModuleTypes] = useState(connector.allowedModuleTypes || []);
 
-  // Automatisch generiertes Label aus Dimension + Verbindungsart
-  const generatedLabel = [dimension, verbindungsart].filter(Boolean).join(' ');
+  // Finde das Kürzel der gewählten Verbindungsart
+  const getKuerzel = (verbindungsartName) => {
+    if (!verbindungsartName) return '';
+    const verbindungsartObj = verbindungsartenkatalog.find(v => v.name === verbindungsartName);
+    return verbindungsartObj?.kuerzel || '';
+  };
+
+  // Automatisch generiertes Label: Nur das Kürzel der Verbindungsart
+  const generatedLabel = getKuerzel(verbindungsart);
 
   const handleSave = (updates = {}) => {
-    const label = [
-      updates.dimension !== undefined ? updates.dimension : dimension,
-      updates.verbindungsart !== undefined ? updates.verbindungsart : verbindungsart
-    ].filter(Boolean).join(' ');
+    const finalVerbindungsart = updates.verbindungsart !== undefined ? updates.verbindungsart : verbindungsart;
+    const label = getKuerzel(finalVerbindungsart);
 
     onUpdate({
       ...connector,
       label,
       dimension: updates.dimension !== undefined ? updates.dimension : dimension,
-      verbindungsart: updates.verbindungsart !== undefined ? updates.verbindungsart : verbindungsart,
+      verbindungsart: finalVerbindungsart,
       connectionType: updates.connectionType !== undefined ? updates.connectionType : connectionType,
       allowedModuleTypes: updates.allowedModuleTypes !== undefined ? updates.allowedModuleTypes : allowedModuleTypes,
     });
@@ -205,7 +210,7 @@ export default function InputOutputEditor({ connector, type, onUpdate, onDelete,
         )}
       </div>
 
-      {/* Generiertes Label (Vorschau) */}
+      {/* Generiertes Label (Vorschau) - Nur Kürzel */}
       {generatedLabel && (
         <div style={{
           marginBottom: '12px',
@@ -215,9 +220,9 @@ export default function InputOutputEditor({ connector, type, onUpdate, onDelete,
           borderRadius: '4px',
         }}>
           <div style={{ fontSize: '10px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
-            Label (automatisch):
+            Kürzel (wird angezeigt):
           </div>
-          <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--accent)' }}>
+          <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--accent)', fontFamily: 'monospace' }}>
             {generatedLabel}
           </div>
         </div>
