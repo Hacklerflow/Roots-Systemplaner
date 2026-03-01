@@ -41,19 +41,38 @@ export default function ModuleNode({ data }) {
         const yOffset = total === 1 ? 50 : (100 / (total + 1)) * (index + 1);
 
         return (
-          <Handle
-            key={input.id}
-            type="target"
-            position={Position.Left}
-            id={input.id}
-            style={{
-              top: `${yOffset}%`,
-              background: getConnectionTypeColor(input.connectionType),
-              width: '10px',
-              height: '10px',
-              border: '2px solid var(--bg-primary)',
-            }}
-          />
+          <div key={input.id}>
+            <Handle
+              type="target"
+              position={Position.Left}
+              id={input.id}
+              style={{
+                top: `${yOffset}%`,
+                background: getConnectionTypeColor(input.connectionType),
+                width: '10px',
+                height: '10px',
+                border: '2px solid var(--bg-primary)',
+              }}
+            />
+            {input.label && (
+              <div
+                style={{
+                  position: 'absolute',
+                  left: '-32px',
+                  top: `calc(${yOffset}% - 8px)`,
+                  fontSize: '9px',
+                  fontWeight: 600,
+                  color: 'var(--text-primary)',
+                  whiteSpace: 'nowrap',
+                  pointerEvents: 'none',
+                  fontFamily: 'monospace',
+                  textTransform: 'uppercase',
+                }}
+              >
+                {input.label}
+              </div>
+            )}
+          </div>
         );
       })}
 
@@ -63,19 +82,38 @@ export default function ModuleNode({ data }) {
         const yOffset = total === 1 ? 50 : (100 / (total + 1)) * (index + 1);
 
         return (
-          <Handle
-            key={output.id}
-            type="source"
-            position={Position.Right}
-            id={output.id}
-            style={{
-              top: `${yOffset}%`,
-              background: getConnectionTypeColor(output.connectionType),
-              width: '10px',
-              height: '10px',
-              border: '2px solid var(--bg-primary)',
-            }}
-          />
+          <div key={output.id}>
+            <Handle
+              type="source"
+              position={Position.Right}
+              id={output.id}
+              style={{
+                top: `${yOffset}%`,
+                background: getConnectionTypeColor(output.connectionType),
+                width: '10px',
+                height: '10px',
+                border: '2px solid var(--bg-primary)',
+              }}
+            />
+            {output.label && (
+              <div
+                style={{
+                  position: 'absolute',
+                  right: '-32px',
+                  top: `calc(${yOffset}% - 8px)`,
+                  fontSize: '9px',
+                  fontWeight: 600,
+                  color: 'var(--text-primary)',
+                  whiteSpace: 'nowrap',
+                  pointerEvents: 'none',
+                  fontFamily: 'monospace',
+                  textTransform: 'uppercase',
+                }}
+              >
+                {output.label}
+              </div>
+            )}
+          </div>
         );
       })}
     </div>
