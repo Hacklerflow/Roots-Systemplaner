@@ -248,6 +248,47 @@ function App() {
     }
   };
 
+  const handleImportSystemSets = (importedSets) => {
+    // Prüfe auf Duplikate (gleiche ID)
+    const existingIds = new Set(systemSets.map(s => s.id));
+    const duplicates = importedSets.filter(s => existingIds.has(s.id));
+
+    if (duplicates.length > 0) {
+      const shouldOverwrite = confirm(
+        `${duplicates.length} Set(s) mit gleichen IDs existieren bereits.\n\n` +
+        `Möchtest du sie überschreiben?\n\n` +
+        `JA = Überschreiben\n` +
+        `NEIN = Neue IDs vergeben`
+      );
+
+      if (shouldOverwrite) {
+        // Überschreibe existierende Sets
+        const updatedSets = systemSets.map(existing => {
+          const imported = importedSets.find(imp => imp.id === existing.id);
+          return imported || existing;
+        });
+        // Füge neue Sets hinzu
+        const newSets = importedSets.filter(imp => !existingIds.has(imp.id));
+        setSystemSets([...updatedSets, ...newSets]);
+      } else {
+        // Vergebe neue IDs für Duplikate
+        const processedSets = importedSets.map(set => {
+          if (existingIds.has(set.id)) {
+            return {
+              ...set,
+              id: `set-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            };
+          }
+          return set;
+        });
+        setSystemSets([...systemSets, ...processedSets]);
+      }
+    } else {
+      // Keine Duplikate, einfach hinzufügen
+      setSystemSets([...systemSets, ...importedSets]);
+    }
+  };
+
   // Konfigurations State (STRUKTUR: building + modules + connections)
   const [configuration, setConfiguration] = useState(() => {
     try {
@@ -739,6 +780,7 @@ function App() {
         onCreateSet={handleCreateSystemSet}
         onSwitchSet={handleSwitchSystemSet}
         onDeleteSet={handleDeleteSystemSet}
+        onImportSets={handleImportSystemSets}
       />
     </div>
   );

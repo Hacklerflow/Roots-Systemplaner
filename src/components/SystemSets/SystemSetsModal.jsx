@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 
 export default function SystemSetsModal({
   isOpen,
@@ -8,9 +8,11 @@ export default function SystemSetsModal({
   onCreateSet,
   onSwitchSet,
   onDeleteSet,
+  onImportSets,
 }) {
   const [newSetName, setNewSetName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const fileInputRef = useRef(null);
 
   if (!isOpen) return null;
 
@@ -45,6 +47,107 @@ export default function SystemSetsModal({
     if (confirm(`System Set "${setName}" wirklich löschen?\n\nDiese Aktion kann nicht rückgängig gemacht werden!`)) {
       onDeleteSet(setId);
     }
+  };
+
+  // Export einzelnes Set
+  const handleExportSet = (set) => {
+    const exportData = {
+      version: '1.0',
+      type: 'roots-system-set',
+      exportDate: new Date().toISOString(),
+      set: set,
+    };
+
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `SystemSet_${set.name.replace(/[^a-zA-Z0-9]/g, '_')}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // Export alle Sets
+  const handleExportAllSets = () => {
+    if (systemSets.length === 0) {
+      alert('Keine System Sets zum Exportieren vorhanden!');
+      return;
+    }
+
+    const exportData = {
+      version: '1.0',
+      type: 'roots-system-sets-collection',
+      exportDate: new Date().toISOString(),
+      sets: systemSets,
+    };
+
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+
+    const today = new Date().toISOString().slice(0, 10);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `RootsSystemSets_${today}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // Import Sets
+  const handleImportFile = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const imported = JSON.parse(e.target.result);
+
+        // Validierung
+        if (!imported.version || !imported.type) {
+          alert('Ungültige Datei: Falsches Format!');
+          return;
+        }
+
+        let setsToImport = [];
+
+        // Einzelnes Set oder Collection?
+        if (imported.type === 'roots-system-set' && imported.set) {
+          setsToImport = [imported.set];
+        } else if (imported.type === 'roots-system-sets-collection' && imported.sets) {
+          setsToImport = imported.sets;
+        } else {
+          alert('Ungültige Datei: Unbekannter Typ!');
+          return;
+        }
+
+        // Validiere Set-Struktur
+        const invalidSets = setsToImport.filter(set =>
+          !set.id || !set.name || !set.createdAt
+        );
+
+        if (invalidSets.length > 0) {
+          alert('Ungültige Datei: Ein oder mehrere Sets haben eine ungültige Struktur!');
+          return;
+        }
+
+        // Import durchführen
+        onImportSets(setsToImport);
+        alert(`${setsToImport.length} System Set(s) erfolgreich importiert!`);
+      } catch (error) {
+        console.error('Import-Fehler:', error);
+        alert('Fehler beim Importieren: Ungültige JSON-Datei!');
+      }
+    };
+
+    reader.readAsText(file);
+    event.target.value = ''; // Reset input
   };
 
   const activeSet = systemSets.find(s => s.id === activeSetId);
@@ -113,6 +216,53 @@ export default function SystemSetsModal({
 
         {/* Content */}
         <div style={{ padding: '24px' }}>
+          {/* Import/Export Buttons */}
+          <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
+            <button
+              onClick={handleExportAllSets}
+              disabled={systemSets.length === 0}
+              style={{
+                flex: 1,
+                padding: '10px 16px',
+                background: systemSets.length === 0 ? 'var(--bg-tertiary)' : 'var(--success)',
+                color: systemSets.length === 0 ? 'var(--text-secondary)' : 'white',
+                border: 'none',
+                borderRadius: '4px',
+                fontWeight: 600,
+                cursor: systemSets.length === 0 ? 'not-allowed' : 'pointer',
+                fontFamily: 'inherit',
+                fontSize: '13px',
+                opacity: systemSets.length === 0 ? 0.5 : 1,
+              }}
+            >
+              📥 Alle Sets exportieren
+            </button>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              style={{
+                flex: 1,
+                padding: '10px 16px',
+                background: 'var(--accent)',
+                color: 'var(--bg-primary)',
+                border: 'none',
+                borderRadius: '4px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                fontSize: '13px',
+              }}
+            >
+              📂 Sets importieren
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json"
+              onChange={handleImportFile}
+              style={{ display: 'none' }}
+            />
+          </div>
+
           {/* Active Set Display */}
           {activeSet && (
             <div
@@ -308,6 +458,22 @@ export default function SystemSetsModal({
                           Aktivieren
                         </button>
                       )}
+                      <button
+                        onClick={() => handleExportSet(set)}
+                        style={{
+                          padding: '6px 12px',
+                          background: 'var(--success)',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          fontFamily: 'inherit',
+                          fontSize: '12px',
+                        }}
+                      >
+                        💾 Export
+                      </button>
                       <button
                         onClick={() => handleDelete(set.id, set.name)}
                         disabled={set.id === activeSetId}
