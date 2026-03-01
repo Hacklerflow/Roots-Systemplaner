@@ -42,27 +42,36 @@ export default function InputOutputEditor({ connector, type, onUpdate, onDelete,
     return newAllowedTypes;
   };
 
-  // Verfügbare Dimensionen: ALLE aus Dimensionskatalog
+  // Verfügbare Dimensionen: ALLE aus Dimensionskatalog (nicht nach Type filtern)
   const getAvailableDimensions = () => {
-    return dimensionskatalog
-      .map(d => d.name)
-      .sort();
+    const uniqueDimensions = [...new Set(dimensionskatalog.map(d => d.name))];
+    return uniqueDimensions.filter(Boolean).sort();
   };
 
-  // Verfügbare Verbindungsarten: Filtere nach Dimension
+  // Verfügbare Verbindungsarten: Filtere nach Dimension (falls gewählt)
   const getAvailableVerbindungsarten = () => {
     if (!dimension) {
-      // Keine Dimension gewählt: zeige alle Verbindungsarten
+      // Keine Dimension gewählt: zeige alle Verbindungsarten des connectionType
       return verbindungsartenkatalog.filter(v => v.connectionType === connectionType);
     }
 
-    // Finde alle Verbindungsarten, deren kompatible Leitungen die gewählte Dimension haben
+    // Finde alle Verbindungsarten, die die gewählte Dimension unterstützen
+    // Entweder: Name enthält Dimension ODER kompatible Leitungen haben diese Dimension
     return verbindungsartenkatalog.filter(v => {
-      // Prüfe ob eine der kompatiblen Leitungen die gewählte Dimension hat
-      return v.kompatible_leitungen.some(leitungId => {
-        const leitung = leitungskatalog.find(l => l.id === leitungId);
-        return leitung && leitung.dimension === dimension;
-      });
+      // Option 1: Name enthält die Dimension
+      if (v.name.includes(dimension)) {
+        return true;
+      }
+
+      // Option 2: Mindestens eine kompatible Leitung hat diese Dimension
+      if (v.kompatible_leitungen && v.kompatible_leitungen.length > 0) {
+        return v.kompatible_leitungen.some(leitungId => {
+          const leitung = leitungskatalog.find(l => l.id === leitungId);
+          return leitung && leitung.dimension === dimension;
+        });
+      }
+
+      return false;
     });
   };
 
