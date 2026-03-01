@@ -18,13 +18,13 @@ export const initialModules = [
     inputs: [
       {
         id: 'hub12-in-1',
-        label: 'DN50 Quelle',
+        label: 'FL50',
         connectionType: CONNECTION_TYPES.HYDRAULIC,
         allowedModuleTypes: [MODULE_TYPES.SOURCE, MODULE_TYPES.BUILDING],
       },
       {
         id: 'hub12-in-2',
-        label: '400V Strom',
+        label: '400V',
         connectionType: CONNECTION_TYPES.ELECTRIC,
         allowedModuleTypes: [MODULE_TYPES.BUILDING],
       },
@@ -32,13 +32,13 @@ export const initialModules = [
     outputs: [
       {
         id: 'hub12-out-1',
-        label: 'DN50 Heizung',
+        label: 'FL50',
         connectionType: CONNECTION_TYPES.HYDRAULIC,
         allowedModuleTypes: [MODULE_TYPES.STORAGE],
       },
       {
         id: 'hub12-out-2',
-        label: 'Steuerung',
+        label: 'MODBUS',
         connectionType: CONNECTION_TYPES.CONTROL,
         allowedModuleTypes: [MODULE_TYPES.STORAGE],
       },
@@ -59,13 +59,13 @@ export const initialModules = [
     inputs: [
       {
         id: 'hub20-in-1',
-        label: 'DN65 Quelle',
+        label: 'FL65',
         connectionType: CONNECTION_TYPES.HYDRAULIC,
         allowedModuleTypes: [MODULE_TYPES.SOURCE, MODULE_TYPES.BUILDING],
       },
       {
         id: 'hub20-in-2',
-        label: '400V Strom',
+        label: '400V',
         connectionType: CONNECTION_TYPES.ELECTRIC,
         allowedModuleTypes: [MODULE_TYPES.BUILDING],
       },
@@ -73,13 +73,13 @@ export const initialModules = [
     outputs: [
       {
         id: 'hub20-out-1',
-        label: 'DN65 Heizung',
+        label: 'FL65',
         connectionType: CONNECTION_TYPES.HYDRAULIC,
         allowedModuleTypes: [MODULE_TYPES.STORAGE],
       },
       {
         id: 'hub20-out-2',
-        label: 'Steuerung',
+        label: 'MODBUS',
         connectionType: CONNECTION_TYPES.CONTROL,
         allowedModuleTypes: [MODULE_TYPES.STORAGE],
       },
@@ -100,13 +100,13 @@ export const initialModules = [
     inputs: [
       {
         id: 'hub35-in-1',
-        label: 'DN80 Quelle',
+        label: 'FL80',
         connectionType: CONNECTION_TYPES.HYDRAULIC,
         allowedModuleTypes: [MODULE_TYPES.SOURCE, MODULE_TYPES.BUILDING],
       },
       {
         id: 'hub35-in-2',
-        label: '400V Strom',
+        label: '400V',
         connectionType: CONNECTION_TYPES.ELECTRIC,
         allowedModuleTypes: [MODULE_TYPES.BUILDING],
       },
@@ -114,13 +114,13 @@ export const initialModules = [
     outputs: [
       {
         id: 'hub35-out-1',
-        label: 'DN80 Heizung',
+        label: 'FL80',
         connectionType: CONNECTION_TYPES.HYDRAULIC,
         allowedModuleTypes: [MODULE_TYPES.STORAGE],
       },
       {
         id: 'hub35-out-2',
-        label: 'Steuerung',
+        label: 'MODBUS',
         connectionType: CONNECTION_TYPES.CONTROL,
         allowedModuleTypes: [MODULE_TYPES.STORAGE],
       },
@@ -142,7 +142,7 @@ export const initialModules = [
     outputs: [
       {
         id: 'quelle-out-1',
-        label: 'DN50 Quellkreis',
+        label: 'FL50',
         connectionType: CONNECTION_TYPES.HYDRAULIC,
         allowedModuleTypes: [MODULE_TYPES.HUB, MODULE_TYPES.HEAT_PUMP],
       },
@@ -165,7 +165,7 @@ export const initialModules = [
     outputs: [
       {
         id: 'soletherme-out-1',
-        label: 'DN32 Solar',
+        label: 'FL32',
         connectionType: CONNECTION_TYPES.HYDRAULIC,
         allowedModuleTypes: [MODULE_TYPES.STORAGE],
       },
@@ -187,13 +187,13 @@ export const initialModules = [
     inputs: [
       {
         id: 'puffer500-in-1',
-        label: 'DN50 Ladung',
+        label: 'FL50',
         connectionType: CONNECTION_TYPES.HYDRAULIC,
         allowedModuleTypes: [MODULE_TYPES.HUB, MODULE_TYPES.HEAT_PUMP, MODULE_TYPES.SOLAR_THERMAL],
       },
       {
         id: 'puffer500-in-2',
-        label: 'Steuerung',
+        label: 'MODBUS',
         connectionType: CONNECTION_TYPES.CONTROL,
         allowedModuleTypes: [MODULE_TYPES.HUB, MODULE_TYPES.HEAT_PUMP],
       },
@@ -201,7 +201,7 @@ export const initialModules = [
     outputs: [
       {
         id: 'puffer500-out-1',
-        label: 'DN50 Heizkreis',
+        label: 'FL50',
         connectionType: CONNECTION_TYPES.HYDRAULIC,
         allowedModuleTypes: [],
       },
@@ -223,13 +223,13 @@ export const initialModules = [
     inputs: [
       {
         id: 'puffer1000-in-1',
-        label: 'DN65 Ladung',
+        label: 'FL65',
         connectionType: CONNECTION_TYPES.HYDRAULIC,
         allowedModuleTypes: [MODULE_TYPES.HUB, MODULE_TYPES.HEAT_PUMP, MODULE_TYPES.SOLAR_THERMAL],
       },
       {
         id: 'puffer1000-in-2',
-        label: 'Steuerung',
+        label: 'MODBUS',
         connectionType: CONNECTION_TYPES.CONTROL,
         allowedModuleTypes: [MODULE_TYPES.HUB, MODULE_TYPES.HEAT_PUMP],
       },
@@ -237,7 +237,7 @@ export const initialModules = [
     outputs: [
       {
         id: 'puffer1000-out-1',
-        label: 'DN65 Heizkreis',
+        label: 'FL65',
         connectionType: CONNECTION_TYPES.HYDRAULIC,
         allowedModuleTypes: [],
       },
