@@ -145,35 +145,96 @@ export default function Stueckliste({ configuration, setConfiguration, modultype
         }
       };
 
-      // Sende an Airtable
-      const response = await fetch(`https://api.airtable.com/v0/${baseId}/${encodeURIComponent(tableName)}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${personalAccessToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          fields: {
-            'Projektname': exportData.projektName,
-            'Exportdatum': exportData.exportDatum,
-            'Gebaeude': JSON.stringify(exportData.gebaeude),
-            'Komponenten': JSON.stringify(exportData.komponenten),
-            'Leitungen': JSON.stringify(exportData.leitungen),
-            'Komponenten_Summe': exportData.summen.komponenten_summe_euro,
-            'Leitungen_Summe': exportData.summen.leitungen_summe_euro,
-            'Gesamtsumme': exportData.summen.gesamtsumme_euro,
-            'Anzahl_Komponenten': exportData.summen.anzahl_komponenten,
-            'Anzahl_Leitungen': exportData.summen.anzahl_leitungen,
-          }
-        })
+      // Erstelle Projekt-ID für Verknüpfung
+      const projektId = `${building?.name || 'System'}-${new Date().getTime()}`;
+
+      // Sammle alle Records (Projekt-Header + Komponenten + Leitungen)
+      const allRecords = [];
+
+      // 1. Projekt-Header Record
+      allRecords.push({
+        fields: {
+          'Typ': 'Projekt',
+          'ProjektID': projektId,
+          'Projektname': exportData.projektName,
+          'Exportdatum': exportData.exportDatum,
+          'Gebaeude_Name': exportData.gebaeude?.name || '',
+          'Gebaeude_Baujahr': exportData.gebaeude?.baujahr || '',
+          'Gebaeude_Strasse': exportData.gebaeude?.strasse || '',
+          'Gebaeude_Hausnummer': exportData.gebaeude?.hausnummer || '',
+          'Gebaeude_Stockwerke': exportData.gebaeude?.stockwerke || '',
+          'Komponenten_Summe': exportData.summen.komponenten_summe_euro,
+          'Leitungen_Summe': exportData.summen.leitungen_summe_euro,
+          'Gesamtsumme': exportData.summen.gesamtsumme_euro,
+          'Anzahl_Komponenten': exportData.summen.anzahl_komponenten,
+          'Anzahl_Leitungen': exportData.summen.anzahl_leitungen,
+        }
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error?.message || 'Fehler beim Senden an Airtable');
+      // 2. Komponenten Records
+      exportData.komponenten.forEach(komp => {
+        allRecords.push({
+          fields: {
+            'Typ': 'Komponente',
+            'ProjektID': projektId,
+            'Position': komp.position,
+            'Name': komp.name,
+            'Modultyp': komp.modultyp,
+            'Hersteller': komp.hersteller,
+            'Abmessungen': komp.abmessungen,
+            'Gewicht_kg': komp.gewicht_kg,
+            'Leistung_kW': komp.leistung_nominal_kw,
+            'Volumen_L': komp.volumen_liter,
+            'Berechnungsart': komp.berechnungsart,
+            'Einheit': komp.einheit || '',
+            'Menge': komp.menge || 1,
+            'Preis_pro_Einheit': komp.preis_pro_einheit_euro || komp.preis_euro || 0,
+            'Gesamtpreis': komp.gesamtpreis_euro || komp.preis_euro || 0,
+          }
+        });
+      });
+
+      // 3. Leitungen Records
+      exportData.leitungen.forEach(leitung => {
+        allRecords.push({
+          fields: {
+            'Typ': 'Leitung',
+            'ProjektID': projektId,
+            'Position': leitung.position,
+            'Von_Modul': leitung.von_modul,
+            'Von_Ausgang': leitung.von_ausgang,
+            'Zu_Modul': leitung.zu_modul,
+            'Zu_Eingang': leitung.zu_eingang,
+            'Verbindungstyp': leitung.verbindungstyp,
+            'Laenge_m': leitung.laenge_meter || 0,
+            'Dimension': leitung.dimension,
+            'Preis_pro_m': leitung.preis_pro_meter_euro || 0,
+            'Gesamtpreis': leitung.gesamtpreis_euro || 0,
+          }
+        });
+      });
+
+      // Sende alle Records in Batches (max 10 pro Request)
+      const batchSize = 10;
+      for (let i = 0; i < allRecords.length; i += batchSize) {
+        const batch = allRecords.slice(i, i + batchSize);
+
+        const response = await fetch(`https://api.airtable.com/v0/${baseId}/${encodeURIComponent(tableName)}`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${personalAccessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ records: batch })
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error?.message || 'Fehler beim Senden an Airtable');
+        }
       }
 
-      alert('✅ Erfolgreich an Airtable gesendet!');
+      alert(`✅ Erfolgreich an Airtable gesendet!\n\n${allRecords.length} Records erstellt:\n• 1 Projekt\n• ${exportData.komponenten.length} Komponenten\n• ${exportData.leitungen.length} Leitungen`);
     } catch (error) {
       console.error('Fehler beim Senden an Airtable:', error);
       alert(`❌ Fehler: ${error.message}\n\nBitte prüfe deine Airtable-Einstellungen.`);
