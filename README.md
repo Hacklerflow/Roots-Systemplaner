@@ -1,96 +1,92 @@
 # Roots Systemkonfigurator
 
-Internes Planungstool für Roots Energy Techniker zur visuellen Planung von modularen Wärmepumpen-Systemketten für städtische Mehrfamilienhäuser.
+**Version 1.0.0** | Professionelles Planungstool für Roots Energy Wärmepumpensysteme
 
-![Roots Systemkonfigurator](https://img.shields.io/badge/React-19.2-blue) ![Vite](https://img.shields.io/badge/Vite-7.3-purple) ![React Flow](https://img.shields.io/badge/React_Flow-12.10-green)
+Ein modernes, browserbasiertes Konfigurations- und Planungstool zur Erstellung komplexer Wärmepumpensysteme mit integrierter Stücklisten-Generierung und Airtable-Export für automatisierte Angebotserstellung.
 
-## 🎯 Zweck
+![Roots Systemkonfigurator](https://img.shields.io/badge/React-19.2-61DAFB?logo=react) ![Vite](https://img.shields.io/badge/Vite-7.3-646CFF?logo=vite) ![License](https://img.shields.io/badge/License-Private-red)
 
-Das Tool ermöglicht die Verkettung von Gebäuden mit Roots-Modulen und prüft automatisch die Kompatibilität basierend auf Leistungen und Voraussetzungen. Techniker können damit:
+---
 
-- Gebäude mit ihren Parametern erfassen
-- Module zu einer Systemkette hinzufügen
-- Automatische Kompatibilitätsprüfung durchführen
-- Visuelle Darstellung der Systemkette sehen
-- Module in der Datenbank verwalten
+## 🎯 Features
 
-## ✨ Features
+### 🏗️ Visueller Konfigurator
+- **Drag-and-Drop Interface** mit React Flow für intuitive Systemplanung
+- **Node-basierte Architektur** für Module, Gebäude und Knotenpunkte
+- **Dynamische Verbindungen** mit automatischer Kompatibilitätsprüfung
+- **3 Verbindungstypen**: Hydraulisch (durchgezogen), Elektrisch (gestrichelt), Steuerung (gepunktet)
+- **Intelligente Anschlüsse**: Bis zu 12 Eingänge und 36 Ausgänge pro Modul
+- **Verbindungsarten-Katalog** mit Kürzeln (max. 6 Zeichen) für kompakte Darstellung
 
-### 🔧 Konfigurator
-- **Visueller Node-Editor** mit React Flow
-- **Gebäude als Startpunkt** der Kette mit Parametern wie:
-  - Heizlast (kW)
-  - Tiefenbohrung vorhanden
-  - Keller- und Dachfläche verfügbar
-- **Modul-Verkettung**: Gebäude → Modul A → Modul B → ...
-- **Intelligente Filterung**: Nur kompatible Module werden zum Hinzufügen angeboten
-- **Inkompatibilitäts-Anzeige**: Nicht passende Module werden ausgegraut mit Grund
-- **Bearbeitungsmodus**: Klick auf Node öffnet Modal zur Parameteranpassung
+### 📋 Stücklisten-Management
+- **Automatische Stücklisten-Generierung** aus der Konfiguration
+- **Komponenten-Tabelle** mit Hersteller, Abmessungen, Preisen, Mengen
+- **Leitungs-Tabelle** mit Längen, Dimensionen, Verbindungstypen
+- **Flexible Preisberechnung**:
+  - Pro Stück oder pro Einheit (m, m², m³)
+  - Automatische Summenberechnung
+- **Editierbare Preise** direkt in der Stückliste
 
-### 📋 Listenansicht
-- **Hierarchische Darstellung** der gesamten Systemkette
-- **Kompatibilitätsstatus** zwischen Verbindungen (✓ kompatibel / ✗ + Grund)
-- **Aufklappbare Elemente** mit drei Sektionen:
-  - **Eigenschaften**: Beschreibende Kennwerte (Baujahr, Abmessungen, etc.)
-  - **Leistungen**: Was das Element bereitstellt (Tiefenbohrung, Leistung kW)
-  - **Voraussetzungen**: Was das Element benötigt (nur bei Modulen)
+### 🔄 Export & Integration
 
-### 🗄️ Moduldatenbank
-- **CRUD-Operationen**: Module erstellen, bearbeiten, löschen
-- **Vorkonfigurierte Module**:
-  - Roots Hub 12 (12 kW, max 15 kW Heizlast)
-  - Roots Hub 20 (20 kW, max 25 kW Heizlast)
-  - Roots Hub 35 (35 kW, max 40 kW Heizlast)
-  - Solarthermie-Modul (8 kW, benötigt Dachfläche)
-  - Pufferspeicher 500L
-  - Pufferspeicher 1000L
-- **Persistenz**: Module werden in localStorage gespeichert
+#### Excel Export
+- Separate Sheets für Komponenten und Leitungen
+- Fertig formatiert für Weiterbearbeitung
 
-## 🧮 Kompatibilitätslogik
+#### JSON Export
+- Strukturierte Daten für externe Systeme
+- Vollständige Projekt-, Gebäude- und Konfigurationsdaten
 
-### Datenmodell
-Jedes Element (Gebäude oder Modul) hat drei Attributtypen:
+#### Airtable Integration
+- **Direkter Export** zu Airtable mit 3-Tabellen-Struktur:
+  - **Projekte**: Hauptdaten, Gebäudeinformationen, Summen
+  - **Komponenten**: Verlinkte Module mit allen Properties
+  - **Leitungen**: Verlinkte Verbindungen mit Längen und Preisen
+- **Automatische Verknüpfung** der Records über Linked Fields
+- **Test-Funktion** zur Validierung der Airtable-Konfiguration
 
-1. **Eigenschaften** – Beschreibende Kennwerte, keine Kompatibilitätslogik
-   Beispiel: `baujahr`, `modultyp`, `abmessungen`
+#### docsautomator Integration
+- **Word-Template** mit professionellem Layout
+- **Line Items Syntax** für automatische Tabellengenerierung
+- **Webhook-Ready** für Automation (Airtable → docsautomator)
+- **PDF-Generierung** für fertige Angebote
 
-2. **Leistungen** – Was dieses Element bereitstellt
-   Beispiel: `tiefenbohrung_vorhanden: true`, `verfuegbare_leistung_kw: 40`
+### 🗄️ Katalog-Verwaltung
 
-3. **Voraussetzungen** – Was das vorherige Element liefern muss
-   Beispiel: `tiefenbohrung_required: true`, `max_heizlast_kw: 15`
+#### Modultypen
+- Benutzerdefinierte Modultypen mit Eigenschaften
+- Kategorien: Wärmepumpe, Rückkühler, Speicher, etc.
+- Berechnungsarten: Stück oder pro Einheit
 
-### Kompatibilitätsprüfung
-Ein Modul ist mit seinem Vorgänger kompatibel, wenn:
+#### Module-Datenbank
+- Vorkonfigurierte Module (Roots Hub, Speicher, etc.)
+- Ein-/Ausgänge mit Verbindungsarten
+- Technische Daten (Leistung, Volumen, Gewicht)
 
-1. ✅ **Alle Flag-Voraussetzungen** beim Vorgänger `true` sind
-2. ✅ **Numerische Voraussetzungen** erfüllt sind:
-   - `max_heizlast_kw`: Heizlast des Gebäudes darf nicht überschritten werden
-   - `min_leistung_kw`: Vorgänger muss mindestens diese Leistung liefern
+#### Verbindungsarten
+- Hydraulische Anschlüsse (Flansch DN25-DN80, Schweißring)
+- Elektrische Anschlüsse (230V, 400V, Kälte 230V/400V)
+- Steuerungen (Modbus, CAN, RS485)
+- Kürzeldefinition für kompakte Darstellung
 
-Das **Gebäude** ist immer Startpunkt – es hat Leistungen aber keine Voraussetzungen.
+#### Leitungskatalog
+- Kompatible Leitungen pro Verbindungsart
+- Dimensionen und Preise pro Meter
+- Automatische Filterung im Connection Modal
 
-## 🎨 Design
+---
 
-- **Dark Theme**: Technisches, professionelles Design
-- **Font**: IBM Plex Mono für monospace-typischen Look
-- **Farbschema**:
-  - Hintergrund: #0a0a0a (Primär), #1a1a1a (Sekundär)
-  - Accent: #00d9ff (Cyan)
-  - Success: #00ff88 (Grün)
-  - Error: #ff4444 (Rot)
-
-## 🚀 Installation & Start
+## 🚀 Installation & Setup
 
 ### Voraussetzungen
-- Node.js (v18+)
-- npm
+- Node.js 18+ und npm
+- Moderner Browser (Chrome, Firefox, Safari, Edge)
 
-### Setup
+### Installation
 ```bash
 # Repository klonen
 git clone https://github.com/Hacklerflow/Roots-Systemplaner.git
-cd Roots-Systemplaner
+cd roots-configurator
 
 # Dependencies installieren
 npm install
@@ -99,105 +95,305 @@ npm install
 npm run dev
 ```
 
-Die App läuft dann unter `http://localhost:5173/`
+Die App läuft dann auf `http://localhost:5173`
 
-### Build für Produktion
+### Build für Production
 ```bash
 npm run build
-npm run preview
+npm run preview  # Build-Preview testen
 ```
-
-## 🛠️ Tech Stack
-
-- **React 19.2** – UI Framework
-- **Vite 7.3** – Build Tool & Dev Server
-- **@xyflow/react 12.10** – Node-basierter visueller Editor
-- **localStorage** – Session-Persistenz (kein Backend)
-
-## 📁 Projektstruktur
-
-```
-src/
-├── App.jsx                          # Haupt-App mit Tab-Navigation
-├── data/
-│   ├── types.js                     # Datentypen und Factory-Funktionen
-│   ├── moduleDatabase.js            # Initial-Module
-│   └── compatibilityChecker.js      # Kompatibilitätslogik
-├── components/
-│   ├── ConfiguratorEditor/
-│   │   ├── ConfiguratorEditor.jsx   # Hauptkomponente mit React Flow
-│   │   ├── BuildingNode.jsx         # Custom Node für Gebäude
-│   │   ├── ModuleNode.jsx           # Custom Node für Module
-│   │   └── ElementModal.jsx         # Modal für Parameter-Bearbeitung
-│   ├── ListView/
-│   │   └── ListView.jsx             # Hierarchische Listenansicht
-│   └── ModuleDatabase/
-│       └── ModuleDatabase.jsx       # Datenbank-Editor (CRUD)
-└── styles/
-    └── theme.css                    # Globales Dark Theme
-```
-
-## 🧪 Verwendung
-
-### 1. Gebäude erstellen
-1. Im **Konfigurator**-Tab auf "Neues Gebäude" klicken
-2. Auf den Gebäude-Node klicken und Parameter eintragen:
-   - Heizlast (kW)
-   - Tiefenbohrung vorhanden
-   - Kellerfläche/Dachfläche verfügbar
-
-### 2. Module hinzufügen
-1. In der rechten Sidebar werden nur **kompatible Module** grün angezeigt
-2. Inkompatible Module sind rot und ausgegraut mit Begründung
-3. Auf "Hinzufügen" bei einem kompatiblen Modul klicken
-4. Modul erscheint in der Kette
-
-### 3. Kette prüfen
-- **Konfigurator**: Visuelle Darstellung mit React Flow
-- **Listenansicht**: Detaillierte hierarchische Liste mit Kompatibilitätsstatus
-
-### 4. Eigene Module erstellen
-1. Im **Moduldatenbank**-Tab auf "+ Neues Modul"
-2. Formular ausfüllen:
-   - Eigenschaften (Name, Typ, Abmessungen)
-   - Leistungen (was es bereitstellt)
-   - Voraussetzungen (was es benötigt)
-3. Modul ist sofort im Konfigurator verfügbar
-
-## 📝 Systemanforderungen-Beispiel
-
-**Szenario**: Altbau mit 30 kW Heizlast, Tiefenbohrung und Keller vorhanden
-
-✅ **Kompatibel**:
-- Roots Hub 35 (max 40 kW Heizlast, benötigt Tiefenbohrung + Keller)
-
-✅ **Dann hinzufügbar**:
-- Pufferspeicher 1000L (benötigt Wärmequelle + Keller)
-
-❌ **Nicht kompatibel**:
-- Roots Hub 12 (max 15 kW – Heizlast zu hoch)
-- Solarthermie-Modul (benötigt Dachfläche, nicht vorhanden)
-
-## 🔒 Datenpersistenz
-
-- **localStorage** wird verwendet für:
-  - Aktuelle Konfiguration (Gebäude + Kette)
-  - Moduldatenbank (inkl. selbst erstellter Module)
-- Kein Backend notwendig
-- Daten bleiben im Browser gespeichert
-
-## 🎯 Zielgruppe
-
-Internes Tool für **Roots Energy Techniker** zur Systemplanung. Nicht für Consumer-Nutzung gedacht.
-
-## 📄 Lizenz
-
-Proprietär – Roots Energy internes Tool
-
-## 🤝 Entwicklung
-
-Entwickelt mit Claude Code (Anthropic) für Roots Energy.
 
 ---
 
-**Roots Energy** – Modulare Wärmepumpen-Lösungen für die Stadt
+## 📖 Verwendung
+
+### 1. Projekt erstellen
+
+1. **Gebäude erstellen**
+   - Navigation: **Konfigurator** → Gebäude im Canvas platzieren
+   - Eigenschaften: Name, Baujahr, Adresse, Stockwerke
+   - Ausgänge definieren mit Verbindungsarten
+
+2. **Module hinzufügen**
+   - Aus Datenbank (linke Sidebar) auf Canvas ziehen
+   - Oder neue Module in der Modul-Datenbank erstellen
+   - Eigenschaften bearbeiten (Preise, Mengen, technische Daten)
+
+3. **Verbindungen erstellen**
+   - Anschlüsse (Handles) an Modulen verbinden
+   - Kompatibilitätsprüfung erfolgt automatisch
+   - ⚠️ Warnung bei nicht empfohlenen Verbindungen (trotzdem erlaubt)
+
+4. **Verbindungen konfigurieren**
+   - Doppelklick auf Verbindungslinie
+   - Länge, Leitungstyp (aus Katalog), Dimension, Preis eintragen
+
+### 2. Stückliste bearbeiten
+
+Navigation: **Stückliste**
+
+- **Preise anpassen**: Direkt in den Eingabefeldern
+- **Mengen ändern**: Bei "pro Einheit" Modultypen
+- **Summen**: Werden automatisch berechnet
+
+### 3. Export
+
+#### Excel Export
+```
+Stückliste → 📥 Excel Export
+```
+→ `Roots_Stueckliste_[Projektname]_[Datum].xlsx`
+
+#### JSON Export
+```
+Stückliste → 📄 JSON Export
+```
+→ `Roots_Stueckliste_[Projektname]_[Datum].json`
+
+#### Airtable Export
+
+**Setup (einmalig):**
+1. Airtable Settings öffnen (⚙️ Button)
+2. **Personal Access Token** erstellen:
+   - Airtable.com → Developer Hub → Create Token
+   - Scopes: `data.records:read` + `data.records:write`
+   - Base auswählen!
+3. **Base ID** eintragen (aus URL: `app...`)
+4. **3 Tabellen erstellen**:
+   - `Projekte` (siehe Feldliste unten)
+   - `Komponenten` (siehe Feldliste unten)
+   - `Leitungen` (siehe Feldliste unten)
+5. **Verbindung testen**
+
+**Export durchführen:**
+```
+Stückliste → 📤 An Airtable senden
+```
+
+**Airtable Feldstruktur:**
+
+**Tabelle: Projekte**
+- Projektname (Text)
+- Exportdatum (Date/Time)
+- Gebaeude_Name (Text)
+- Gebaeude_Baujahr (Number)
+- Gebaeude_Strasse (Text)
+- Gebaeude_Hausnummer (Text)
+- Gebaeude_Stockwerke (Number)
+- Komponenten_Summe (Number - Currency)
+- Leitungen_Summe (Number - Currency)
+- Gesamtsumme (Number - Currency)
+- Anzahl_Komponenten (Number)
+- Anzahl_Leitungen (Number)
+
+**Tabelle: Komponenten**
+- **Projekt** (Link to Projekte) ⚠️ Wichtig!
+- Position (Number)
+- Name (Text)
+- Modultyp (Text)
+- Hersteller (Text)
+- Abmessungen (Text)
+- Gewicht_kg (Number)
+- Leistung_kW (Number)
+- Volumen_L (Number)
+- Berechnungsart (Text)
+- Einheit (Text)
+- Menge (Number)
+- Preis_pro_Einheit (Number - Currency)
+- Gesamtpreis (Number - Currency)
+
+**Tabelle: Leitungen**
+- **Projekt** (Link to Projekte) ⚠️ Wichtig!
+- Position (Number)
+- Von_Modul (Text)
+- Von_Ausgang (Text)
+- Zu_Modul (Text)
+- Zu_Eingang (Text)
+- Verbindungstyp (Text)
+- Laenge_m (Number)
+- Dimension (Text)
+- Preis_pro_m (Number - Currency)
+- Gesamtpreis (Number - Currency)
+
+### 4. docsautomator Setup
+
+**Template hochladen:**
+1. Datei verwenden: `Roots_Stueckliste_Template.docx`
+2. In docsautomator hochladen
+3. **Data Source konfigurieren**:
+   - Primary Table: **Projekte**
+   - Line Items 1: **Komponenten** (via "Projekt" Link)
+   - Line Items 2: **Leitungen** (via "Projekt" Link)
+
+**Automation einrichten:**
+
+**Option A - Automatisch:**
+```
+Airtable Automation:
+Trigger: "When record created" (Tabelle: Projekte)
+Action: "Send webhook" → docsautomator Webhook URL
+```
+
+**Option B - Mit Button:**
+```
+1. Checkbox-Feld in Projekte: "Dokument generieren"
+2. Automation Trigger: "When record matches" → Checkbox = true
+3. Action 1: Webhook to docsautomator
+4. Action 2: Update record → Checkbox = false
+```
+
+---
+
+## 🏗️ Projekt-Struktur
+
+```
+roots-configurator/
+├── src/
+│   ├── components/
+│   │   ├── ConfiguratorEditor/    # Visueller Editor
+│   │   │   ├── ConfiguratorEditor.jsx
+│   │   │   ├── BuildingNode.jsx
+│   │   │   ├── ModuleNode.jsx
+│   │   │   ├── JunctionNode.jsx
+│   │   │   ├── WarningEdge.jsx
+│   │   │   ├── ConnectionModal.jsx
+│   │   │   ├── ElementModal.jsx
+│   │   │   └── InputOutputEditor.jsx
+│   │   ├── Stueckliste/           # Stücklisten-View
+│   │   │   └── Stueckliste.jsx
+│   │   ├── ModuleDatabase/        # Katalog-Verwaltung
+│   │   │   └── ModuleDatabase.jsx
+│   │   ├── Kataloge/              # Stammdaten
+│   │   │   ├── Modultypen.jsx
+│   │   │   ├── Verbindungen.jsx
+│   │   │   └── Leitungen.jsx
+│   │   └── Settings/              # Einstellungen
+│   │       └── AirtableSettings.jsx
+│   ├── data/
+│   │   ├── types.js               # Datenmodell & Factories
+│   │   ├── compatibilityChecker.js
+│   │   ├── moduleDatabase.js
+│   │   ├── modultypen.js
+│   │   ├── verbindungsartenkatalog.js
+│   │   └── leitungskatalog.js
+│   ├── App.jsx                    # Haupt-App mit Routing
+│   ├── App.css                    # Styling & Theme
+│   └── main.jsx
+├── Roots_Stueckliste_Template.docx  # docsautomator Template
+├── create_template.py               # Template-Generator
+├── package.json
+├── vite.config.js
+└── README.md
+```
+
+---
+
+## 🛠️ Technologie-Stack
+
+- **Frontend Framework**: React 19.2
+- **Build Tool**: Vite 7.3
+- **Node-Editor**: @xyflow/react 12.10
+- **Excel Export**: xlsx 0.18
+- **Styling**: Custom CSS mit CSS Variables
+- **State Management**: React Hooks + localStorage
+
+### Browser-Kompatibilität
+- Chrome/Edge 90+
+- Firefox 88+
+- Safari 14+
+
+---
+
+## 💾 Datenspeicherung
+
+Die App nutzt den Browser `localStorage` für:
+- Aktuelle Konfiguration
+- Modul-Datenbank (benutzerdefiniert)
+- Modultypen
+- Verbindungsarten-Katalog
+- Leitungskatalog
+- Airtable-Einstellungen
+
+**⚠️ Backup-Hinweis:** Nutze regelmäßig Excel/JSON Export als Backup!
+
+---
+
+## 🎨 Design & Benutzerführung
+
+### Farb-Schema (Dark Mode)
+- **Primary**: `#1a1a1a` (Hintergrund)
+- **Secondary**: `#242424` (Cards/Panels)
+- **Accent**: `#2ea043` (Roots Grün)
+- **Success**: `#2ea043`
+- **Error**: `#ef4444`
+- **Text Primary**: `rgba(255, 255, 255, 0.87)`
+- **Text Secondary**: `rgba(255, 255, 255, 0.6)`
+
+### UX-Features
+- **Click-Areas vergrößert** (50px) für einfacheres Anklicken von Verbindungen
+- **Kürzel-Labels** (max 6 Zeichen) für kompakte Darstellung
+- **Semi-transparente Hintergründe** für bessere Lesbarkeit
+- **Monospace-Schrift** für technische Bezeichnungen
+- **Hover-Effekte** und visuelle Feedback
+
+---
+
+## 🐛 Troubleshooting
+
+### Airtable Export funktioniert nicht
+1. **Token-Berechtigungen prüfen**:
+   - `data.records:read` + `data.records:write` aktiviert?
+   - Base in Token-Einstellungen ausgewählt?
+2. **Feldnamen exakt übernehmen** (Groß-/Kleinschreibung, Unterstriche)
+3. **Linked Fields** in Komponenten/Leitungen richtig konfiguriert?
+4. Test-Funktion nutzen (⚙️ → Verbindung testen)
+
+### docsautomator Template zeigt keine Daten
+1. **Line Items Mapping prüfen**:
+   - line_items_1 → Komponenten (Linked Field: "Projekt")
+   - line_items_2 → Leitungen (Linked Field: "Projekt")
+2. **View Selection**: Passende Views in Airtable gewählt?
+3. **Feldnamen** müssen in Template UND Airtable identisch sein
+
+### Module lassen sich nicht verbinden
+- **Kompatibilität**: Warnung = OK, Verbindung trotzdem möglich
+- **Handles**: Inputs (links) und Outputs (rechts) korrekt?
+- **Verbindungstyp**: Muss übereinstimmen (hydraulisch/elektrisch/steuerung)
+
+---
+
+## 📝 Changelog
+
+### Version 1.0.0 (2026-03-01)
+- ✨ Initiales Release
+- 🏗️ Visueller Node-Editor mit React Flow
+- 📋 Stücklisten-Generierung
+- 📤 Airtable-Integration (3-Tabellen-Struktur)
+- 📄 Excel/JSON Export
+- 🗄️ Katalog-Verwaltung (Modultypen, Verbindungen, Leitungen)
+- 📝 docsautomator Word-Template
+- 🔧 Verbindungsarten mit Kürzeln
+- ⚙️ Airtable Settings mit Test-Funktion
+
+---
+
+## 👥 Team & Support
+
+**Entwickelt für:** Roots Energy
+**Repository:** [github.com/Hacklerflow/Roots-Systemplaner](https://github.com/Hacklerflow/Roots-Systemplaner)
+
+### Support
+Bei Fragen oder Problemen:
+1. GitHub Issues nutzen
+2. Dokumentation prüfen
+3. Code-Kommentare lesen
+
+---
+
+## 📜 Lizenz
+
+Private - Alle Rechte vorbehalten.
+
+---
+
+**Made with ❤️ and ⚡ by Claude Sonnet 4.5**

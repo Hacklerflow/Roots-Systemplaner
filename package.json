@@ -1,7 +1,9 @@
 {
   "name": "roots-configurator",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "Professionelles Planungstool für Roots Energy Wärmepumpensysteme mit Stücklisten-Generierung und Airtable-Export",
+  "author": "Roots Energy",
   "type": "module",
   "scripts": {
     "dev": "vite",
