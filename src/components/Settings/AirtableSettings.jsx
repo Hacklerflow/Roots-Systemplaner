@@ -4,7 +4,6 @@ export default function AirtableSettings({ onClose }) {
   const [settings, setSettings] = useState({
     personalAccessToken: '',
     baseId: '',
-    tableName: '',
   });
 
   const [isSaving, setIsSaving] = useState(false);
@@ -38,7 +37,6 @@ export default function AirtableSettings({ onClose }) {
       setSettings({
         personalAccessToken: '',
         baseId: '',
-        tableName: '',
       });
       setTestResult(null);
     }
@@ -49,43 +47,46 @@ export default function AirtableSettings({ onClose }) {
     setTestResult(null);
 
     try {
-      // Teste Verbindung mit einem einfachen GET Request
-      const response = await fetch(
-        `https://api.airtable.com/v0/${settings.baseId}/${encodeURIComponent(settings.tableName)}?maxRecords=1`,
-        {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${settings.personalAccessToken}`,
-          },
-        }
-      );
+      // Teste alle 3 Tabellen
+      const tables = ['Projekte', 'Komponenten', 'Leitungen'];
+      const results = [];
 
-      if (!response.ok) {
-        const error = await response.json();
+      for (const table of tables) {
+        const response = await fetch(
+          `https://api.airtable.com/v0/${settings.baseId}/${encodeURIComponent(table)}?maxRecords=1`,
+          {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${settings.personalAccessToken}`,
+            },
+          }
+        );
 
-        let errorMessage = 'Verbindung fehlgeschlagen:\n\n';
-
-        if (response.status === 401 || response.status === 403) {
-          errorMessage += '🔐 Authentifizierung fehlgeschlagen!\n\n';
-          errorMessage += 'Prüfe:\n';
-          errorMessage += '• Token ist korrekt (beginnt mit "pat")\n';
-          errorMessage += '• Token hat "data.records:read" Berechtigung\n';
-          errorMessage += '• Token hat Zugriff auf diese Base\n';
-        } else if (response.status === 404) {
-          errorMessage += '❌ Base oder Tabelle nicht gefunden!\n\n';
-          errorMessage += 'Prüfe:\n';
-          errorMessage += `• Base ID: ${settings.baseId}\n`;
-          errorMessage += `• Table Name: "${settings.tableName}" (case-sensitive!)\n`;
+        if (!response.ok) {
+          const error = await response.json();
+          results.push({ table, success: false, error });
         } else {
-          errorMessage += error.error?.message || 'Unbekannter Fehler';
+          results.push({ table, success: true });
         }
+      }
 
-        setTestResult({ success: false, message: errorMessage });
-      } else {
+      // Prüfe ob alle erfolgreich waren
+      const allSuccess = results.every(r => r.success);
+      const failedTables = results.filter(r => !r.success);
+
+      if (allSuccess) {
         setTestResult({
           success: true,
-          message: '✅ Verbindung erfolgreich!\n\nDie Einstellungen sind korrekt.'
+          message: '✅ Alle Tabellen gefunden!\n\n✓ Projekte\n✓ Komponenten\n✓ Leitungen\n\nDie Einstellungen sind korrekt.'
         });
+      } else {
+        let errorMessage = '❌ Folgende Tabellen fehlen:\n\n';
+        failedTables.forEach(f => {
+          errorMessage += `• ${f.table}\n`;
+        });
+        errorMessage += '\nBitte erstelle diese Tabellen in deiner Airtable-Base!';
+
+        setTestResult({ success: false, message: errorMessage });
       }
     } catch (error) {
       setTestResult({
@@ -159,8 +160,11 @@ export default function AirtableSettings({ onClose }) {
               Öffne deine Base → URL: <code>https://airtable.com/<strong>appXXXXXXXXXXXXXX</strong>/...</code>
             </li>
             <li>
-              <strong>Table Name:</strong><br/>
-              Der <strong>exakte</strong> Name deiner Tabelle (case-sensitive!)
+              <strong>3 Tabellen erstellen:</strong><br/>
+              • "Projekte"<br/>
+              • "Komponenten"<br/>
+              • "Leitungen"<br/>
+              (Exakte Namen verwenden!)
             </li>
           </ol>
         </div>
@@ -213,27 +217,21 @@ export default function AirtableSettings({ onClose }) {
             />
           </div>
 
-          {/* Table Name */}
-          <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '13px' }}>
-              Table Name *
-            </label>
-            <input
-              type="text"
-              value={settings.tableName}
-              onChange={(e) => setSettings({ ...settings, tableName: e.target.value })}
-              placeholder="Stückliste"
-              style={{
-                width: '100%',
-                padding: '10px',
-                background: 'var(--bg-tertiary)',
-                border: '1px solid var(--border)',
-                borderRadius: '4px',
-                color: 'var(--text-primary)',
-                fontFamily: 'inherit',
-                fontSize: '14px',
-              }}
-            />
+          {/* Info: 3 Tabellen werden verwendet */}
+          <div
+            style={{
+              background: 'rgba(46, 160, 67, 0.1)',
+              border: '1px solid var(--success)',
+              borderRadius: '4px',
+              padding: '12px',
+              fontSize: '12px',
+            }}
+          >
+            <strong>ℹ️ Automatische Tabellennamen:</strong><br/>
+            Die App sendet an 3 feste Tabellen in deiner Base:<br/>
+            • <code>Projekte</code><br/>
+            • <code>Komponenten</code><br/>
+            • <code>Leitungen</code>
           </div>
         </div>
 
@@ -259,46 +257,44 @@ export default function AirtableSettings({ onClose }) {
         <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
           <button
             onClick={handleTest}
-            disabled={!settings.personalAccessToken || !settings.baseId || !settings.tableName || isTesting}
+            disabled={!settings.personalAccessToken || !settings.baseId || isTesting}
             style={{
               flex: 1,
               padding: '12px',
-              background: settings.personalAccessToken && settings.baseId && settings.tableName
-                ? 'var(--bg-tertiary)'
-                : 'var(--bg-tertiary)',
+              background: 'var(--bg-tertiary)',
               color: 'var(--text-primary)',
               border: '1px solid var(--border)',
               borderRadius: '4px',
               fontWeight: 600,
-              cursor: settings.personalAccessToken && settings.baseId && settings.tableName && !isTesting
+              cursor: settings.personalAccessToken && settings.baseId && !isTesting
                 ? 'pointer'
                 : 'not-allowed',
               fontFamily: 'inherit',
               fontSize: '14px',
-              opacity: settings.personalAccessToken && settings.baseId && settings.tableName ? 1 : 0.5,
+              opacity: settings.personalAccessToken && settings.baseId ? 1 : 0.5,
             }}
           >
-            {isTesting ? '⏳ Teste...' : '🔍 Verbindung testen'}
+            {isTesting ? '⏳ Teste alle 3 Tabellen...' : '🔍 Verbindung testen'}
           </button>
         </div>
 
         <div style={{ display: 'flex', gap: '12px' }}>
           <button
             onClick={handleSave}
-            disabled={!settings.personalAccessToken || !settings.baseId || !settings.tableName}
+            disabled={!settings.personalAccessToken || !settings.baseId}
             style={{
               flex: 1,
               padding: '12px',
-              background: settings.personalAccessToken && settings.baseId && settings.tableName
+              background: settings.personalAccessToken && settings.baseId
                 ? 'var(--accent)'
                 : 'var(--bg-tertiary)',
-              color: settings.personalAccessToken && settings.baseId && settings.tableName
+              color: settings.personalAccessToken && settings.baseId
                 ? 'var(--bg-primary)'
                 : 'var(--text-secondary)',
               border: 'none',
               borderRadius: '4px',
               fontWeight: 600,
-              cursor: settings.personalAccessToken && settings.baseId && settings.tableName
+              cursor: settings.personalAccessToken && settings.baseId
                 ? 'pointer'
                 : 'not-allowed',
               fontFamily: 'inherit',
