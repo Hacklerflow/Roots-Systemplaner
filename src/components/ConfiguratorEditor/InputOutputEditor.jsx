@@ -44,7 +44,10 @@ export default function InputOutputEditor({ connector, type, onUpdate, onDelete,
 
   // Verfügbare Dimensionen: ALLE aus Dimensionskatalog (nicht nach Type filtern)
   const getAvailableDimensions = () => {
+    console.log('dimensionskatalog:', dimensionskatalog);
+    console.log('dimensionskatalog.length:', dimensionskatalog?.length);
     const uniqueDimensions = [...new Set(dimensionskatalog.map(d => d.name))];
+    console.log('uniqueDimensions:', uniqueDimensions);
     return uniqueDimensions.filter(Boolean).sort();
   };
 
