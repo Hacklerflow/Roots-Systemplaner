@@ -42,24 +42,28 @@ export default function InputOutputEditor({ connector, type, onUpdate, onDelete,
     return newAllowedTypes;
   };
 
-  // Verfügbare Dimensionen basierend auf connectionType (aus Dimensionskatalog)
+  // Verfügbare Dimensionen: ALLE aus Dimensionskatalog
   const getAvailableDimensions = () => {
     return dimensionskatalog
-      .filter(d => d.connectionType === connectionType)
       .map(d => d.name)
       .sort();
   };
 
-  // Verfügbare Verbindungsarten basierend auf connectionType und Dimension
+  // Verfügbare Verbindungsarten: Filtere nach Dimension
   const getAvailableVerbindungsarten = () => {
-    let filtered = verbindungsartenkatalog.filter(v => v.connectionType === connectionType);
-
-    // Wenn Dimension gewählt, filtere Verbindungsarten die diese Dimension im Namen haben
-    if (dimension) {
-      filtered = filtered.filter(v => v.name.includes(dimension));
+    if (!dimension) {
+      // Keine Dimension gewählt: zeige alle Verbindungsarten
+      return verbindungsartenkatalog.filter(v => v.connectionType === connectionType);
     }
 
-    return filtered;
+    // Finde alle Verbindungsarten, deren kompatible Leitungen die gewählte Dimension haben
+    return verbindungsartenkatalog.filter(v => {
+      // Prüfe ob eine der kompatiblen Leitungen die gewählte Dimension hat
+      return v.kompatible_leitungen.some(leitungId => {
+        const leitung = leitungskatalog.find(l => l.id === leitungId);
+        return leitung && leitung.dimension === dimension;
+      });
+    });
   };
 
   const moduleTypeOptions = getModuleTypeOptions();
@@ -144,7 +148,7 @@ export default function InputOutputEditor({ connector, type, onUpdate, onDelete,
         </select>
         {availableDimensions.length === 0 && (
           <div style={{ fontSize: '10px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-            Keine Leitungen für {CONNECTION_TYPE_LABELS[connectionType]} verfügbar
+            Keine Dimensionen im Katalog verfügbar
           </div>
         )}
       </div>
