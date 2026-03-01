@@ -27,10 +27,6 @@ export default function WarningEdge({
     }
   };
 
-  // Labels für Ausgang und Eingang
-  const sourceLabel = data.sourceLabel || '';
-  const targetLabel = data.targetLabel || '';
-
   // Connection properties (Länge und Dimension)
   const laenge = data.laenge_meter;
   const dimension = data.dimension;
@@ -58,48 +54,6 @@ export default function WarningEdge({
       />
 
       <EdgeLabelRenderer>
-        {/* Source Label (Ausgang) - fester Abstand von 40px zum Modul */}
-        {sourceLabel && (
-          <div
-            style={{
-              position: 'absolute',
-              transform: `translate(-50%, -50%) translate(${sourceX + 40}px, ${sourceY - 20}px)`,
-              background: '#000000',
-              color: 'var(--text-primary)',
-              padding: '4px 8px',
-              borderRadius: '4px',
-              fontSize: '11px',
-              fontWeight: 500,
-              pointerEvents: 'none',
-              whiteSpace: 'nowrap',
-              border: '1px solid var(--border)',
-            }}
-          >
-            {sourceLabel}
-          </div>
-        )}
-
-        {/* Target Label (Eingang) - fester Abstand von 40px zum Modul */}
-        {targetLabel && (
-          <div
-            style={{
-              position: 'absolute',
-              transform: `translate(-50%, -50%) translate(${targetX - 40}px, ${targetY - 20}px)`,
-              background: '#000000',
-              color: 'var(--text-primary)',
-              padding: '4px 8px',
-              borderRadius: '4px',
-              fontSize: '11px',
-              fontWeight: 500,
-              pointerEvents: 'none',
-              whiteSpace: 'nowrap',
-              border: '1px solid var(--border)',
-            }}
-          >
-            {targetLabel}
-          </div>
-        )}
-
         {/* Länge und Dimension - in der Mitte */}
         {hasProperties && (
           <div
