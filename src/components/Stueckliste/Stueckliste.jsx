@@ -108,6 +108,28 @@ export default function Stueckliste({ configuration, setConfiguration, modultype
     writeFile(wb, filename);
   };
 
+  // Berechne Summen
+  const moduleSumme = modules.reduce((sum, module) => {
+    const moduleTypeInfo = modultypen?.find(t => t.name === module.moduleType);
+    const isProEinheit = moduleTypeInfo?.berechnungsart === 'pro_einheit';
+    const menge = module.properties?.menge || null;
+    const preisEuro = module.properties?.preis_euro || null;
+
+    if (!preisEuro) return sum;
+
+    const itemTotal = isProEinheit && menge ? menge * preisEuro : preisEuro;
+    return sum + itemTotal;
+  }, 0);
+
+  const leitungenSumme = connections.reduce((sum, conn) => {
+    if (conn.preis_pro_meter && conn.laenge_meter) {
+      return sum + (conn.preis_pro_meter * conn.laenge_meter);
+    }
+    return sum;
+  }, 0);
+
+  const gesamtsumme = moduleSumme + leitungenSumme;
+
   if (!building && modules.length === 0) {
     return (
       <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-secondary)' }}>
@@ -259,6 +281,15 @@ export default function Stueckliste({ configuration, setConfiguration, modultype
                 </tr>
               );
             })}
+            {/* Zwischensumme Komponenten */}
+            <tr style={{ background: 'var(--accent)', borderTop: '2px solid var(--border)' }}>
+              <td colSpan="7" style={{ ...tableCellStyle, fontWeight: 700, color: 'var(--bg-primary)', textAlign: 'right', padding: '16px' }}>
+                Zwischensumme Komponenten:
+              </td>
+              <td style={{ ...tableCellStyle, fontWeight: 700, fontSize: '15px', color: 'var(--bg-primary)', padding: '16px' }}>
+                {moduleSumme.toFixed(2)} €
+              </td>
+            </tr>
           </tbody>
         </table>
       </Section>
@@ -345,10 +376,64 @@ export default function Stueckliste({ configuration, setConfiguration, modultype
                   </tr>
                 );
               })}
+              {/* Zwischensumme Leitungen */}
+              {connections.length > 0 && (
+                <tr style={{ background: 'var(--accent)', borderTop: '2px solid var(--border)' }}>
+                  <td colSpan="7" style={{ ...tableCellStyle, fontWeight: 700, color: 'var(--bg-primary)', textAlign: 'right', padding: '16px' }}>
+                    Zwischensumme Leitungen:
+                  </td>
+                  <td style={{ ...tableCellStyle, fontWeight: 700, fontSize: '15px', color: 'var(--bg-primary)', padding: '16px' }}>
+                    {leitungenSumme.toFixed(2)} €
+                  </td>
+                  <td colSpan="2"></td>
+                </tr>
+              )}
             </tbody>
           </table>
         )}
       </Section>
+
+      {/* Gesamtsumme */}
+      <div style={{
+        background: 'var(--bg-secondary)',
+        border: '3px solid var(--accent)',
+        borderRadius: '8px',
+        padding: '24px',
+        marginTop: '32px',
+      }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}>
+          <div style={{
+            fontSize: '20px',
+            fontWeight: 700,
+            color: 'var(--accent)',
+            textTransform: 'uppercase',
+            letterSpacing: '1px',
+          }}>
+            Gesamtsumme
+          </div>
+          <div style={{
+            fontSize: '28px',
+            fontWeight: 700,
+            color: 'var(--accent)',
+          }}>
+            {gesamtsumme.toFixed(2)} €
+          </div>
+        </div>
+        <div style={{
+          marginTop: '12px',
+          fontSize: '13px',
+          color: 'var(--text-secondary)',
+          display: 'flex',
+          gap: '24px',
+        }}>
+          <span>Komponenten: {moduleSumme.toFixed(2)} €</span>
+          <span>Leitungen: {leitungenSumme.toFixed(2)} €</span>
+        </div>
+      </div>
     </div>
   );
 }
