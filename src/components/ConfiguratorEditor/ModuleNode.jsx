@@ -58,17 +58,15 @@ export default function ModuleNode({ data }) {
               <div
                 style={{
                   position: 'absolute',
-                  left: '12px',
-                  top: `calc(${yOffset}% - 8px)`,
-                  fontSize: '9px',
-                  fontWeight: 700,
+                  left: '14px',
+                  top: `calc(${yOffset}% - 6px)`,
+                  fontSize: '7px',
+                  fontWeight: 600,
                   color: 'var(--text-secondary)',
-                  background: 'var(--bg-primary)',
-                  padding: '2px 4px',
-                  borderRadius: '3px',
                   whiteSpace: 'nowrap',
                   pointerEvents: 'none',
                   fontFamily: 'monospace',
+                  textTransform: 'uppercase',
                 }}
               >
                 {input.label}
@@ -101,17 +99,15 @@ export default function ModuleNode({ data }) {
               <div
                 style={{
                   position: 'absolute',
-                  right: '12px',
-                  top: `calc(${yOffset}% - 8px)`,
-                  fontSize: '9px',
-                  fontWeight: 700,
+                  right: '14px',
+                  top: `calc(${yOffset}% - 6px)`,
+                  fontSize: '7px',
+                  fontWeight: 600,
                   color: 'var(--text-secondary)',
-                  background: 'var(--bg-primary)',
-                  padding: '2px 4px',
-                  borderRadius: '3px',
                   whiteSpace: 'nowrap',
                   pointerEvents: 'none',
                   fontFamily: 'monospace',
+                  textTransform: 'uppercase',
                 }}
               >
                 {output.label}
