@@ -40,6 +40,103 @@ export default function Stueckliste({ configuration, setConfiguration, modultype
     });
   };
 
+  const handleExportJSON = () => {
+    // Erstelle strukturierte JSON-Daten für docsautomator
+    const exportData = {
+      // Metadaten
+      exportDatum: new Date().toISOString(),
+      projektName: building?.name || 'Unbenanntes System',
+
+      // Gebäude-Informationen
+      gebaeude: building ? {
+        name: building.name || '',
+        baujahr: building.properties?.baujahr || '',
+        strasse: building.properties?.strasse || '',
+        hausnummer: building.properties?.hausnummer || '',
+        stockwerke: building.properties?.stockwerke || '',
+      } : null,
+
+      // Komponenten/Module
+      komponenten: modules.map((module, index) => {
+        const moduleTypeInfo = modultypen?.find(t => t.name === module.moduleType);
+        const isProEinheit = moduleTypeInfo?.berechnungsart === 'pro_einheit';
+        const einheit = moduleTypeInfo?.einheit || '';
+        const menge = module.properties?.menge || null;
+        const preisEuro = module.properties?.preis_euro || null;
+        const gesamtpreis = isProEinheit && menge && preisEuro ? (menge * preisEuro) : preisEuro;
+
+        return {
+          position: index + 1,
+          name: module.name || '',
+          modultyp: module.moduleType || '',
+          hersteller: module.properties?.hersteller || '',
+          abmessungen: module.properties?.abmessungen || '',
+          gewicht_kg: module.properties?.gewicht_kg || null,
+          leistung_nominal_kw: module.properties?.leistung_nominal_kw || null,
+          volumen_liter: module.properties?.volumen_liter || null,
+          ...(isProEinheit ? {
+            berechnungsart: 'pro_einheit',
+            einheit: einheit,
+            menge: menge,
+            preis_pro_einheit_euro: preisEuro,
+            gesamtpreis_euro: gesamtpreis,
+          } : {
+            berechnungsart: 'stueck',
+            preis_euro: preisEuro,
+          }),
+        };
+      }),
+
+      // Leitungen/Verbindungen
+      leitungen: connections.map((conn, index) => {
+        const sourceModule = modules.find(m => m.id === conn.source) || building;
+        const targetModule = modules.find(m => m.id === conn.target);
+        const output = sourceModule?.outputs?.find(o => o.id === conn.sourceHandle);
+        const input = targetModule?.inputs?.find(i => i.id === conn.targetHandle);
+        const gesamtpreis = conn.preis_pro_meter && conn.laenge_meter
+          ? (conn.preis_pro_meter * conn.laenge_meter)
+          : null;
+
+        return {
+          position: index + 1,
+          von_modul: sourceModule?.name || '',
+          von_ausgang: output?.label || '',
+          zu_modul: targetModule?.name || '',
+          zu_eingang: input?.label || '',
+          verbindungstyp: CONNECTION_TYPE_LABELS[output?.connectionType] || '',
+          laenge_meter: conn.laenge_meter || null,
+          dimension: conn.dimension || '',
+          preis_pro_meter_euro: conn.preis_pro_meter || null,
+          gesamtpreis_euro: gesamtpreis,
+        };
+      }),
+
+      // Summen
+      summen: {
+        komponenten_summe_euro: moduleSumme,
+        leitungen_summe_euro: leitungenSumme,
+        gesamtsumme_euro: gesamtsumme,
+        anzahl_komponenten: modules.length,
+        anzahl_leitungen: connections.length,
+      }
+    };
+
+    // JSON-String erstellen (formatiert für bessere Lesbarkeit)
+    const jsonString = JSON.stringify(exportData, null, 2);
+
+    // Download als JSON-Datei
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const timestamp = new Date().toISOString().slice(0, 10);
+    link.href = url;
+    link.download = `Roots_Stueckliste_${building?.name || 'System'}_${timestamp}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const handleExportExcel = () => {
     // Erstelle Arbeitsblätter
     const wb = utils.book_new();
@@ -166,7 +263,7 @@ export default function Stueckliste({ configuration, setConfiguration, modultype
         </div>
       )}
 
-      {/* Export-Button und Zusammenfassung */}
+      {/* Export-Buttons und Zusammenfassung */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
         <div>
           <h3 style={{ margin: 0, marginBottom: '8px' }}>Stückliste</h3>
@@ -174,24 +271,44 @@ export default function Stueckliste({ configuration, setConfiguration, modultype
             {modules.length} Komponenten • {connections.length} Leitungen
           </div>
         </div>
-        <button
-          onClick={handleExportExcel}
-          disabled={modules.length === 0 && connections.length === 0}
-          style={{
-            padding: '12px 24px',
-            background: 'var(--success)',
-            color: 'var(--bg-primary)',
-            border: 'none',
-            borderRadius: '4px',
-            fontWeight: 600,
-            cursor: modules.length === 0 && connections.length === 0 ? 'not-allowed' : 'pointer',
-            fontFamily: 'inherit',
-            fontSize: '14px',
-            opacity: modules.length === 0 && connections.length === 0 ? 0.5 : 1,
-          }}
-        >
-          📥 Excel Export
-        </button>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button
+            onClick={handleExportJSON}
+            disabled={modules.length === 0 && connections.length === 0}
+            style={{
+              padding: '12px 24px',
+              background: 'var(--accent)',
+              color: 'var(--bg-primary)',
+              border: 'none',
+              borderRadius: '4px',
+              fontWeight: 600,
+              cursor: modules.length === 0 && connections.length === 0 ? 'not-allowed' : 'pointer',
+              fontFamily: 'inherit',
+              fontSize: '14px',
+              opacity: modules.length === 0 && connections.length === 0 ? 0.5 : 1,
+            }}
+          >
+            📄 JSON Export
+          </button>
+          <button
+            onClick={handleExportExcel}
+            disabled={modules.length === 0 && connections.length === 0}
+            style={{
+              padding: '12px 24px',
+              background: 'var(--success)',
+              color: 'var(--bg-primary)',
+              border: 'none',
+              borderRadius: '4px',
+              fontWeight: 600,
+              cursor: modules.length === 0 && connections.length === 0 ? 'not-allowed' : 'pointer',
+              fontFamily: 'inherit',
+              fontSize: '14px',
+              opacity: modules.length === 0 && connections.length === 0 ? 0.5 : 1,
+            }}
+          >
+            📥 Excel Export
+          </button>
+        </div>
       </div>
 
       {/* Komponenten */}
