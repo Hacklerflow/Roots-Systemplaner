@@ -61,6 +61,7 @@ export default function ModuleDatabase({ modules, setModules, leitungskatalog = 
           module={editingModule}
           onSave={handleSave}
           onCancel={handleCancel}
+          onDelete={handleDelete}
           isCreating={isCreating}
           leitungskatalog={leitungskatalog}
           verbindungsartenkatalog={verbindungsartenkatalog}
@@ -68,26 +69,41 @@ export default function ModuleDatabase({ modules, setModules, leitungskatalog = 
         />
       )}
 
-      {/* Modulliste */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px' }}>
-        {modules.map((module) => (
-          <ModuleCard
-            key={module.id}
-            module={module}
-            onEdit={() => {
-              setEditingModule({ ...module });
-              setIsCreating(false);
-            }}
-            onDelete={() => handleDelete(module.id)}
-            disabled={!!editingModule}
-          />
-        ))}
-      </div>
+      {/* Modulliste - Gruppiert nach Modultyp */}
+      {(() => {
+        const grouped = modules.reduce((acc, module) => {
+          const type = module.moduleType || 'Sonstige';
+          if (!acc[type]) acc[type] = [];
+          acc[type].push(module);
+          return acc;
+        }, {});
+
+        return Object.entries(grouped).map(([type, typeModules]) => (
+          <div key={type} style={{ marginBottom: '32px' }}>
+            <h3 style={{ marginBottom: '16px', color: 'var(--accent)', fontSize: '16px' }}>
+              {type}
+            </h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px' }}>
+              {typeModules.map((module) => (
+                <ModuleCard
+                  key={module.id}
+                  module={module}
+                  onEdit={() => {
+                    setEditingModule({ ...module });
+                    setIsCreating(false);
+                  }}
+                  disabled={!!editingModule}
+                />
+              ))}
+            </div>
+          </div>
+        ));
+      })()}
     </div>
   );
 }
 
-function ModuleCard({ module, onEdit, onDelete, disabled }) {
+function ModuleCard({ module, onEdit, disabled }) {
   return (
     <div
       style={{
@@ -107,59 +123,33 @@ function ModuleCard({ module, onEdit, onDelete, disabled }) {
 
       {/* Schnellinfo */}
       <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
-        <div>⚡ {module.inputs.length} Eingänge | {module.outputs.length} Ausgänge</div>
-        {module.properties?.leistung_nominal_kw && (
-          <div>🔥 {module.properties.leistung_nominal_kw} kW</div>
-        )}
-        {module.properties?.volumen_liter && (
-          <div>📦 {module.properties.volumen_liter} L</div>
-        )}
+        ⚡ {module.inputs.length} Eingänge | {module.outputs.length} Ausgänge
       </div>
 
-      {/* Buttons */}
-      <div style={{ display: 'flex', gap: '8px' }}>
-        <button
-          onClick={onEdit}
-          disabled={disabled}
-          style={{
-            flex: 1,
-            padding: '8px',
-            background: 'var(--bg-tertiary)',
-            color: 'var(--text-primary)',
-            border: '1px solid var(--border)',
-            borderRadius: '4px',
-            fontSize: '12px',
-            fontWeight: 600,
-            cursor: disabled ? 'not-allowed' : 'pointer',
-            fontFamily: 'inherit',
-          }}
-        >
-          Bearbeiten
-        </button>
-        <button
-          onClick={onDelete}
-          disabled={disabled}
-          style={{
-            flex: 1,
-            padding: '8px',
-            background: 'var(--error)',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            fontSize: '12px',
-            fontWeight: 600,
-            cursor: disabled ? 'not-allowed' : 'pointer',
-            fontFamily: 'inherit',
-          }}
-        >
-          Löschen
-        </button>
-      </div>
+      {/* Button */}
+      <button
+        onClick={onEdit}
+        disabled={disabled}
+        style={{
+          width: '100%',
+          padding: '8px',
+          background: 'var(--bg-tertiary)',
+          color: 'var(--text-primary)',
+          border: '1px solid var(--border)',
+          borderRadius: '4px',
+          fontSize: '12px',
+          fontWeight: 600,
+          cursor: disabled ? 'not-allowed' : 'pointer',
+          fontFamily: 'inherit',
+        }}
+      >
+        Bearbeiten
+      </button>
     </div>
   );
 }
 
-function ModuleForm({ module, onSave, onCancel, isCreating, leitungskatalog = [], verbindungsartenkatalog = [], dimensionskatalog = [] }) {
+function ModuleForm({ module, onSave, onCancel, onDelete, isCreating, leitungskatalog = [], verbindungsartenkatalog = [], dimensionskatalog = [] }) {
   const [formData, setFormData] = useState(module);
 
   const handleChange = (section, key, value) => {
@@ -305,29 +295,11 @@ function ModuleForm({ module, onSave, onCancel, isCreating, leitungskatalog = []
             onChange={(v) => handleChange('properties', 'abmessungen', v)}
           />
           <FormField
-            label="Gewicht (kg)"
-            type="number"
-            value={formData.properties.gewicht_kg}
-            onChange={(v) => handleChange('properties', 'gewicht_kg', v)}
-          />
-          <FormField
             label="Preis (€)"
             type="number"
             step="0.01"
             value={formData.properties.preis_euro}
             onChange={(v) => handleChange('properties', 'preis_euro', v)}
-          />
-          <FormField
-            label="Leistung nominal (kW)"
-            type="number"
-            value={formData.properties.leistung_nominal_kw}
-            onChange={(v) => handleChange('properties', 'leistung_nominal_kw', v)}
-          />
-          <FormField
-            label="Volumen (Liter)"
-            type="number"
-            value={formData.properties.volumen_liter}
-            onChange={(v) => handleChange('properties', 'volumen_liter', v)}
           />
         </FormSection>
 
@@ -451,6 +423,29 @@ function ModuleForm({ module, onSave, onCancel, isCreating, leitungskatalog = []
         >
           Abbrechen
         </button>
+        {!isCreating && (
+          <button
+            type="button"
+            onClick={() => {
+              onDelete(formData.id);
+              onCancel();
+            }}
+            style={{
+              flex: 1,
+              padding: '12px',
+              background: 'var(--error)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              fontSize: '14px',
+            }}
+          >
+            Löschen
+          </button>
+        )}
       </div>
     </form>
   );
