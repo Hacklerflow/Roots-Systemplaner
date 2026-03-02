@@ -1,29 +1,99 @@
 import { useState } from 'react';
 import { createModuleTemplate, createInput, createOutput } from '../../data/types';
 import InputOutputEditor from '../ConfiguratorEditor/InputOutputEditor';
+import { catalogsAPI } from '../../api/client';
 
-export default function ModuleDatabase({ modules, setModules, leitungskatalog = [], verbindungsartenkatalog = [], dimensionskatalog = [], modultypen = [] }) {
+export default function ModuleDatabase({ modules, setModules, leitungskatalog = [], verbindungsartenkatalog = [], dimensionskatalog = [], modultypen = [], onReloadCatalogs }) {
   const [editingModule, setEditingModule] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
 
   const handleCreate = () => {
     setEditingModule(createModuleTemplate());
     setIsCreating(true);
   };
 
-  const handleSave = (module) => {
-    if (isCreating) {
-      setModules([...modules, module]);
-    } else {
-      setModules(modules.map((m) => (m.id === module.id ? module : m)));
+  const handleSave = async (module) => {
+    setSaving(true);
+    setError('');
+
+    try {
+      // Convert frontend format to backend format
+      const backendModule = {
+        name: module.name,
+        modultyp: module.modultyp || module.moduleType,
+        hersteller: module.hersteller,
+        abmessungen: module.abmessungen,
+        gewicht_kg: module.gewichtKg,
+        leistung_kw: module.leistungKw,
+        volumen_l: module.volumenL,
+        preis: module.preis,
+        eingaenge: module.inputs,
+        ausgaenge: module.outputs,
+      };
+
+      if (isCreating) {
+        // Create new module in backend
+        await catalogsAPI.addModule(backendModule);
+
+        // Update local state
+        setModules([...modules, module]);
+      } else {
+        // Find module ID in backend (we need to search by name since frontend uses temp IDs)
+        const backendModules = await catalogsAPI.getModules();
+        const backendMod = backendModules.modules.find(m => m.name === module.name);
+
+        if (backendMod) {
+          await catalogsAPI.updateModule(backendMod.id, backendModule);
+        }
+
+        // Update local state
+        setModules(modules.map((m) => (m.id === module.id ? module : m)));
+      }
+
+      setEditingModule(null);
+      setIsCreating(false);
+
+      // Reload catalogs to get fresh data from backend
+      if (onReloadCatalogs) {
+        await onReloadCatalogs();
+      }
+    } catch (err) {
+      console.error('Fehler beim Speichern:', err);
+      setError('Fehler beim Speichern: ' + err.message);
+    } finally {
+      setSaving(false);
     }
-    setEditingModule(null);
-    setIsCreating(false);
   };
 
-  const handleDelete = (id) => {
-    if (confirm('Modul wirklich löschen?')) {
-      setModules(modules.filter((m) => m.id !== id));
+  const handleDelete = async (moduleToDelete) => {
+    if (!confirm('Modul wirklich löschen?')) return;
+
+    setSaving(true);
+    setError('');
+
+    try {
+      // Find module in backend by name
+      const backendModules = await catalogsAPI.getModules();
+      const backendMod = backendModules.modules.find(m => m.name === moduleToDelete.name);
+
+      if (backendMod) {
+        await catalogsAPI.deleteModule(backendMod.id);
+      }
+
+      // Update local state
+      setModules(modules.filter((m) => m.id !== moduleToDelete.id));
+
+      // Reload catalogs
+      if (onReloadCatalogs) {
+        await onReloadCatalogs();
+      }
+    } catch (err) {
+      console.error('Fehler beim Löschen:', err);
+      setError('Fehler beim Löschen: ' + err.message);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -35,18 +105,21 @@ export default function ModuleDatabase({ modules, setModules, leitungskatalog = 
   return (
     <div style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto', minHeight: '100%' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <h2 style={{ margin: 0 }}>Moduldatenbank</h2>
+        <div>
+          <h2 style={{ margin: 0 }}>Moduldatenbank</h2>
+          {saving && <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: 'var(--text-secondary)' }}>Speichert...</p>}
+        </div>
         <button
           onClick={handleCreate}
-          disabled={!!editingModule}
+          disabled={!!editingModule || saving}
           style={{
             padding: '12px 24px',
-            background: editingModule ? 'var(--bg-tertiary)' : 'var(--accent)',
-            color: editingModule ? 'var(--text-secondary)' : 'var(--bg-primary)',
+            background: (editingModule || saving) ? 'var(--bg-tertiary)' : 'var(--accent)',
+            color: (editingModule || saving) ? 'var(--text-secondary)' : 'var(--bg-primary)',
             border: 'none',
             borderRadius: '4px',
             fontWeight: 600,
-            cursor: editingModule ? 'not-allowed' : 'pointer',
+            cursor: (editingModule || saving) ? 'not-allowed' : 'pointer',
             fontFamily: 'inherit',
             fontSize: '14px',
           }}
@@ -54,6 +127,20 @@ export default function ModuleDatabase({ modules, setModules, leitungskatalog = 
           + Neues Modul
         </button>
       </div>
+
+      {/* Error message */}
+      {error && (
+        <div style={{
+          background: 'rgba(239, 68, 68, 0.1)',
+          border: '1px solid #ef4444',
+          color: '#fca5a5',
+          padding: '12px 16px',
+          borderRadius: '6px',
+          marginBottom: '16px',
+        }}>
+          {error}
+        </div>
+      )}
 
       {/* Formular beim Erstellen/Bearbeiten */}
       {editingModule && (
