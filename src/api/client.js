@@ -187,6 +187,7 @@ export const catalogsAPI = {
     });
   },
 
+  // Module Types
   addModuleType: async (moduleTypeData) => {
     return apiRequest('/api/catalogs/module-types', {
       method: 'POST',
@@ -194,6 +195,20 @@ export const catalogsAPI = {
     });
   },
 
+  updateModuleType: async (id, moduleTypeData) => {
+    return apiRequest(`/api/catalogs/module-types/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(moduleTypeData),
+    });
+  },
+
+  deleteModuleType: async (id) => {
+    return apiRequest(`/api/catalogs/module-types/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // Connections
   addConnection: async (connectionData) => {
     return apiRequest('/api/catalogs/connections', {
       method: 'POST',
@@ -201,10 +216,58 @@ export const catalogsAPI = {
     });
   },
 
+  updateConnection: async (id, connectionData) => {
+    return apiRequest(`/api/catalogs/connections/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(connectionData),
+    });
+  },
+
+  deleteConnection: async (id) => {
+    return apiRequest(`/api/catalogs/connections/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // Pipes
   addPipe: async (pipeData) => {
     return apiRequest('/api/catalogs/pipes', {
       method: 'POST',
       body: JSON.stringify(pipeData),
+    });
+  },
+
+  updatePipe: async (id, pipeData) => {
+    return apiRequest(`/api/catalogs/pipes/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(pipeData),
+    });
+  },
+
+  deletePipe: async (id) => {
+    return apiRequest(`/api/catalogs/pipes/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // Dimensions
+  addDimension: async (dimensionData) => {
+    return apiRequest('/api/catalogs/dimensions', {
+      method: 'POST',
+      body: JSON.stringify(dimensionData),
+    });
+  },
+
+  updateDimension: async (id, dimensionData) => {
+    return apiRequest(`/api/catalogs/dimensions/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(dimensionData),
+    });
+  },
+
+  deleteDimension: async (id) => {
+    return apiRequest(`/api/catalogs/dimensions/${id}`, {
+      method: 'DELETE',
     });
   },
 };

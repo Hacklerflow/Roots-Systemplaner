@@ -316,6 +316,7 @@ export default function ConfiguratorWrapper({
               verbindungsartenkatalog={verbindungsartenkatalog}
               setVerbindungsartenkatalog={setVerbindungsartenkatalog}
               leitungskatalog={leitungskatalog}
+              onReload={onReloadCatalogs}
             />
           )}
 
@@ -324,6 +325,8 @@ export default function ConfiguratorWrapper({
               leitungskatalog={leitungskatalog}
               setLeitungskatalog={setLeitungskatalog}
               dimensionskatalog={dimensionskatalog}
+              verbindungsartenkatalog={verbindungsartenkatalog}
+              onReload={onReloadCatalogs}
             />
           )}
 
@@ -331,6 +334,7 @@ export default function ConfiguratorWrapper({
             <Dimensionen
               dimensionskatalog={dimensionskatalog}
               setDimensionskatalog={setDimensionskatalog}
+              onReload={onReloadCatalogs}
             />
           )}
 
@@ -338,6 +342,7 @@ export default function ConfiguratorWrapper({
             <Modultypen
               modultypen={modultypen}
               setModultypen={setModultypen}
+              onReload={onReloadCatalogs}
             />
           )}
 

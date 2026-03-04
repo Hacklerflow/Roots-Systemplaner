@@ -1,38 +1,78 @@
 import { useState } from 'react';
 import { CONNECTION_TYPES, CONNECTION_TYPE_LABELS } from '../../data/types';
+import { catalogsAPI } from '../../api/client';
 
-export default function Dimensionen({ dimensionskatalog, setDimensionskatalog }) {
+export default function Dimensionen({ dimensionskatalog, setDimensionskatalog, onReload }) {
   const [editingDimension, setEditingDimension] = useState(null);
   const [newDimension, setNewDimension] = useState({
     connectionType: CONNECTION_TYPES.HYDRAULIC,
     name: '',
   });
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!newDimension.name) {
       alert('Bitte Name eingeben!');
       return;
     }
 
-    const dimension = {
-      id: `dim-${newDimension.connectionType}-${Date.now()}`,
-      ...newDimension,
-    };
+    try {
+      const dimensionData = {
+        name: newDimension.name,
+        value: newDimension.connectionType, // Map connectionType → value
+      };
 
-    setDimensionskatalog([...dimensionskatalog, dimension]);
-    setNewDimension({
-      connectionType: CONNECTION_TYPES.HYDRAULIC,
-      name: '',
-    });
+      await catalogsAPI.addDimension(dimensionData);
+
+      // Reload catalogs from backend
+      if (onReload) {
+        await onReload();
+      }
+
+      setNewDimension({
+        connectionType: CONNECTION_TYPES.HYDRAULIC,
+        name: '',
+      });
+    } catch (error) {
+      console.error('Fehler beim Hinzufügen:', error);
+      alert('Fehler beim Hinzufügen: ' + error.message);
+    }
   };
 
-  const handleUpdate = (id, updates) => {
-    setDimensionskatalog(dimensionskatalog.map(d => d.id === id ? { ...d, ...updates } : d));
+  const handleUpdate = async (id, updates) => {
+    try {
+      const dimension = dimensionskatalog.find(d => d.id === id);
+      const updateData = {
+        name: updates.name || dimension.name,
+        value: updates.connectionType || dimension.connectionType, // Map connectionType → value
+      };
+
+      await catalogsAPI.updateDimension(id, updateData);
+
+      // Reload catalogs from backend
+      if (onReload) {
+        await onReload();
+      }
+    } catch (error) {
+      console.error('Fehler beim Aktualisieren:', error);
+      alert('Fehler beim Aktualisieren: ' + error.message);
+    }
   };
 
-  const handleDelete = (id) => {
-    if (confirm('Dimension wirklich löschen? Dies kann Leitungen und Verbindungen beeinflussen.')) {
-      setDimensionskatalog(dimensionskatalog.filter(d => d.id !== id));
+  const handleDelete = async (id) => {
+    if (!confirm('Dimension wirklich löschen? Dies kann Leitungen und Verbindungen beeinflussen.')) {
+      return;
+    }
+
+    try {
+      await catalogsAPI.deleteDimension(id);
+
+      // Reload catalogs from backend
+      if (onReload) {
+        await onReload();
+      }
+    } catch (error) {
+      console.error('Fehler beim Löschen:', error);
+      alert('Fehler beim Löschen: ' + error.message);
     }
   };
 

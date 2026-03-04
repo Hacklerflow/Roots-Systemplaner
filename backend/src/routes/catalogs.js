@@ -334,4 +334,251 @@ router.delete('/modules/:id', async (req, res) => {
   }
 });
 
+/**
+ * PUT /api/catalogs/module-types/:id
+ * Update a module type
+ */
+router.put('/module-types/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, kategorie, berechnungsart, einheit } = req.body;
+
+    const result = await query(`
+      UPDATE catalog_module_types
+      SET name = $1, kategorie = $2, berechnungsart = $3, einheit = $4
+      WHERE id = $5
+      RETURNING *
+    `, [name, kategorie, berechnungsart, einheit, id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Module type not found' });
+    }
+
+    res.json({
+      message: 'Module type updated',
+      moduleType: result.rows[0],
+    });
+  } catch (error) {
+    console.error('Update module type error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * DELETE /api/catalogs/module-types/:id
+ * Delete a module type
+ */
+router.delete('/module-types/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await query(
+      'DELETE FROM catalog_module_types WHERE id = $1 RETURNING id',
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Module type not found' });
+    }
+
+    res.json({ message: 'Module type deleted' });
+  } catch (error) {
+    console.error('Delete module type error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * PUT /api/catalogs/connections/:id
+ * Update a connection type
+ */
+router.put('/connections/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, kuerzel, typ } = req.body;
+
+    const result = await query(`
+      UPDATE catalog_connections
+      SET name = $1, kuerzel = $2, typ = $3
+      WHERE id = $4
+      RETURNING *
+    `, [name, kuerzel, typ, id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Connection type not found' });
+    }
+
+    res.json({
+      message: 'Connection type updated',
+      connection: result.rows[0],
+    });
+  } catch (error) {
+    console.error('Update connection error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * DELETE /api/catalogs/connections/:id
+ * Delete a connection type
+ */
+router.delete('/connections/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await query(
+      'DELETE FROM catalog_connections WHERE id = $1 RETURNING id',
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Connection type not found' });
+    }
+
+    res.json({ message: 'Connection type deleted' });
+  } catch (error) {
+    console.error('Delete connection error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * PUT /api/catalogs/pipes/:id
+ * Update a pipe
+ */
+router.put('/pipes/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { verbindungsart, leitungstyp, dimension, preis_pro_meter } = req.body;
+
+    const result = await query(`
+      UPDATE catalog_pipes
+      SET verbindungsart = $1, leitungstyp = $2, dimension = $3, preis_pro_meter = $4
+      WHERE id = $5
+      RETURNING *
+    `, [verbindungsart, leitungstyp, dimension, preis_pro_meter, id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Pipe not found' });
+    }
+
+    res.json({
+      message: 'Pipe updated',
+      pipe: result.rows[0],
+    });
+  } catch (error) {
+    console.error('Update pipe error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * DELETE /api/catalogs/pipes/:id
+ * Delete a pipe
+ */
+router.delete('/pipes/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await query(
+      'DELETE FROM catalog_pipes WHERE id = $1 RETURNING id',
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Pipe not found' });
+    }
+
+    res.json({ message: 'Pipe deleted' });
+  } catch (error) {
+    console.error('Delete pipe error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * POST /api/catalogs/dimensions
+ * Add a new dimension
+ */
+router.post('/dimensions', async (req, res) => {
+  try {
+    const { name, value } = req.body;
+
+    if (!name || !value) {
+      return res.status(400).json({ error: 'Name and value are required' });
+    }
+
+    const result = await query(`
+      INSERT INTO catalog_dimensions (name, value)
+      VALUES ($1, $2)
+      RETURNING *
+    `, [name, value]);
+
+    res.status(201).json({
+      message: 'Dimension created',
+      dimension: result.rows[0],
+    });
+  } catch (error) {
+    if (error.code === '23505') {
+      return res.status(409).json({ error: 'Dimension with this name already exists' });
+    }
+    console.error('Create dimension error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * PUT /api/catalogs/dimensions/:id
+ * Update a dimension
+ */
+router.put('/dimensions/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, value } = req.body;
+
+    const result = await query(`
+      UPDATE catalog_dimensions
+      SET name = $1, value = $2
+      WHERE id = $3
+      RETURNING *
+    `, [name, value, id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Dimension not found' });
+    }
+
+    res.json({
+      message: 'Dimension updated',
+      dimension: result.rows[0],
+    });
+  } catch (error) {
+    console.error('Update dimension error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * DELETE /api/catalogs/dimensions/:id
+ * Delete a dimension
+ */
+router.delete('/dimensions/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await query(
+      'DELETE FROM catalog_dimensions WHERE id = $1 RETURNING id',
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Dimension not found' });
+    }
+
+    res.json({ message: 'Dimension deleted' });
+  } catch (error) {
+    console.error('Delete dimension error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 export default router;

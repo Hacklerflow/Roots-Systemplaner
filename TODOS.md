@@ -85,10 +85,10 @@
 ### 2.5 Katalog-Verwaltung
 - [x] Kataloge vom Backend laden statt localStorage
 - [x] Modul-Datenbank: Backend-Integration (Create, Update, Delete)
-- [ ] Modultypen: Backend-Integration (später)
-- [ ] Verbindungen: Backend-Integration (später)
-- [ ] Leitungen: Backend-Integration (später)
-- [ ] Dimensionen: Backend-Integration (später)
+- [x] Modultypen: Backend-Integration (Create, Update, Delete)
+- [x] Verbindungen: Backend-Integration (Create, Update, Delete)
+- [x] Leitungen: Backend-Integration (Create, Update, Delete)
+- [x] Dimensionen: Backend-Integration (Create, Update, Delete)
 - [x] Shared Catalogs für alle User
 
 ---
@@ -241,4 +241,15 @@
 
 ---
 
-**Letzte Aktualisierung:** 2026-03-02 18:15
+- ✅ **Phase 2.5 Katalog-Backend-Integration - KOMPLETT! (Update)**
+  - Modultypen: Volle Backend-Integration (Create, Update, Delete)
+  - Verbindungen: Volle Backend-Integration (Create, Update, Delete)
+  - Leitungen: Volle Backend-Integration (Create, Update, Delete)
+  - Dimensionen: Volle Backend-Integration (Create, Update, Delete)
+  - Alle Katalog-Änderungen werden jetzt in der Datenbank gespeichert
+  - Automatisches Neuladen nach Änderungen
+  - Backend-API erweitert um UPDATE und DELETE Endpoints für alle Kataloge
+
+---
+
+**Letzte Aktualisierung:** 2026-03-02 19:35

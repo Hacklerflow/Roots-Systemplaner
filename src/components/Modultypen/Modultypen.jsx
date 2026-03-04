@@ -1,13 +1,14 @@
 import { useState } from 'react';
+import { catalogsAPI } from '../../api/client';
 
-export default function Modultypen({ modultypen, setModultypen }) {
+export default function Modultypen({ modultypen, setModultypen, onReload }) {
   const [editingType, setEditingType] = useState(null);
   const [newTypeName, setNewTypeName] = useState('');
   const [newBerechnungsart, setNewBerechnungsart] = useState('pro_unit');
   const [newEinheit, setNewEinheit] = useState('');
   const [editFormData, setEditFormData] = useState(null);
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!newTypeName.trim()) {
       alert('Bitte einen Namen eingeben!');
       return;
@@ -18,20 +19,31 @@ export default function Modultypen({ modultypen, setModultypen }) {
       return;
     }
 
-    const newType = {
-      id: `type-${Date.now()}`,
-      name: newTypeName.trim(),
-      berechnungsart: newBerechnungsart,
-      einheit: newBerechnungsart === 'pro_einheit' ? newEinheit.trim() : '',
-    };
+    try {
+      const moduleTypeData = {
+        name: newTypeName.trim(),
+        kategorie: 'Sonstige', // Default category
+        berechnungsart: newBerechnungsart,
+        einheit: newBerechnungsart === 'pro_einheit' ? newEinheit.trim() : '',
+      };
 
-    setModultypen([...modultypen, newType]);
-    setNewTypeName('');
-    setNewBerechnungsart('pro_unit');
-    setNewEinheit('');
+      await catalogsAPI.addModuleType(moduleTypeData);
+
+      // Reload catalogs from backend
+      if (onReload) {
+        await onReload();
+      }
+
+      setNewTypeName('');
+      setNewBerechnungsart('pro_unit');
+      setNewEinheit('');
+    } catch (error) {
+      console.error('Fehler beim Hinzufügen:', error);
+      alert('Fehler beim Hinzufügen: ' + error.message);
+    }
   };
 
-  const handleUpdate = (id, updates) => {
+  const handleUpdate = async (id, updates) => {
     if (!updates.name.trim()) {
       alert('Name darf nicht leer sein!');
       return;
@@ -42,18 +54,45 @@ export default function Modultypen({ modultypen, setModultypen }) {
       return;
     }
 
-    setModultypen(modultypen.map(t => t.id === id ? {
-      ...t,
-      name: updates.name.trim(),
-      berechnungsart: updates.berechnungsart,
-      einheit: updates.berechnungsart === 'pro_einheit' ? updates.einheit.trim() : '',
-    } : t));
-    setEditingType(null);
+    try {
+      const moduleType = modultypen.find(t => t.id === id);
+      const updateData = {
+        name: updates.name.trim(),
+        kategorie: moduleType.kategorie || 'Sonstige',
+        berechnungsart: updates.berechnungsart,
+        einheit: updates.berechnungsart === 'pro_einheit' ? updates.einheit.trim() : '',
+      };
+
+      await catalogsAPI.updateModuleType(id, updateData);
+
+      // Reload catalogs from backend
+      if (onReload) {
+        await onReload();
+      }
+
+      setEditingType(null);
+      setEditFormData(null);
+    } catch (error) {
+      console.error('Fehler beim Aktualisieren:', error);
+      alert('Fehler beim Aktualisieren: ' + error.message);
+    }
   };
 
-  const handleDelete = (id) => {
-    if (confirm('Modultyp wirklich löschen?\n\nHinweis: Bestehende Module mit diesem Typ werden nicht gelöscht, aber der Typ wird nicht mehr in der Auswahl erscheinen.')) {
-      setModultypen(modultypen.filter(t => t.id !== id));
+  const handleDelete = async (id) => {
+    if (!confirm('Modultyp wirklich löschen?\n\nHinweis: Bestehende Module mit diesem Typ werden nicht gelöscht, aber der Typ wird nicht mehr in der Auswahl erscheinen.')) {
+      return;
+    }
+
+    try {
+      await catalogsAPI.deleteModuleType(id);
+
+      // Reload catalogs from backend
+      if (onReload) {
+        await onReload();
+      }
+    } catch (error) {
+      console.error('Fehler beim Löschen:', error);
+      alert('Fehler beim Löschen: ' + error.message);
     }
   };
 
