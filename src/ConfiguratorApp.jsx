@@ -104,9 +104,12 @@ function ConfiguratorApp() {
       // Connections
       if (connectionsRes.connections?.length > 0) {
         const convertedConnections = connectionsRes.connections.map(c => ({
+          id: c.id,
           name: c.name,
           kuerzel: c.kuerzel,
-          typ: c.typ,
+          connectionType: c.typ,
+          kompatible_leitungen: Array.isArray(c.kompatible_leitungen) ? c.kompatible_leitungen :
+                                 (typeof c.kompatible_leitungen === 'string' ? JSON.parse(c.kompatible_leitungen) : []),
         }));
         setVerbindungsartenkatalog(convertedConnections);
       }
@@ -114,10 +117,11 @@ function ConfiguratorApp() {
       // Pipes
       if (pipesRes.pipes?.length > 0) {
         const convertedPipes = pipesRes.pipes.map(p => ({
-          verbindungsart: p.verbindungsart,
-          leitungstyp: p.leitungstyp,
+          id: p.id,
+          connectionType: p.connection_type,
+          material: p.leitungstyp,
           dimension: p.dimension,
-          preisProMeter: p.preis_pro_meter,
+          preis_pro_meter: p.preis_pro_meter,
         }));
         setLeitungskatalog(convertedPipes);
       }

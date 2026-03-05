@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { CONNECTION_TYPES, CONNECTION_TYPE_LABELS } from '../../data/types';
+import { catalogsAPI } from '../../api/client';
 
 export default function Leitungen({ leitungskatalog, setLeitungskatalog, dimensionskatalog = [] }) {
   const [editingLeitung, setEditingLeitung] = useState(null);
@@ -11,34 +12,68 @@ export default function Leitungen({ leitungskatalog, setLeitungskatalog, dimensi
     produktlink: ''
   });
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!newLeitung.dimension || !newLeitung.preis_pro_meter) {
       alert('Bitte Dimension und Preis eingeben!');
       return;
     }
 
-    const leitung = {
-      id: `${newLeitung.connectionType}-${Date.now()}`,
-      ...newLeitung,
-    };
+    try {
+      const response = await catalogsAPI.addPipe({
+        connection_type: newLeitung.connectionType,
+        leitungstyp: newLeitung.material,
+        dimension: newLeitung.dimension,
+        preis_pro_meter: newLeitung.preis_pro_meter,
+      });
 
-    setLeitungskatalog([...leitungskatalog, leitung]);
-    setNewLeitung({
-      connectionType: CONNECTION_TYPES.HYDRAULIC,
-      dimension: '',
-      material: '',
-      preis_pro_meter: null,
-      produktlink: ''
-    });
+      const leitung = {
+        id: response.pipe.id,
+        connectionType: response.pipe.connection_type,
+        material: response.pipe.leitungstyp,
+        dimension: response.pipe.dimension,
+        preis_pro_meter: response.pipe.preis_pro_meter,
+        produktlink: newLeitung.produktlink || '',
+      };
+
+      setLeitungskatalog([...leitungskatalog, leitung]);
+      setNewLeitung({
+        connectionType: CONNECTION_TYPES.HYDRAULIC,
+        dimension: '',
+        material: '',
+        preis_pro_meter: null,
+        produktlink: ''
+      });
+    } catch (error) {
+      alert(`Fehler beim Speichern: ${error.message}`);
+    }
   };
 
-  const handleUpdate = (id, updates) => {
-    setLeitungskatalog(leitungskatalog.map(l => l.id === id ? { ...l, ...updates } : l));
+  const handleUpdate = async (id, updates) => {
+    try {
+      // Convert frontend format to backend format
+      const backendUpdates = {};
+      if (updates.connectionType !== undefined) backendUpdates.connection_type = updates.connectionType;
+      if (updates.material !== undefined) backendUpdates.leitungstyp = updates.material;
+      if (updates.dimension !== undefined) backendUpdates.dimension = updates.dimension;
+      if (updates.preis_pro_meter !== undefined) backendUpdates.preis_pro_meter = updates.preis_pro_meter;
+
+      await catalogsAPI.updatePipe(id, backendUpdates);
+
+      // Update local state
+      setLeitungskatalog(leitungskatalog.map(l => l.id === id ? { ...l, ...updates } : l));
+    } catch (error) {
+      alert(`Fehler beim Aktualisieren: ${error.message}`);
+    }
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (confirm('Leitung wirklich löschen?')) {
-      setLeitungskatalog(leitungskatalog.filter(l => l.id !== id));
+      try {
+        await catalogsAPI.deletePipe(id);
+        setLeitungskatalog(leitungskatalog.filter(l => l.id !== id));
+      } catch (error) {
+        alert(`Fehler beim Löschen: ${error.message}`);
+      }
     }
   };
 

@@ -3,10 +3,20 @@ import InputOutputEditor from './InputOutputEditor';
 import { createInput, createOutput, isBuilding, getModuleTypeOptions } from '../../data/types';
 
 export default function ElementModal({ element, onClose, onSave, onDelete, leitungskatalog = [], verbindungsartenkatalog = [], dimensionskatalog = [], modultypen = [] }) {
-  const [formData, setFormData] = useState(element);
+  const [formData, setFormData] = useState({
+    ...element,
+    inputs: element?.inputs || [],
+    outputs: element?.outputs || [],
+    properties: element?.properties || {},
+  });
 
   useEffect(() => {
-    setFormData(element);
+    setFormData({
+      ...element,
+      inputs: element?.inputs || [],
+      outputs: element?.outputs || [],
+      properties: element?.properties || {},
+    });
   }, [element]);
 
   if (!element) return null;

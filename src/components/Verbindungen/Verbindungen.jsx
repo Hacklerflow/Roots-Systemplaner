@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { CONNECTION_TYPES, CONNECTION_TYPE_LABELS } from '../../data/types';
+import { catalogsAPI } from '../../api/client';
 
 export default function Verbindungen({ verbindungsartenkatalog, setVerbindungsartenkatalog, leitungskatalog }) {
   const [editingVerbindungsart, setEditingVerbindungsart] = useState(null);
@@ -10,7 +11,7 @@ export default function Verbindungen({ verbindungsartenkatalog, setVerbindungsar
     kompatible_leitungen: [],
   });
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!newVerbindungsart.name) {
       alert('Bitte Name eingeben!');
       return;
@@ -26,29 +27,66 @@ export default function Verbindungen({ verbindungsartenkatalog, setVerbindungsar
       return;
     }
 
-    const verbindungsart = {
-      id: `${newVerbindungsart.connectionType}-${Date.now()}`,
-      ...newVerbindungsart,
-    };
+    try {
+      const response = await catalogsAPI.addConnection({
+        name: newVerbindungsart.name,
+        kuerzel: newVerbindungsart.kuerzel,
+        typ: newVerbindungsart.connectionType,
+        kompatible_leitungen: newVerbindungsart.kompatible_leitungen,
+      });
 
-    setVerbindungsartenkatalog([...verbindungsartenkatalog, verbindungsart]);
-    setNewVerbindungsart({
-      connectionType: CONNECTION_TYPES.HYDRAULIC,
-      name: '',
-      kuerzel: '',
-      kompatible_leitungen: [],
-    });
+      const verbindungsart = {
+        id: response.connection.id,
+        name: response.connection.name,
+        kuerzel: response.connection.kuerzel,
+        connectionType: response.connection.typ,
+        kompatible_leitungen: Array.isArray(response.connection.kompatible_leitungen)
+          ? response.connection.kompatible_leitungen
+          : (typeof response.connection.kompatible_leitungen === 'string'
+              ? JSON.parse(response.connection.kompatible_leitungen)
+              : []),
+      };
+
+      setVerbindungsartenkatalog([...verbindungsartenkatalog, verbindungsart]);
+      setNewVerbindungsart({
+        connectionType: CONNECTION_TYPES.HYDRAULIC,
+        name: '',
+        kuerzel: '',
+        kompatible_leitungen: [],
+      });
+    } catch (error) {
+      alert(`Fehler beim Speichern: ${error.message}`);
+    }
   };
 
-  const handleUpdate = (id, updates) => {
-    setVerbindungsartenkatalog(
-      verbindungsartenkatalog.map(v => v.id === id ? { ...v, ...updates } : v)
-    );
+  const handleUpdate = async (id, updates) => {
+    try {
+      // Convert frontend format to backend format
+      const backendUpdates = {};
+      if (updates.name !== undefined) backendUpdates.name = updates.name;
+      if (updates.kuerzel !== undefined) backendUpdates.kuerzel = updates.kuerzel;
+      if (updates.connectionType !== undefined) backendUpdates.typ = updates.connectionType;
+      if (updates.kompatible_leitungen !== undefined) backendUpdates.kompatible_leitungen = updates.kompatible_leitungen;
+
+      await catalogsAPI.updateConnection(id, backendUpdates);
+
+      // Update local state
+      setVerbindungsartenkatalog(
+        verbindungsartenkatalog.map(v => v.id === id ? { ...v, ...updates } : v)
+      );
+    } catch (error) {
+      alert(`Fehler beim Aktualisieren: ${error.message}`);
+    }
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (confirm('Verbindungsart wirklich löschen?')) {
-      setVerbindungsartenkatalog(verbindungsartenkatalog.filter(v => v.id !== id));
+      try {
+        await catalogsAPI.deleteConnection(id);
+        setVerbindungsartenkatalog(verbindungsartenkatalog.filter(v => v.id !== id));
+      } catch (error) {
+        alert(`Fehler beim Löschen: ${error.message}`);
+      }
     }
   };
 

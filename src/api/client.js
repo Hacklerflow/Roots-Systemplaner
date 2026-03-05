@@ -207,6 +207,32 @@ export const catalogsAPI = {
       body: JSON.stringify(pipeData),
     });
   },
+
+  updateConnection: async (id, connectionData) => {
+    return apiRequest(`/api/catalogs/connections/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(connectionData),
+    });
+  },
+
+  deleteConnection: async (id) => {
+    return apiRequest(`/api/catalogs/connections/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  updatePipe: async (id, pipeData) => {
+    return apiRequest(`/api/catalogs/pipes/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(pipeData),
+    });
+  },
+
+  deletePipe: async (id) => {
+    return apiRequest(`/api/catalogs/pipes/${id}`, {
+      method: 'DELETE',
+    });
+  },
 };
 
 export default {
