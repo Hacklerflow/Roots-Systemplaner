@@ -52,6 +52,11 @@ export function createOutput(label = '', connectionType = CONNECTION_TYPES.HYDRA
     label,
     connectionType,
     allowedModuleTypes: allowedTypes,
+    // Pumpen-Definition für hydraulische Ausgänge (Phase 4/5)
+    pump: connectionType === CONNECTION_TYPES.HYDRAULIC ? {
+      enabled: false,
+      förderhoehe_m: 0,  // Lift capacity in meters
+    } : null,
   };
 }
 

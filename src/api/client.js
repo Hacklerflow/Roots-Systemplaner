@@ -233,6 +233,30 @@ export const catalogsAPI = {
       method: 'DELETE',
     });
   },
+
+  getFormulas: async () => {
+    return apiRequest('/api/catalogs/formulas');
+  },
+
+  addFormula: async (formulaData) => {
+    return apiRequest('/api/catalogs/formulas', {
+      method: 'POST',
+      body: JSON.stringify(formulaData),
+    });
+  },
+
+  updateFormula: async (id, formulaData) => {
+    return apiRequest(`/api/catalogs/formulas/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(formulaData),
+    });
+  },
+
+  deleteFormula: async (id) => {
+    return apiRequest(`/api/catalogs/formulas/${id}`, {
+      method: 'DELETE',
+    });
+  },
 };
 
 export default {

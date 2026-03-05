@@ -1,22 +1,70 @@
 import { useState, useEffect } from 'react';
 import { isJunction } from '../../data/types';
+import { evaluateFormula } from '../../utils/formulaEvaluator';
 
-export default function ConnectionModal({ connection, sourceModule, targetModule, leitungskatalog = [], verbindungsartenkatalog = [], onClose, onSave, onDelete }) {
+export default function ConnectionModal({ connection, sourceModule, targetModule, leitungskatalog = [], verbindungsartenkatalog = [], formulaskatalog = [], onClose, onSave, onDelete }) {
   const [formData, setFormData] = useState({
-    laenge_meter: connection.laenge_meter || null,
-    dimension: connection.dimension || '',
+    laenge_meter: connection.laenge_meter || connection.rohrlänge_m || null,
+    dimension: connection.dimension || connection.rohrdimension || '',
     preis_pro_meter: connection.preis_pro_meter || null,
     leitungskatalog_id: connection.leitungskatalog_id || '',
+    faktor: connection.faktor || 1.4,
   });
+
+  const [calculatedLoss, setCalculatedLoss] = useState(null);
+  const [calculationError, setCalculationError] = useState(null);
 
   useEffect(() => {
     setFormData({
-      laenge_meter: connection.laenge_meter || null,
-      dimension: connection.dimension || '',
+      laenge_meter: connection.laenge_meter || connection.rohrlänge_m || null,
+      dimension: connection.dimension || connection.rohrdimension || '',
       preis_pro_meter: connection.preis_pro_meter || null,
       leitungskatalog_id: connection.leitungskatalog_id || '',
+      faktor: connection.faktor || 1.4,
     });
   }, [connection]);
+
+  // Aktive Formel finden
+  const activeFormula = formulaskatalog.find(f => f.is_active);
+
+  // Berechne Druckverlust wenn sich Werte ändern
+  useEffect(() => {
+    if (!activeFormula) {
+      setCalculationError(null);
+      setCalculatedLoss(null);
+      return;
+    }
+
+    // Prüfe ob alle benötigten Werte vorhanden sind
+    if (!formData.laenge_meter) {
+      setCalculatedLoss(null);
+      setCalculationError(null);
+      return;
+    }
+
+    try {
+      // Extrahiere DN-Wert aus Dimension (z.B. "DN50" -> 50)
+      let dimensionValue = 0;
+      if (formData.dimension) {
+        const match = formData.dimension.match(/\d+/);
+        dimensionValue = match ? parseFloat(match[0]) : 0;
+      }
+
+      // Prepare data für Formula Evaluator
+      const data = {
+        Rohrlänge: parseFloat(formData.laenge_meter) || 0,
+        Rohrdimension: dimensionValue,
+        Faktor: parseFloat(formData.faktor) || 1.4,
+      };
+
+      const loss = evaluateFormula(activeFormula.formula, data);
+      setCalculatedLoss(loss);
+      setCalculationError(null);
+    } catch (error) {
+      setCalculatedLoss(null);
+      setCalculationError(error.message);
+    }
+  }, [formData, activeFormula]);
 
   // Handler für Leitungsauswahl aus Katalog
   const handleLeitungSelect = (leitungId) => {
@@ -83,6 +131,10 @@ export default function ConnectionModal({ connection, sourceModule, targetModule
     onSave({
       ...connection,
       ...formData,
+      // Alias neue Feldnamen für Druckverlust-Berechnung
+      rohrlänge_m: formData.laenge_meter,
+      rohrdimension: formData.dimension,
+      druckverlust_m: calculatedLoss,
     });
     onClose();
   };
@@ -168,6 +220,25 @@ export default function ConnectionModal({ connection, sourceModule, targetModule
             </div>
           </div>
         </div>
+
+        {/* Aktive Formel Info */}
+        {activeFormula && (
+          <div style={{
+            background: 'var(--bg-tertiary)',
+            border: '1px solid var(--border)',
+            borderRadius: '4px',
+            padding: '12px',
+            marginBottom: '16px',
+            fontSize: '12px',
+          }}>
+            <div style={{ fontWeight: 600, marginBottom: '4px', color: 'var(--accent)' }}>
+              📐 Aktive Formel: {activeFormula.name}
+            </div>
+            <code style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+              {activeFormula.formula}
+            </code>
+          </div>
+        )}
 
         {/* Eigenschaften */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
@@ -281,7 +352,78 @@ export default function ConnectionModal({ connection, sourceModule, targetModule
               }}
             />
           </div>
+
+          {/* Faktor (für Druckverlust-Berechnung) */}
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '13px' }}>
+              Faktor (für Druckverlust)
+            </label>
+            <input
+              type="number"
+              step="0.1"
+              min="0.1"
+              value={formData.faktor ?? 1.4}
+              onChange={(e) => setFormData({
+                ...formData,
+                faktor: e.target.value ? parseFloat(e.target.value) : 1.4
+              })}
+              style={{
+                width: '100%',
+                padding: '10px',
+                background: 'var(--bg-tertiary)',
+                border: '1px solid var(--border)',
+                borderRadius: '4px',
+                color: 'var(--text-primary)',
+                fontFamily: 'inherit',
+                fontSize: '14px',
+              }}
+            />
+            <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+              Standard: 1.4 (für Sole-Kreisläufe)
+            </div>
+          </div>
         </div>
+
+        {/* Berechneter Druckverlust */}
+        {activeFormula && (
+          <div style={{
+            background: calculatedLoss !== null
+              ? 'rgba(34, 197, 94, 0.1)'
+              : calculationError
+                ? 'rgba(239, 160, 68, 0.1)'
+                : 'var(--bg-tertiary)',
+            border: `1px solid ${calculatedLoss !== null
+              ? '#22c55e'
+              : calculationError
+                ? '#ef9444'
+                : 'var(--border)'}`,
+            borderRadius: '4px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <div style={{
+              fontWeight: 600,
+              marginBottom: '8px',
+              fontSize: '13px',
+              color: calculatedLoss !== null ? '#22c55e' : 'var(--text-primary)',
+            }}>
+              {calculatedLoss !== null ? '✓ Druckverlust berechnet' : 'Druckverlust'}
+            </div>
+            {calculatedLoss !== null ? (
+              <div style={{ fontSize: '24px', fontWeight: 700, color: '#22c55e' }}>
+                {calculatedLoss.toFixed(2)} m
+              </div>
+            ) : calculationError ? (
+              <div style={{ fontSize: '12px', color: '#ef9444' }}>
+                ⚠️ {calculationError}
+              </div>
+            ) : (
+              <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                Länge eingeben für automatische Berechnung
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Buttons */}
         <div style={{ display: 'flex', gap: '12px' }}>

@@ -44,6 +44,7 @@ function ConfiguratorApp() {
   const [verbindungsartenkatalog, setVerbindungsartenkatalog] = useState(initialVerbindungsarten);
   const [dimensionskatalog, setDimensionskatalog] = useState(initialDimensionen);
   const [modultypen, setModultypen] = useState(initialModultypen);
+  const [formulaskatalog, setFormulaskatalog] = useState([]);
 
   // Load all catalogs from backend on mount
   useEffect(() => {
@@ -61,12 +62,14 @@ function ConfiguratorApp() {
         connectionsRes,
         pipesRes,
         dimensionsRes,
+        formulasRes,
       ] = await Promise.all([
         catalogsAPI.getModuleTypes(),
         catalogsAPI.getModules(),
         catalogsAPI.getConnections(),
         catalogsAPI.getPipes(),
         catalogsAPI.getDimensions(),
+        catalogsAPI.getFormulas(),
       ]);
 
       // Convert backend format to frontend format
@@ -135,6 +138,20 @@ function ConfiguratorApp() {
         setDimensionskatalog(convertedDimensions);
       }
 
+      // Formulas
+      if (formulasRes.formulas?.length > 0) {
+        const convertedFormulas = formulasRes.formulas.map(f => ({
+          id: f.id,
+          name: f.name,
+          formula: f.formula,
+          beschreibung: f.beschreibung,
+          variablen: Array.isArray(f.variablen) ? f.variablen :
+                     (typeof f.variablen === 'string' ? JSON.parse(f.variablen) : []),
+          is_active: f.is_active,
+        }));
+        setFormulaskatalog(convertedFormulas);
+      }
+
       setCatalogsLoaded(true);
       console.log('✅ Kataloge vom Backend geladen');
     } catch (error) {
@@ -169,6 +186,11 @@ function ConfiguratorApp() {
   const handleModultypenChange = async (newModultypen) => {
     setModultypen(newModultypen);
     // Sync to backend handled in Modultypen component
+  };
+
+  const handleFormulaskatalogChange = async (newFormulas) => {
+    setFormulaskatalog(newFormulas);
+    // Sync to backend handled in Formulas component
   };
 
   // System Sets (keeping for now - can be migrated later)
@@ -316,6 +338,12 @@ function ConfiguratorApp() {
           Stückliste
         </button>
         <button
+          className={`tab ${activeTab === 'pumpen' ? 'active' : ''}`}
+          onClick={() => setActiveTab('pumpen')}
+        >
+          Pumpenanalyse
+        </button>
+        <button
           className={`tab ${activeTab === 'datenbank' ? 'active' : ''}`}
           onClick={() => setActiveTab('datenbank')}
         >
@@ -347,12 +375,13 @@ function ConfiguratorApp() {
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
               zIndex: 1000,
             }}>
-              {['verbindungen', 'leitungen', 'dimensionen', 'modultypen', 'systemsets'].map(tab => {
+              {['verbindungen', 'leitungen', 'dimensionen', 'modultypen', 'formulas', 'systemsets'].map(tab => {
                 const labels = {
                   verbindungen: 'Verbindungen',
                   leitungen: 'Leitungen',
                   dimensionen: 'Dimensionen',
                   modultypen: 'Modultypen',
+                  formulas: 'Formeln',
                   systemsets: 'System Sets',
                 };
                 return (
@@ -399,6 +428,8 @@ function ConfiguratorApp() {
         setDimensionskatalog={handleDimensionskatalogChange}
         modultypen={modultypen}
         setModultypen={handleModultypenChange}
+        formulaskatalog={formulaskatalog}
+        setFormulaskatalog={handleFormulaskatalogChange}
         onReloadCatalogs={loadCatalogs}
         systemSets={systemSets}
         activeSetId={activeSetId}

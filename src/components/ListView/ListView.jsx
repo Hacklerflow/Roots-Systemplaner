@@ -113,6 +113,10 @@ function ModuleCard({ module, modultypen = [], onUpdateModule }) {
   const isProEinheit = moduleTypeInfo?.berechnungsart === 'pro_einheit';
   const einheit = moduleTypeInfo?.einheit || '';
 
+  // Check for pumps
+  const pumps = (module.outputs || []).filter(output => output.pump?.enabled && output.pump?.förderhoehe_m > 0);
+  const hasPumps = pumps.length > 0;
+
   const handleMengeChange = (newMenge) => {
     if (onUpdateModule) {
       onUpdateModule({
@@ -146,11 +150,27 @@ function ModuleCard({ module, modultypen = [], onUpdateModule }) {
         }}
       >
         <div>
-          <div style={{ fontWeight: 600, fontSize: '16px', marginBottom: '4px' }}>
+          <div style={{ fontWeight: 600, fontSize: '16px', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             {module.name}
+            {hasPumps && (
+              <span style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '2px 6px',
+                background: 'var(--accent)',
+                color: 'var(--bg-primary)',
+                borderRadius: '10px',
+                fontSize: '9px',
+                fontWeight: 600,
+              }}>
+                💧 PUMPE
+              </span>
+            )}
           </div>
           <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
             {module.moduleType} | {module.inputs.length} Ein | {module.outputs.length} Aus
+            {hasPumps && ` | ${pumps.length} Pumpe${pumps.length > 1 ? 'n' : ''}`}
           </div>
         </div>
         <div style={{ fontSize: '18px', color: 'var(--text-secondary)' }}>
@@ -305,18 +325,36 @@ function ModuleCard({ module, modultypen = [], onUpdateModule }) {
                   key={output.id}
                   style={{
                     padding: '8px',
-                    background: 'var(--bg-tertiary)',
+                    background: output.pump?.enabled ? 'rgba(46, 160, 67, 0.1)' : 'var(--bg-tertiary)',
+                    border: output.pump?.enabled ? '1px solid var(--accent)' : 'none',
                     borderRadius: '4px',
                     marginBottom: '6px',
                   }}
                 >
-                  <div style={{ fontSize: '13px', fontWeight: 500 }}>
+                  <div style={{ fontSize: '13px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '6px' }}>
                     {output.label || `Ausgang ${idx + 1}`}
+                    {output.pump?.enabled && (
+                      <span style={{
+                        padding: '2px 6px',
+                        background: 'var(--accent)',
+                        color: 'var(--bg-primary)',
+                        borderRadius: '8px',
+                        fontSize: '8px',
+                        fontWeight: 600,
+                      }}>
+                        💧 PUMPE
+                      </span>
+                    )}
                   </div>
                   <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px' }}>
                     Typ: {CONNECTION_TYPE_LABELS[output.connectionType]}
                     {output.allowedModuleTypes.length > 0 && (
                       <div>Erlaubt: {output.allowedModuleTypes.join(', ')}</div>
+                    )}
+                    {output.pump?.enabled && output.pump?.förderhoehe_m > 0 && (
+                      <div style={{ color: 'var(--accent)', fontWeight: 600, marginTop: '4px' }}>
+                        Förderhöhe: {output.pump.förderhoehe_m} m
+                      </div>
                     )}
                   </div>
                 </div>

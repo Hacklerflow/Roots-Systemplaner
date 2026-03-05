@@ -516,4 +516,156 @@ router.delete('/modules/:id', async (req, res) => {
   }
 });
 
+/**
+ * GET /api/catalogs/formulas
+ * Get all formulas
+ */
+router.get('/formulas', async (req, res) => {
+  try {
+    console.log('📋 GET /formulas - Fetching formulas...');
+    const result = await query(`
+      SELECT * FROM catalog_formulas
+      ORDER BY is_active DESC, name
+    `);
+
+    console.log(`📋 GET /formulas - Found ${result.rows.length} formulas`);
+    res.json({ formulas: result.rows });
+  } catch (error) {
+    console.error('❌ Get formulas error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * POST /api/catalogs/formulas
+ * Add a new formula
+ */
+router.post('/formulas', async (req, res) => {
+  try {
+    const { name, formula, beschreibung, variablen, is_active } = req.body;
+
+    if (!name || !formula) {
+      return res.status(400).json({ error: 'Name and formula are required' });
+    }
+
+    // If setting this formula as active, deactivate all others
+    if (is_active) {
+      await query('UPDATE catalog_formulas SET is_active = false WHERE is_active = true');
+    }
+
+    const result = await query(`
+      INSERT INTO catalog_formulas (name, formula, beschreibung, variablen, is_active)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING *
+    `, [name, formula, beschreibung || null, JSON.stringify(variablen || []), is_active || false]);
+
+    res.status(201).json({
+      message: 'Formula created',
+      formula: result.rows[0],
+    });
+  } catch (error) {
+    if (error.code === '23505') {
+      return res.status(409).json({ error: 'Only one formula can be active at a time' });
+    }
+    console.error('Create formula error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * PUT /api/catalogs/formulas/:id
+ * Update a formula
+ */
+router.put('/formulas/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, formula, beschreibung, variablen, is_active } = req.body;
+
+    const fields = [];
+    const values = [];
+    let paramCount = 1;
+
+    if (name !== undefined) {
+      fields.push(`name = $${paramCount++}`);
+      values.push(name);
+    }
+    if (formula !== undefined) {
+      fields.push(`formula = $${paramCount++}`);
+      values.push(formula);
+    }
+    if (beschreibung !== undefined) {
+      fields.push(`beschreibung = $${paramCount++}`);
+      values.push(beschreibung);
+    }
+    if (variablen !== undefined) {
+      fields.push(`variablen = $${paramCount++}`);
+      values.push(JSON.stringify(variablen));
+    }
+    if (is_active !== undefined) {
+      // If setting this formula as active, deactivate all others first
+      if (is_active) {
+        await query('UPDATE catalog_formulas SET is_active = false WHERE is_active = true AND id != $1', [id]);
+      }
+      fields.push(`is_active = $${paramCount++}`);
+      values.push(is_active);
+    }
+
+    if (fields.length === 0) {
+      return res.status(400).json({ error: 'No valid fields to update' });
+    }
+
+    values.push(id);
+
+    const result = await query(`
+      UPDATE catalog_formulas
+      SET ${fields.join(', ')}
+      WHERE id = $${paramCount}
+      RETURNING *
+    `, values);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Formula not found' });
+    }
+
+    res.json({
+      message: 'Formula updated',
+      formula: result.rows[0],
+    });
+  } catch (error) {
+    if (error.code === '23505') {
+      return res.status(409).json({ error: 'Only one formula can be active at a time' });
+    }
+    console.error('Update formula error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * DELETE /api/catalogs/formulas/:id
+ * Delete a formula
+ */
+router.delete('/formulas/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await query(`
+      DELETE FROM catalog_formulas
+      WHERE id = $1
+      RETURNING *
+    `, [id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Formula not found' });
+    }
+
+    res.json({
+      message: 'Formula deleted',
+      formula: result.rows[0],
+    });
+  } catch (error) {
+    console.error('Delete formula error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 export default router;

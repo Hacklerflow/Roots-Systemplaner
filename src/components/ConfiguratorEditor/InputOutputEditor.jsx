@@ -11,6 +11,10 @@ export default function InputOutputEditor({ connector, type, onUpdate, onDelete,
   const [connectionType, setConnectionType] = useState(connector.connectionType || CONNECTION_TYPES.HYDRAULIC);
   const [allowedModuleTypes, setAllowedModuleTypes] = useState(connector.allowedModuleTypes || []);
 
+  // Pump configuration (only for outputs with hydraulic connection type)
+  const [pumpEnabled, setPumpEnabled] = useState(connector.pump?.enabled || false);
+  const [pumpCapacity, setPumpCapacity] = useState(connector.pump?.förderhoehe_m || 0);
+
   // Finde das Kürzel der gewählten Verbindungsart
   const getKuerzel = (verbindungsartName) => {
     if (!verbindungsartName) return '';
@@ -24,14 +28,24 @@ export default function InputOutputEditor({ connector, type, onUpdate, onDelete,
   const handleSave = (updates = {}) => {
     const finalVerbindungsart = updates.verbindungsart !== undefined ? updates.verbindungsart : verbindungsart;
     const label = getKuerzel(finalVerbindungsart);
+    const finalConnectionType = updates.connectionType !== undefined ? updates.connectionType : connectionType;
+    const finalPumpEnabled = updates.pumpEnabled !== undefined ? updates.pumpEnabled : pumpEnabled;
+    const finalPumpCapacity = updates.pumpCapacity !== undefined ? updates.pumpCapacity : pumpCapacity;
+
+    // Include pump data only for hydraulic outputs
+    const pumpData = (type === 'output' && finalConnectionType === CONNECTION_TYPES.HYDRAULIC) ? {
+      enabled: finalPumpEnabled,
+      förderhoehe_m: finalPumpEnabled ? parseFloat(finalPumpCapacity) || 0 : 0,
+    } : null;
 
     onUpdate({
       ...connector,
       label,
       dimension: updates.dimension !== undefined ? updates.dimension : dimension,
       verbindungsart: finalVerbindungsart,
-      connectionType: updates.connectionType !== undefined ? updates.connectionType : connectionType,
+      connectionType: finalConnectionType,
       allowedModuleTypes: updates.allowedModuleTypes !== undefined ? updates.allowedModuleTypes : allowedModuleTypes,
+      pump: pumpData,
     });
   };
 
@@ -263,6 +277,77 @@ export default function InputOutputEditor({ connector, type, onUpdate, onDelete,
           ))}
         </div>
       </div>
+
+      {/* Pump Configuration (only for hydraulic outputs) */}
+      {type === 'output' && connectionType === CONNECTION_TYPES.HYDRAULIC && (
+        <div style={{
+          marginBottom: '12px',
+          padding: '12px',
+          background: 'var(--bg-primary)',
+          border: '1px solid var(--border)',
+          borderRadius: '4px',
+        }}>
+          <div style={{ marginBottom: '8px' }}>
+            <label style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontSize: '12px',
+              fontWeight: 500,
+              cursor: 'pointer',
+            }}>
+              <input
+                type="checkbox"
+                checked={pumpEnabled}
+                onChange={(e) => {
+                  const enabled = e.target.checked;
+                  setPumpEnabled(enabled);
+                  handleSave({ pumpEnabled: enabled });
+                }}
+                style={{ cursor: 'pointer' }}
+              />
+              <span>Pumpe aktivieren</span>
+            </label>
+          </div>
+
+          {pumpEnabled && (
+            <div>
+              <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', fontWeight: 500 }}>
+                Förderhöhe (m)
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="0.1"
+                value={pumpCapacity}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setPumpCapacity(value);
+                }}
+                onBlur={(e) => {
+                  const value = parseFloat(e.target.value) || 0;
+                  setPumpCapacity(value);
+                  handleSave({ pumpCapacity: value });
+                }}
+                style={{
+                  width: '100%',
+                  padding: '6px',
+                  background: 'var(--bg-secondary)',
+                  border: '1px solid var(--border)',
+                  borderRadius: '4px',
+                  color: 'var(--text-primary)',
+                  fontFamily: 'inherit',
+                  fontSize: '12px',
+                }}
+                placeholder="z.B. 10"
+              />
+              <div style={{ fontSize: '10px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                Maximale Förderhöhe der Pumpe in Metern
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Delete Button */}
       <button

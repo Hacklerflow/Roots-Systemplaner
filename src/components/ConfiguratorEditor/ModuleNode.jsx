@@ -4,6 +4,9 @@ import { getConnectionTypeColor } from '../../data/compatibilityChecker';
 export default function ModuleNode({ data }) {
   const { name, moduleType, properties, inputs = [], outputs = [], onClick } = data;
 
+  // Check if module has any enabled pumps
+  const hasPump = outputs.some(output => output.pump?.enabled && output.pump?.förderhoehe_m > 0);
+
   // Subtitle erstellen
   let subtitle = moduleType || 'Modul';
   if (properties?.leistung_nominal_kw) {
@@ -31,9 +34,27 @@ export default function ModuleNode({ data }) {
       <div style={{ fontWeight: 600, fontSize: '13px', marginBottom: '2px' }}>
         {name}
       </div>
-      <div style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>
+      <div style={{ fontSize: '10px', color: 'var(--text-secondary)', marginBottom: hasPump ? '4px' : '0' }}>
         {subtitle}
       </div>
+
+      {/* Pump Badge */}
+      {hasPump && (
+        <div style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '4px',
+          padding: '2px 6px',
+          background: 'var(--accent)',
+          color: 'var(--bg-primary)',
+          borderRadius: '10px',
+          fontSize: '9px',
+          fontWeight: 600,
+        }}>
+          <span>💧</span>
+          <span>PUMPE</span>
+        </div>
+      )}
 
       {/* Eingänge - Handles */}
       {inputs.map((input, index) => {

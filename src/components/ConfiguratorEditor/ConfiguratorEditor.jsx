@@ -31,7 +31,7 @@ const edgeTypes = {
 };
 
 // Wrapper Komponente mit ReactFlowProvider
-export default function ConfiguratorEditor({ modules: moduleTemplates, configuration, setConfiguration, leitungskatalog, verbindungsartenkatalog, dimensionskatalog, modultypen }) {
+export default function ConfiguratorEditor({ modules: moduleTemplates, configuration, setConfiguration, leitungskatalog, verbindungsartenkatalog, dimensionskatalog, modultypen, formulaskatalog }) {
   return (
     <ReactFlowProvider>
       <ConfiguratorEditorInner
@@ -42,13 +42,14 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
         verbindungsartenkatalog={verbindungsartenkatalog}
         dimensionskatalog={dimensionskatalog}
         modultypen={modultypen}
+        formulaskatalog={formulaskatalog}
       />
     </ReactFlowProvider>
   );
 }
 
 // Innere Komponente die useReactFlow verwenden kann
-function ConfiguratorEditorInner({ modules: moduleTemplates, configuration, setConfiguration, leitungskatalog, verbindungsartenkatalog, dimensionskatalog, modultypen }) {
+function ConfiguratorEditorInner({ modules: moduleTemplates, configuration, setConfiguration, leitungskatalog, verbindungsartenkatalog, dimensionskatalog, modultypen, formulaskatalog }) {
   const reactFlowInstance = useReactFlow();
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -329,6 +330,11 @@ function ConfiguratorEditorInner({ modules: moduleTemplates, configuration, setC
         sourceHandle: params.sourceHandle,
         target: params.target,
         targetHandle: params.targetHandle,
+        // Neue Felder für Druckverlust-Berechnung
+        rohrlänge_m: null,         // Rohrlänge in Metern (vom User einzugeben)
+        rohrdimension: null,       // z.B. "DN50" (vom User einzugeben)
+        faktor: 1.4,               // Standard-Faktor (editierbar)
+        druckverlust_m: null,      // Berechneter Druckverlust (cached)
       };
 
       setConfiguration({
@@ -605,6 +611,7 @@ function ConfiguratorEditorInner({ modules: moduleTemplates, configuration, setC
           }
           leitungskatalog={leitungskatalog}
           verbindungsartenkatalog={verbindungsartenkatalog}
+          formulaskatalog={formulaskatalog}
           onClose={() => setConnectionModalOpen(false)}
           onSave={handleSaveConnection}
           onDelete={() => {
