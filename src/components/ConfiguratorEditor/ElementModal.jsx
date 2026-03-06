@@ -3,18 +3,34 @@ import InputOutputEditor from './InputOutputEditor';
 import { createInput, createOutput, isBuilding, getModuleTypeOptions } from '../../data/types';
 
 export default function ElementModal({ element, onClose, onSave, onDelete, leitungskatalog = [], verbindungsartenkatalog = [], dimensionskatalog = [], modultypen = [] }) {
-  const [formData, setFormData] = useState({
-    ...element,
-    inputs: element?.inputs || [],
-    outputs: element?.outputs || [],
-    properties: element?.properties || {},
+  const [formData, setFormData] = useState(() => {
+    // Migration: Entferne alte Felder von Gebäuden (moduleType, inputs, outputs)
+    const cleanedElement = { ...element };
+    if (isBuilding(element)) {
+      delete cleanedElement.moduleType;
+      delete cleanedElement.inputs;
+      delete cleanedElement.outputs;
+    }
+    return {
+      ...cleanedElement,
+      inputs: !isBuilding(element) ? (element?.inputs || []) : undefined,
+      outputs: !isBuilding(element) ? (element?.outputs || []) : undefined,
+      properties: element?.properties || {},
+    };
   });
 
   useEffect(() => {
+    // Migration: Entferne alte Felder von Gebäuden
+    const cleanedElement = { ...element };
+    if (isBuilding(element)) {
+      delete cleanedElement.moduleType;
+      delete cleanedElement.inputs;
+      delete cleanedElement.outputs;
+    }
     setFormData({
-      ...element,
-      inputs: element?.inputs || [],
-      outputs: element?.outputs || [],
+      ...cleanedElement,
+      inputs: !isBuilding(element) ? (element?.inputs || []) : undefined,
+      outputs: !isBuilding(element) ? (element?.outputs || []) : undefined,
       properties: element?.properties || {},
     });
   }, [element]);
@@ -37,7 +53,14 @@ export default function ElementModal({ element, onClose, onSave, onDelete, leitu
   };
 
   const handleSave = () => {
-    onSave(formData);
+    // Für Gebäude: Entferne alte Felder vor dem Speichern
+    const dataToSave = { ...formData };
+    if (isBuildingElement) {
+      delete dataToSave.moduleType;
+      delete dataToSave.inputs;
+      delete dataToSave.outputs;
+    }
+    onSave(dataToSave);
     onClose();
   };
 
@@ -179,37 +202,219 @@ export default function ElementModal({ element, onClose, onSave, onDelete, leitu
         )}
 
         {/* Eigenschaften */}
-        <Section title="Eigenschaften">
-          {isProEinheit && (
-            <FormField
-              label={`Menge (${einheit})`}
-              type="number"
-              value={formData.properties?.menge ?? null}
-              onChange={(value) => handleChange('properties', 'menge', value)}
-            />
-          )}
-          {Object.keys(formData.properties || {}).map((key) => {
-            // Skip menge if it's shown separately above
-            if (key === 'menge' && isProEinheit) return null;
+        {isBuildingElement ? (
+          /* Gebäude-spezifische Eigenschaften */
+          <>
+            <Section title="Adresse">
+              <div style={{ display: 'grid', gridTemplateColumns: '3fr 1fr', gap: '12px', marginBottom: '12px' }}>
+                <FormField
+                  label="Straße"
+                  value={formData.properties?.strasse || ''}
+                  onChange={(value) => handleChange('properties', 'strasse', value)}
+                />
+                <FormField
+                  label="Hausnummer"
+                  value={formData.properties?.hausnummer || ''}
+                  onChange={(value) => handleChange('properties', 'hausnummer', value)}
+                />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '12px' }}>
+                <FormField
+                  label="PLZ"
+                  value={formData.properties?.plz || ''}
+                  onChange={(value) => handleChange('properties', 'plz', value)}
+                />
+                <FormField
+                  label="Ort"
+                  value={formData.properties?.ort || ''}
+                  onChange={(value) => handleChange('properties', 'ort', value)}
+                />
+              </div>
+            </Section>
 
-            // Dynamic label for preis_euro
-            let label = formatLabel(key);
-            if (key === 'preis_euro' && isProEinheit) {
-              label = `Preis pro ${einheit} (€)`;
-            } else if (key === 'preis_euro') {
-              label = 'Preis (€)';
-            }
+            <Section title="Gebäudedaten">
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+                <FormField
+                  label="Baujahr"
+                  type="number"
+                  value={formData.properties?.baujahr ?? null}
+                  onChange={(value) => handleChange('properties', 'baujahr', value ? parseInt(value) : null)}
+                />
+                <FormField
+                  label="Stockwerke"
+                  type="number"
+                  value={formData.properties?.stockwerke ?? null}
+                  onChange={(value) => handleChange('properties', 'stockwerke', value ? parseInt(value) : null)}
+                />
+                <FormField
+                  label="Anzahl Einheiten"
+                  type="number"
+                  value={formData.properties?.anzahl_einheiten ?? null}
+                  onChange={(value) => handleChange('properties', 'anzahl_einheiten', value ? parseInt(value) : null)}
+                />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '12px' }}>
+                <FormField
+                  label="Wohnfläche (m²)"
+                  type="number"
+                  step="0.01"
+                  value={formData.properties?.wohnflaeche_m2 ?? null}
+                  onChange={(value) => handleChange('properties', 'wohnflaeche_m2', value ? parseFloat(value) : null)}
+                />
+                <FormField
+                  label="Nutzfläche (m²)"
+                  type="number"
+                  step="0.01"
+                  value={formData.properties?.nutzflaeche_m2 ?? null}
+                  onChange={(value) => handleChange('properties', 'nutzflaeche_m2', value ? parseFloat(value) : null)}
+                />
+              </div>
+            </Section>
 
-            return (
+            <Section title="Heizlast">
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <FormField
+                  label="Heizlast nach Norm (kW)"
+                  type="number"
+                  step="0.1"
+                  value={formData.properties?.heizlast_norm_kw ?? null}
+                  onChange={(value) => handleChange('properties', 'heizlast_norm_kw', value ? parseFloat(value) : null)}
+                  placeholder="z.B. DIN EN 12831"
+                />
+                <FormField
+                  label="Auslegungsheizlast (kW)"
+                  type="number"
+                  step="0.1"
+                  value={formData.properties?.auslegungsheizlast_kw ?? null}
+                  onChange={(value) => handleChange('properties', 'auslegungsheizlast_kw', value ? parseFloat(value) : null)}
+                  placeholder="Tatsächliche Auslegung"
+                />
+              </div>
+            </Section>
+
+            <Section title="Energetische Daten">
               <FormField
-                key={key}
-                label={label}
-                value={formData.properties[key]}
-                onChange={(value) => handleChange('properties', key, value)}
+                label="Energiestandard"
+                value={formData.properties?.energiestandard || ''}
+                onChange={(value) => handleChange('properties', 'energiestandard', value)}
+                placeholder="z.B. KfW 55, Passivhaus, Altbau unsaniert"
               />
-            );
-          })}
-        </Section>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginTop: '12px' }}>
+                <FormField
+                  label="U-Wert Außenwand (W/m²K)"
+                  type="number"
+                  step="0.01"
+                  value={formData.properties?.u_wert_aussenwand ?? null}
+                  onChange={(value) => handleChange('properties', 'u_wert_aussenwand', value ? parseFloat(value) : null)}
+                />
+                <FormField
+                  label="U-Wert Dach (W/m²K)"
+                  type="number"
+                  step="0.01"
+                  value={formData.properties?.u_wert_dach ?? null}
+                  onChange={(value) => handleChange('properties', 'u_wert_dach', value ? parseFloat(value) : null)}
+                />
+                <FormField
+                  label="U-Wert Fenster (W/m²K)"
+                  type="number"
+                  step="0.01"
+                  value={formData.properties?.u_wert_fenster ?? null}
+                  onChange={(value) => handleChange('properties', 'u_wert_fenster', value ? parseFloat(value) : null)}
+                />
+              </div>
+            </Section>
+
+            <Section title="Warmwasser">
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <FormField
+                  label="Anzahl Personen"
+                  type="number"
+                  value={formData.properties?.warmwasser_personen ?? null}
+                  onChange={(value) => handleChange('properties', 'warmwasser_personen', value ? parseInt(value) : null)}
+                />
+                <FormField
+                  label="Bedarf (l/Tag)"
+                  type="number"
+                  value={formData.properties?.warmwasser_bedarf_l_tag ?? null}
+                  onChange={(value) => handleChange('properties', 'warmwasser_bedarf_l_tag', value ? parseInt(value) : null)}
+                />
+              </div>
+            </Section>
+
+            <Section title="Heizsystem">
+              <FormField
+                label="Heizsystem"
+                value={formData.properties?.heizsystem || ''}
+                onChange={(value) => handleChange('properties', 'heizsystem', value)}
+                placeholder="z.B. Fußbodenheizung, Heizkörper, Mischsystem"
+              />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '12px' }}>
+                <FormField
+                  label="Vorlauftemperatur Auslegung (°C)"
+                  type="number"
+                  step="0.1"
+                  value={formData.properties?.vorlauftemperatur_auslegung ?? null}
+                  onChange={(value) => handleChange('properties', 'vorlauftemperatur_auslegung', value ? parseFloat(value) : null)}
+                />
+                <FormField
+                  label="Rücklauftemperatur Auslegung (°C)"
+                  type="number"
+                  step="0.1"
+                  value={formData.properties?.ruecklauftemperatur_auslegung ?? null}
+                  onChange={(value) => handleChange('properties', 'ruecklauftemperatur_auslegung', value ? parseFloat(value) : null)}
+                />
+              </div>
+            </Section>
+
+            <Section title="Sonstiges">
+              <FormField
+                label="Besonderheiten"
+                value={formData.properties?.besonderheiten || ''}
+                onChange={(value) => handleChange('properties', 'besonderheiten', value)}
+                multiline
+              />
+              <FormField
+                label="Notizen"
+                value={formData.properties?.notizen || ''}
+                onChange={(value) => handleChange('properties', 'notizen', value)}
+                multiline
+              />
+            </Section>
+          </>
+        ) : (
+          /* Module-spezifische Eigenschaften */
+          <Section title="Eigenschaften">
+            {isProEinheit && (
+              <FormField
+                label={`Menge (${einheit})`}
+                type="number"
+                value={formData.properties?.menge ?? null}
+                onChange={(value) => handleChange('properties', 'menge', value)}
+              />
+            )}
+            {Object.keys(formData.properties || {}).map((key) => {
+              // Skip menge if it's shown separately above
+              if (key === 'menge' && isProEinheit) return null;
+
+              // Dynamic label for preis_euro
+              let label = formatLabel(key);
+              if (key === 'preis_euro' && isProEinheit) {
+                label = `Preis pro ${einheit} (€)`;
+              } else if (key === 'preis_euro') {
+                label = 'Preis (€)';
+              }
+
+              return (
+                <FormField
+                  key={key}
+                  label={label}
+                  value={formData.properties[key]}
+                  onChange={(value) => handleChange('properties', key, value)}
+                />
+              );
+            })}
+          </Section>
+        )}
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
           {/* Eingänge (nicht für Gebäude) */}
@@ -364,7 +569,7 @@ function Section({ title, children }) {
   );
 }
 
-function FormField({ label, value, onChange, type = 'string' }) {
+function FormField({ label, value, onChange, type = 'string', multiline = false, placeholder = '', step }) {
   if (type === 'boolean') {
     return (
       <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
@@ -379,29 +584,47 @@ function FormField({ label, value, onChange, type = 'string' }) {
     );
   }
 
+  const inputStyle = {
+    width: '100%',
+    padding: '8px',
+    background: 'var(--bg-tertiary)',
+    border: '1px solid var(--border)',
+    borderRadius: '4px',
+    color: 'var(--text-primary)',
+    fontFamily: 'inherit',
+    fontSize: '13px',
+  };
+
   return (
     <div>
       <label style={{ display: 'block', marginBottom: '4px', fontSize: '13px' }}>
         {label}
       </label>
-      <input
-        type={type === 'number' ? 'number' : 'text'}
-        value={value ?? ''}
-        onChange={(e) => {
-          const val = type === 'number' ? (e.target.value ? parseFloat(e.target.value) : null) : e.target.value;
-          onChange(val);
-        }}
-        style={{
-          width: '100%',
-          padding: '8px',
-          background: 'var(--bg-tertiary)',
-          border: '1px solid var(--border)',
-          borderRadius: '4px',
-          color: 'var(--text-primary)',
-          fontFamily: 'inherit',
-          fontSize: '13px',
-        }}
-      />
+      {multiline ? (
+        <textarea
+          value={value ?? ''}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          rows={3}
+          style={{
+            ...inputStyle,
+            resize: 'vertical',
+            minHeight: '60px',
+          }}
+        />
+      ) : (
+        <input
+          type={type === 'number' ? 'number' : 'text'}
+          value={value ?? ''}
+          onChange={(e) => {
+            const val = type === 'number' ? (e.target.value ? parseFloat(e.target.value) : null) : e.target.value;
+            onChange(val);
+          }}
+          placeholder={placeholder}
+          step={step}
+          style={inputStyle}
+        />
+      )}
     </div>
   );
 }

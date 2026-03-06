@@ -62,21 +62,52 @@ export function createOutput(label = '', connectionType = CONNECTION_TYPES.HYDRA
 
 /**
  * Factory-Funktion für ein neues Gebäude
+ *
+ * Gebäude ist KEIN Modul - es ist die Klammer/Container für das gesamte Projekt.
+ * Hat keine Eingänge, Ausgänge oder Modultyp.
  */
 export function createBuilding(name = 'Neues Gebäude') {
   return {
     id: `building-${Date.now()}`,
     type: 'building',
-    moduleType: MODULE_TYPES.BUILDING,
     name,
     properties: {
-      baujahr: null,
+      // Adresse
       strasse: '',
       hausnummer: '',
+      plz: '',
+      ort: '',
+
+      // Gebäudedaten
+      baujahr: null,
       stockwerke: null,
+      anzahl_einheiten: null,
+      wohnflaeche_m2: null,
+      nutzflaeche_m2: null,
+
+      // Heizlast
+      heizlast_norm_kw: null,              // Heizlast nach Norm (z.B. DIN EN 12831)
+      auslegungsheizlast_kw: null,         // Tatsächliche Auslegungsheizlast
+
+      // Energetische Daten
+      energiestandard: '',                  // z.B. "KfW 55", "Passivhaus", "Altbau unsaniert"
+      u_wert_aussenwand: null,             // W/(m²·K)
+      u_wert_dach: null,                   // W/(m²·K)
+      u_wert_fenster: null,                // W/(m²·K)
+
+      // Warmwasser
+      warmwasser_personen: null,
+      warmwasser_bedarf_l_tag: null,
+
+      // Heizung
+      vorlauftemperatur_auslegung: null,   // °C
+      ruecklauftemperatur_auslegung: null, // °C
+      heizsystem: '',                       // z.B. "Fußbodenheizung", "Heizkörper", "Mischsystem"
+
+      // Sonstiges
+      besonderheiten: '',
+      notizen: '',
     },
-    inputs: [],  // Gebäude hat keine Eingänge
-    outputs: [], // Gebäude hat keine Ausgänge - ist nur Info-Container
   };
 }
 

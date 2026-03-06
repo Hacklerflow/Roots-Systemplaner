@@ -169,8 +169,21 @@ function ModuleCard({ module, modultypen = [], onUpdateModule }) {
             )}
           </div>
           <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-            {module.moduleType} | {module.inputs.length} Ein | {module.outputs.length} Aus
-            {hasPumps && ` | ${pumps.length} Pumpe${pumps.length > 1 ? 'n' : ''}`}
+            {isBuildingModule ? (
+              // Gebäude-Info
+              <>
+                🏢 Gebäude
+                {module.properties?.stockwerke && ` | ${module.properties.stockwerke} Stockwerke`}
+                {module.properties?.anzahl_einheiten && ` | ${module.properties.anzahl_einheiten} Einheiten`}
+                {module.properties?.heizlast_norm_kw && ` | ${module.properties.heizlast_norm_kw} kW Heizlast`}
+              </>
+            ) : (
+              // Modul-Info
+              <>
+                {module.moduleType} | {module.inputs?.length || 0} Ein | {module.outputs?.length || 0} Aus
+                {hasPumps && ` | ${pumps.length} Pumpe${pumps.length > 1 ? 'n' : ''}`}
+              </>
+            )}
           </div>
         </div>
         <div style={{ fontSize: '18px', color: 'var(--text-secondary)' }}>
@@ -290,8 +303,8 @@ function ModuleCard({ module, modultypen = [], onUpdateModule }) {
             </DetailSection>
           )}
 
-          {/* Eingänge */}
-          {module.inputs.length > 0 && (
+          {/* Eingänge (nur für Module) */}
+          {!isBuildingModule && module.inputs?.length > 0 && (
             <DetailSection title="Eingänge">
               {module.inputs.map((input, idx) => (
                 <div
@@ -317,8 +330,8 @@ function ModuleCard({ module, modultypen = [], onUpdateModule }) {
             </DetailSection>
           )}
 
-          {/* Ausgänge */}
-          {module.outputs.length > 0 && (
+          {/* Ausgänge (nur für Module) */}
+          {!isBuildingModule && module.outputs?.length > 0 && (
             <DetailSection title="Ausgänge">
               {module.outputs.map((output, idx) => (
                 <div

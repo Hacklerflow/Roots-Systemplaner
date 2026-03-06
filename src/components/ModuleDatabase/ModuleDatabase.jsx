@@ -577,7 +577,7 @@ function ModuleForm({ module, onSave, onCancel, onDelete, isCreating, leitungska
           <button
             type="button"
             onClick={() => {
-              onDelete(formData.id);
+              onDelete(formData);
               onCancel();
             }}
             style={{
