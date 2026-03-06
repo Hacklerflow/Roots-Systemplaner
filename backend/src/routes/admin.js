@@ -1,12 +1,12 @@
 import express from 'express';
 import pool from '../config/database.js';
-import { authenticate } from '../middleware/auth.js';
+import { authenticateToken } from '../middleware/auth.js';
 import { requireAdmin } from '../middleware/adminAuth.js';
 
 const router = express.Router();
 
 // Apply authentication and admin check to all routes
-router.use(authenticate);
+router.use(authenticateToken);
 router.use(requireAdmin);
 
 // ============================================

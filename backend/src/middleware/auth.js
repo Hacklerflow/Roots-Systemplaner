@@ -34,6 +34,7 @@ export const generateToken = (user) => {
     id: user.id,
     email: user.email,
     name: user.name,
+    role: user.role || 'user',
   };
 
   const expiresIn = process.env.JWT_EXPIRES_IN || '7d';
