@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import ConfiguratorWrapper from './components/ConfiguratorWrapper';
 import SystemSetsModal from './components/SystemSets/SystemSetsModal';
-import { catalogsAPI } from './api/client';
+import SetOnboardingModal from './components/SetOnboarding/SetOnboardingModal';
+import { catalogsAPI, setsAPI } from './api/client';
 import { initialModules } from './data/moduleDatabase';
 import { initialLeitungen } from './data/leitungskatalog';
 import { initialVerbindungsarten } from './data/verbindungsartenkatalog';
@@ -18,6 +19,7 @@ function ConfiguratorApp() {
   const [settingsDropdownOpen, setSettingsDropdownOpen] = useState(false);
   const [activeSettingsTab, setActiveSettingsTab] = useState('verbindungen');
   const [systemSetsModalOpen, setSystemSetsModalOpen] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const settingsDropdownRef = useRef(null);
 
   const [catalogsLoaded, setCatalogsLoaded] = useState(false);
@@ -50,6 +52,23 @@ function ConfiguratorApp() {
   useEffect(() => {
     loadCatalogs();
   }, []);
+
+  // Check if user has active set on mount
+  useEffect(() => {
+    checkActiveSet();
+  }, []);
+
+  const checkActiveSet = async () => {
+    try {
+      const response = await setsAPI.getAll();
+      const hasActiveSet = response.sets.some(s => s.is_active);
+      if (!hasActiveSet) {
+        setShowOnboarding(true);
+      }
+    } catch (err) {
+      console.error('Check active set error:', err);
+    }
+  };
 
   const loadCatalogs = async () => {
     try {
@@ -193,97 +212,7 @@ function ConfiguratorApp() {
     // Sync to backend handled in Formulas component
   };
 
-  // System Sets (keeping for now - can be migrated later)
-  const [systemSets, setSystemSets] = useState(() => {
-    try {
-      const stored = localStorage.getItem('roots-system-sets');
-      if (stored) return JSON.parse(stored);
-    } catch (e) {
-      console.error('Fehler beim Laden der System Sets:', e);
-    }
-    return [];
-  });
-
-  const [activeSetId, setActiveSetId] = useState(() => {
-    try {
-      return localStorage.getItem('roots-active-set-id') || null;
-    } catch (e) {
-      return null;
-    }
-  });
-
-  useEffect(() => {
-    localStorage.setItem('roots-system-sets', JSON.stringify(systemSets));
-  }, [systemSets]);
-
-  useEffect(() => {
-    if (activeSetId) {
-      localStorage.setItem('roots-active-set-id', activeSetId);
-    }
-  }, [activeSetId]);
-
-  const handleCreateSystemSet = (name) => {
-    const today = new Date().toISOString().slice(0, 10);
-    const newSet = {
-      id: `set-${Date.now()}`,
-      name: `${name} ${today}`,
-      createdAt: new Date().toISOString(),
-      modules,
-      leitungskatalog,
-      verbindungsartenkatalog,
-      dimensionskatalog,
-      modultypen,
-    };
-    setSystemSets([...systemSets, newSet]);
-    setActiveSetId(newSet.id);
-  };
-
-  const handleSwitchSystemSet = (setId) => {
-    const set = systemSets.find(s => s.id === setId);
-    if (!set) return;
-    setModules(set.modules || []);
-    setLeitungskatalog(set.leitungskatalog || []);
-    setVerbindungsartenkatalog(set.verbindungsartenkatalog || []);
-    setDimensionskatalog(set.dimensionskatalog || []);
-    setModultypen(set.modultypen || []);
-    setActiveSetId(setId);
-  };
-
-  const handleDeleteSystemSet = (setId) => {
-    setSystemSets(systemSets.filter(s => s.id !== setId));
-    if (activeSetId === setId) {
-      setActiveSetId(null);
-    }
-  };
-
-  const handleImportSystemSets = (importedSets) => {
-    const existingIds = new Set(systemSets.map(s => s.id));
-    const duplicates = importedSets.filter(s => existingIds.has(s.id));
-
-    if (duplicates.length > 0) {
-      const shouldOverwrite = confirm(
-        `${duplicates.length} Set(s) mit gleichen IDs existieren bereits.\n\nÜberschreiben?`
-      );
-      if (shouldOverwrite) {
-        const updatedSets = systemSets.map(existing => {
-          const imported = importedSets.find(imp => imp.id === existing.id);
-          return imported || existing;
-        });
-        const newSets = importedSets.filter(imp => !existingIds.has(imp.id));
-        setSystemSets([...updatedSets, ...newSets]);
-      } else {
-        const processedSets = importedSets.map(set => {
-          if (existingIds.has(set.id)) {
-            return { ...set, id: `set-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` };
-          }
-          return set;
-        });
-        setSystemSets([...systemSets, ...processedSets]);
-      }
-    } else {
-      setSystemSets([...systemSets, ...importedSets]);
-    }
-  };
+  // System Sets - now handled by backend (removed localStorage logic)
 
   // Show loading state while catalogs are loading
   if (!catalogsLoaded) {
@@ -431,24 +360,22 @@ function ConfiguratorApp() {
         formulaskatalog={formulaskatalog}
         setFormulaskatalog={handleFormulaskatalogChange}
         onReloadCatalogs={loadCatalogs}
-        systemSets={systemSets}
-        activeSetId={activeSetId}
-        onCreateSet={handleCreateSystemSet}
-        onSwitchSet={handleSwitchSystemSet}
-        onDeleteSet={handleDeleteSystemSet}
-        onImportSets={handleImportSystemSets}
       />
 
       {/* System Sets Modal */}
       <SystemSetsModal
         isOpen={systemSetsModalOpen}
         onClose={() => setSystemSetsModalOpen(false)}
-        systemSets={systemSets}
-        activeSetId={activeSetId}
-        onCreateSet={handleCreateSystemSet}
-        onSwitchSet={handleSwitchSystemSet}
-        onDeleteSet={handleDeleteSystemSet}
-        onImportSets={handleImportSystemSets}
+        onReloadCatalogs={loadCatalogs}
+      />
+
+      {/* Onboarding Modal for new users */}
+      <SetOnboardingModal
+        isOpen={showOnboarding}
+        onComplete={() => {
+          setShowOnboarding(false);
+          loadCatalogs(); // Reload catalogs after set activation
+        }}
       />
     </div>
   );

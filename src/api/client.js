@@ -259,8 +259,75 @@ export const catalogsAPI = {
   },
 };
 
+// Sets API
+export const setsAPI = {
+  getAll: async () => {
+    return apiRequest('/api/sets');
+  },
+
+  getById: async (id) => {
+    return apiRequest(`/api/sets/${id}`);
+  },
+
+  create: async (name, description) => {
+    return apiRequest('/api/sets', {
+      method: 'POST',
+      body: JSON.stringify({ name, description }),
+    });
+  },
+
+  activate: async (id) => {
+    return apiRequest(`/api/sets/${id}/activate`, {
+      method: 'POST',
+    });
+  },
+
+  delete: async (id) => {
+    return apiRequest(`/api/sets/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  export: async (id) => {
+    const url = `${API_URL}/api/sets/${id}/export`;
+    const token = getAuthToken();
+
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.error || 'Export failed');
+    }
+
+    const blob = await response.blob();
+    const filename = response.headers.get('content-disposition')
+      ?.split('filename=')[1]
+      ?.replace(/"/g, '') || 'catalog_set.json';
+
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+  },
+
+  import: async (fileData) => {
+    return apiRequest('/api/sets/import', {
+      method: 'POST',
+      body: JSON.stringify(fileData),
+    });
+  },
+};
+
 export default {
   auth: authAPI,
   projects: projectsAPI,
   catalogs: catalogsAPI,
+  sets: setsAPI,
 };
