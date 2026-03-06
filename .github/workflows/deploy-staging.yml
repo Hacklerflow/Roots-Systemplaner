@@ -1,0 +1,55 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches:
+      - staging
+
+jobs:
+  deploy:
+    name: Deploy to Hetzner Staging
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🚀 Deploy to Staging Server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 89.167.56.131
+          username: root
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          script: |
+            cd /root/Roots-Systemplaner
+
+            echo "📦 Pulling latest code from staging branch..."
+            git pull origin staging
+
+            echo "🐳 Rebuilding and restarting Docker containers..."
+            docker compose up -d --build
+
+            echo "⏳ Waiting for containers to be ready..."
+            sleep 15
+
+            echo "✅ Checking container status..."
+            docker compose ps
+
+            echo "🏥 Health check..."
+            curl -f http://localhost/health || exit 1
+
+            echo "🎉 Deployment successful!"
+            echo "Staging URL: http://89.167.56.131"
+
+      - name: 📊 Deployment Summary
+        if: success()
+        run: |
+          echo "### ✅ Staging Deployment Successful! 🚀" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Staging URL:** http://89.167.56.131" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** staging" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: 🚨 Deployment Failed
+        if: failure()
+        run: |
+          echo "### ❌ Staging Deployment Failed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Check the logs above for details." >> $GITHUB_STEP_SUMMARY
