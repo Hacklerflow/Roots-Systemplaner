@@ -114,6 +114,11 @@ export default function Dashboard() {
         </div>
         <div className="dashboard-header-right">
           <div className="user-info">
+            {user?.role === 'admin' && (
+              <button onClick={() => navigate('/admin')} className="admin-button" style={{ marginRight: '12px' }}>
+                🛠️ Admin
+              </button>
+            )}
             <span className="user-name">{user?.name}</span>
             <button onClick={handleLogout} className="logout-button">
               Logout

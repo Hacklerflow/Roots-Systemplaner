@@ -5,6 +5,7 @@ import Login from './components/Auth/Login';
 import Register from './components/Auth/Register';
 import Dashboard from './components/Dashboard/Dashboard';
 import ConfiguratorApp from './ConfiguratorApp';
+import AdminDashboard from './components/Admin/AdminDashboard';
 
 function App() {
   return (
@@ -30,6 +31,16 @@ function App() {
             element={
               <ProtectedRoute>
                 <ConfiguratorApp />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Admin routes */}
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute>
+                <AdminDashboard />
               </ProtectedRoute>
             }
           />

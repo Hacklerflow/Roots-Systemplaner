@@ -48,7 +48,7 @@ router.post('/register', async (req, res) => {
     const result = await query(
       `INSERT INTO users (email, password_hash, name)
        VALUES ($1, $2, $3)
-       RETURNING id, email, name, created_at`,
+       RETURNING id, email, name, role, created_at`,
       [sanitizedEmail, passwordHash, sanitizedName]
     );
 
@@ -63,6 +63,7 @@ router.post('/register', async (req, res) => {
         id: user.id,
         email: user.email,
         name: user.name,
+        role: user.role,
         created_at: user.created_at,
       },
       token,
@@ -90,7 +91,7 @@ router.post('/login', async (req, res) => {
 
     // Find user
     const result = await query(
-      'SELECT id, email, password_hash, name FROM users WHERE email = $1',
+      'SELECT id, email, password_hash, name, role FROM users WHERE email = $1',
       [sanitizedEmail]
     );
 
@@ -116,6 +117,7 @@ router.post('/login', async (req, res) => {
         id: user.id,
         email: user.email,
         name: user.name,
+        role: user.role,
       },
       token,
     });

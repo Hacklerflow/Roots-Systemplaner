@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/auth.js';
 import projectsRoutes from './routes/projects.js';
 import catalogsRoutes from './routes/catalogs.js';
+import adminRoutes from './routes/admin.js';
 import pool from './config/database.js';
 
 // Load environment variables
@@ -40,6 +41,7 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectsRoutes);
 app.use('/api/catalogs', catalogsRoutes);
+app.use('/api/admin', adminRoutes);
 
 // 404 handler
 app.use((req, res) => {
