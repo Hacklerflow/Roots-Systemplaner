@@ -8,17 +8,40 @@ const router = express.Router();
 router.use(authenticateToken);
 
 /**
+ * Helper function to get user's active set data
+ * Returns catalog data from user's active set, or empty catalogs if no set active
+ */
+async function getUserActiveSetData(userId) {
+  const result = await query(`
+    SELECT cs.data
+    FROM user_active_sets uas
+    JOIN catalog_sets cs ON uas.set_id = cs.id
+    WHERE uas.user_id = $1
+  `, [userId]);
+
+  if (result.rows.length === 0) {
+    // No active set - return empty catalogs
+    return {
+      module_types: [],
+      modules: [],
+      connections: [],
+      pipes: [],
+      dimensions: [],
+      formulas: [],
+    };
+  }
+
+  return result.rows[0].data;
+}
+
+/**
  * GET /api/catalogs/module-types
- * Get all module types
+ * Get module types from user's active set
  */
 router.get('/module-types', async (req, res) => {
   try {
-    const result = await query(`
-      SELECT * FROM catalog_module_types
-      ORDER BY kategorie, name
-    `);
-
-    res.json({ moduleTypes: result.rows });
+    const setData = await getUserActiveSetData(req.user.id);
+    res.json({ moduleTypes: setData.module_types });
   } catch (error) {
     console.error('Get module types error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -27,16 +50,12 @@ router.get('/module-types', async (req, res) => {
 
 /**
  * GET /api/catalogs/modules
- * Get all modules
+ * Get modules from user's active set
  */
 router.get('/modules', async (req, res) => {
   try {
-    const result = await query(`
-      SELECT * FROM catalog_modules
-      ORDER BY modultyp, name
-    `);
-
-    res.json({ modules: result.rows });
+    const setData = await getUserActiveSetData(req.user.id);
+    res.json({ modules: setData.modules });
   } catch (error) {
     console.error('Get modules error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -45,16 +64,12 @@ router.get('/modules', async (req, res) => {
 
 /**
  * GET /api/catalogs/connections
- * Get all connection types
+ * Get connections from user's active set
  */
 router.get('/connections', async (req, res) => {
   try {
-    const result = await query(`
-      SELECT * FROM catalog_connections
-      ORDER BY typ, name
-    `);
-
-    res.json({ connections: result.rows });
+    const setData = await getUserActiveSetData(req.user.id);
+    res.json({ connections: setData.connections });
   } catch (error) {
     console.error('Get connections error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -63,16 +78,12 @@ router.get('/connections', async (req, res) => {
 
 /**
  * GET /api/catalogs/pipes
- * Get all pipes
+ * Get pipes from user's active set
  */
 router.get('/pipes', async (req, res) => {
   try {
-    const result = await query(`
-      SELECT * FROM catalog_pipes
-      ORDER BY verbindungsart, leitungstyp, dimension
-    `);
-
-    res.json({ pipes: result.rows });
+    const setData = await getUserActiveSetData(req.user.id);
+    res.json({ pipes: setData.pipes });
   } catch (error) {
     console.error('Get pipes error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -81,16 +92,12 @@ router.get('/pipes', async (req, res) => {
 
 /**
  * GET /api/catalogs/dimensions
- * Get all dimensions
+ * Get dimensions from user's active set
  */
 router.get('/dimensions', async (req, res) => {
   try {
-    const result = await query(`
-      SELECT * FROM catalog_dimensions
-      ORDER BY name
-    `);
-
-    res.json({ dimensions: result.rows });
+    const setData = await getUserActiveSetData(req.user.id);
+    res.json({ dimensions: setData.dimensions });
   } catch (error) {
     console.error('Get dimensions error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -518,18 +525,14 @@ router.delete('/modules/:id', async (req, res) => {
 
 /**
  * GET /api/catalogs/formulas
- * Get all formulas
+ * Get formulas from user's active set
  */
 router.get('/formulas', async (req, res) => {
   try {
-    console.log('📋 GET /formulas - Fetching formulas...');
-    const result = await query(`
-      SELECT * FROM catalog_formulas
-      ORDER BY is_active DESC, name
-    `);
-
-    console.log(`📋 GET /formulas - Found ${result.rows.length} formulas`);
-    res.json({ formulas: result.rows });
+    console.log('📋 GET /formulas - Fetching formulas from user active set...');
+    const setData = await getUserActiveSetData(req.user.id);
+    console.log(`📋 GET /formulas - Found ${setData.formulas.length} formulas`);
+    res.json({ formulas: setData.formulas });
   } catch (error) {
     console.error('❌ Get formulas error:', error);
     res.status(500).json({ error: 'Internal server error' });
