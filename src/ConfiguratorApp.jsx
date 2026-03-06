@@ -39,11 +39,11 @@ function ConfiguratorApp() {
 
   // ===== SHARED CATALOGS (loaded from backend) =====
 
-  const [modules, setModules] = useState(initialModules);
-  const [leitungskatalog, setLeitungskatalog] = useState(initialLeitungen);
-  const [verbindungsartenkatalog, setVerbindungsartenkatalog] = useState(initialVerbindungsarten);
-  const [dimensionskatalog, setDimensionskatalog] = useState(initialDimensionen);
-  const [modultypen, setModultypen] = useState(initialModultypen);
+  const [modules, setModules] = useState([]);
+  const [leitungskatalog, setLeitungskatalog] = useState([]);
+  const [verbindungsartenkatalog, setVerbindungsartenkatalog] = useState([]);
+  const [dimensionskatalog, setDimensionskatalog] = useState([]);
+  const [modultypen, setModultypen] = useState([]);
   const [formulaskatalog, setFormulaskatalog] = useState([]);
 
   // Load all catalogs from backend on mount
@@ -206,9 +206,11 @@ function ConfiguratorApp() {
 
   const [activeSetId, setActiveSetId] = useState(() => {
     try {
-      return localStorage.getItem('roots-active-set-id') || null;
+      const storedId = localStorage.getItem('roots-active-set-id');
+      // Allow working without an active set
+      return storedId || 'no-set';
     } catch (e) {
-      return null;
+      return 'no-set';
     }
   });
 
@@ -217,7 +219,7 @@ function ConfiguratorApp() {
   }, [systemSets]);
 
   useEffect(() => {
-    if (activeSetId) {
+    if (activeSetId && activeSetId !== 'no-set') {
       localStorage.setItem('roots-active-set-id', activeSetId);
     }
   }, [activeSetId]);

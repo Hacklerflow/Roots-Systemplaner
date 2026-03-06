@@ -27,7 +27,7 @@ export default function SystemSetsModal({
   };
 
   const handleSwitch = (setId) => {
-    if (setId === activeSetId) {
+    if (setId === activeSetId && activeSetId !== 'no-set') {
       onClose();
       return;
     }
@@ -39,7 +39,7 @@ export default function SystemSetsModal({
   };
 
   const handleDelete = (setId, setName) => {
-    if (setId === activeSetId) {
+    if (setId === activeSetId && activeSetId !== 'no-set') {
       alert('Das aktive Set kann nicht gelöscht werden!');
       return;
     }
@@ -150,7 +150,7 @@ export default function SystemSetsModal({
     event.target.value = ''; // Reset input
   };
 
-  const activeSet = systemSets.find(s => s.id === activeSetId);
+  const activeSet = activeSetId !== 'no-set' ? systemSets.find(s => s.id === activeSetId) : null;
 
   return (
     <div
@@ -264,7 +264,7 @@ export default function SystemSetsModal({
           </div>
 
           {/* Active Set Display */}
-          {activeSet && (
+          {activeSet ? (
             <div
               style={{
                 background: 'var(--bg-secondary)',
@@ -285,6 +285,24 @@ export default function SystemSetsModal({
               </div>
               <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '8px' }}>
                 {activeSet.modules?.length || 0} Module • {activeSet.leitungskatalog?.length || 0} Leitungen • {activeSet.dimensionskatalog?.length || 0} Dimensionen
+              </div>
+            </div>
+          ) : (
+            <div
+              style={{
+                background: 'var(--bg-secondary)',
+                border: '1px dashed var(--border)',
+                borderRadius: '8px',
+                padding: '16px',
+                marginBottom: '24px',
+                textAlign: 'center',
+              }}
+            >
+              <div style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 600, marginBottom: '8px' }}>
+                KEIN SET AKTIV
+              </div>
+              <div style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
+                Du arbeitest mit den aktuellen Katalogen aus der Datenbank.
               </div>
             </div>
           )}
@@ -406,8 +424,8 @@ export default function SystemSetsModal({
                   <div
                     key={set.id}
                     style={{
-                      background: set.id === activeSetId ? 'var(--bg-tertiary)' : 'var(--bg-secondary)',
-                      border: `1px solid ${set.id === activeSetId ? 'var(--accent)' : 'var(--border)'}`,
+                      background: set.id === activeSetId && activeSetId !== 'no-set' ? 'var(--bg-tertiary)' : 'var(--bg-secondary)',
+                      border: `1px solid ${set.id === activeSetId && activeSetId !== 'no-set' ? 'var(--accent)' : 'var(--border)'}`,
                       borderRadius: '6px',
                       padding: '12px',
                       display: 'flex',
@@ -420,7 +438,7 @@ export default function SystemSetsModal({
                         <span style={{ fontSize: '14px', fontWeight: 600 }}>
                           {set.name}
                         </span>
-                        {set.id === activeSetId && (
+                        {set.id === activeSetId && activeSetId !== 'no-set' && (
                           <span
                             style={{
                               fontSize: '10px',
@@ -440,7 +458,7 @@ export default function SystemSetsModal({
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: '8px' }}>
-                      {set.id !== activeSetId && (
+                      {(set.id !== activeSetId || activeSetId === 'no-set') && (
                         <button
                           onClick={() => handleSwitch(set.id)}
                           style={{
@@ -476,18 +494,18 @@ export default function SystemSetsModal({
                       </button>
                       <button
                         onClick={() => handleDelete(set.id, set.name)}
-                        disabled={set.id === activeSetId}
+                        disabled={set.id === activeSetId && activeSetId !== 'no-set'}
                         style={{
                           padding: '6px 12px',
-                          background: set.id === activeSetId ? 'var(--bg-tertiary)' : 'var(--error)',
-                          color: set.id === activeSetId ? 'var(--text-secondary)' : 'white',
+                          background: (set.id === activeSetId && activeSetId !== 'no-set') ? 'var(--bg-tertiary)' : 'var(--error)',
+                          color: (set.id === activeSetId && activeSetId !== 'no-set') ? 'var(--text-secondary)' : 'white',
                           border: 'none',
                           borderRadius: '4px',
                           fontWeight: 600,
-                          cursor: set.id === activeSetId ? 'not-allowed' : 'pointer',
+                          cursor: (set.id === activeSetId && activeSetId !== 'no-set') ? 'not-allowed' : 'pointer',
                           fontFamily: 'inherit',
                           fontSize: '12px',
-                          opacity: set.id === activeSetId ? 0.5 : 1,
+                          opacity: (set.id === activeSetId && activeSetId !== 'no-set') ? 0.5 : 1,
                         }}
                       >
                         Löschen
