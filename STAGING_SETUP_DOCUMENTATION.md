@@ -211,9 +211,36 @@ docker compose up -d --build
 
 ## 🔧 Updates & Maintenance
 
-### Code-Updates deployen
+### 🤖 Automatisches Deployment (empfohlen)
 
-**Wenn neue Änderungen im staging Branch gepusht wurden:**
+**Status:** ✅ Aktiv via GitHub Actions
+
+**Workflow:**
+1. Code-Änderungen zu `staging` Branch pushen
+2. GitHub Actions startet automatisch
+3. SSH zum Staging-Server
+4. `git pull origin staging`
+5. `docker compose up -d --build`
+6. Health Check
+7. ✅ Deployment fertig!
+
+**Deployment beobachten:**
+```
+https://github.com/Hacklerflow/Roots-Systemplaner/actions
+```
+
+**Erwartete Dauer:** 2-3 Minuten
+**Erwartete Downtime:** ~30 Sekunden während Container-Restart
+
+**Benachrichtigungen:**
+- ✅ Grünes Häkchen = Deployment erfolgreich
+- ❌ Rotes X = Deployment fehlgeschlagen (Logs checken)
+
+---
+
+### 🔧 Manuelles Deployment (Fallback)
+
+**Falls GitHub Actions nicht verfügbar:**
 
 ```bash
 # 1. SSH zum Server
@@ -484,6 +511,94 @@ sudo systemctl start fail2ban
 sudo apt install certbot -y
 sudo certbot certonly --standalone -d staging.yourdomain.com
 ```
+
+---
+
+## 🤖 CI/CD Pipeline (GitHub Actions)
+
+### ✅ Automatisches Staging-Deployment
+
+**Workflow-Datei:** `.github/workflows/deploy-staging.yml`
+
+**Trigger:** Bei jedem Push zum `staging` Branch
+
+**Was passiert:**
+1. GitHub Actions Runner startet
+2. SSH-Verbindung zum Staging-Server (89.167.56.131)
+3. `git pull origin staging`
+4. `docker compose up -d --build`
+5. Health Check: `curl http://localhost/health`
+6. Deployment Summary in GitHub UI
+
+**Monitoring:**
+```
+https://github.com/Hacklerflow/Roots-Systemplaner/actions
+```
+
+---
+
+### 🔑 SSH Key Setup (bereits konfiguriert)
+
+**SSH Deploy Key auf Server:**
+```bash
+# Key Location auf Server
+~/.ssh/github_actions_staging
+~/.ssh/github_actions_staging.pub
+```
+
+**GitHub Secret:**
+- Name: `STAGING_SSH_KEY`
+- Value: Private Key Content
+- Location: Repository Settings → Secrets → Actions
+
+**Key erneuern (falls nötig):**
+```bash
+# Auf Server
+ssh root@89.167.56.131
+
+# Neuen Key generieren
+ssh-keygen -t ed25519 -C "github-actions-staging" -f ~/.ssh/github_actions_staging_new -N ""
+
+# Zum authorized_keys hinzufügen
+cat ~/.ssh/github_actions_staging_new.pub >> ~/.ssh/authorized_keys
+
+# Private Key anzeigen
+cat ~/.ssh/github_actions_staging_new
+
+# Auf GitHub: Secret STAGING_SSH_KEY mit neuem Key updaten
+```
+
+---
+
+### 📊 Deployment Status
+
+**Erfolgreiche Deployments:**
+- ✅ Grünes Häkchen in GitHub UI
+- Deployment Summary zeigt Staging-URL
+- Container laufen (docker compose ps zeigt alle healthy)
+
+**Fehlgeschlagene Deployments:**
+- ❌ Rotes X in GitHub UI
+- Fehler-Logs in GitHub Actions
+- E-Mail-Benachrichtigung (optional konfigurierbar)
+
+**Logs ansehen:**
+1. GitHub Actions Tab öffnen
+2. Fehlgeschlagenen Workflow klicken
+3. "Deploy to Hetzner Staging" Job öffnen
+4. Fehler-Details lesen
+
+---
+
+### 🔄 Production Deployment
+
+**Workflow-Datei:** `.github/workflows/deploy.yml`
+
+**Trigger:** Bei jedem Push zum `main` Branch
+
+**Ziel:** Hostinger Server (72.60.37.185)
+
+**Workflow:** Gleich wie Staging, aber deployed zu Production
 
 ---
 
