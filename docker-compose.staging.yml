@@ -1,0 +1,87 @@
+version: '3.8'
+
+# Staging-Umgebung — läuft parallel zur Produktion auf demselben Server
+# Ports: Frontend 8080, Backend 3002, DB 5433
+
+services:
+  postgres-staging:
+    image: postgres:15-alpine
+    container_name: roots-staging-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-roots_staging}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set}
+    volumes:
+      - postgres-staging-data:/var/lib/postgresql/data
+      - ./backend/src/config/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./backend/src/config/init-db.js:/docker-entrypoint-initdb.d/02-init.js
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - roots-staging-network
+
+  backend-staging:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: roots-staging-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: staging
+      PORT: 3001
+      DB_HOST: postgres-staging
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-roots_staging}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+    depends_on:
+      postgres-staging:
+        condition: service_healthy
+    ports:
+      - "3002:3001"
+    networks:
+      - roots-staging-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+
+  frontend-staging:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-}
+    container_name: roots-staging-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend-staging
+    ports:
+      - "8080:80"
+    networks:
+      - roots-staging-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  postgres-staging-data:
+    driver: local
+
+networks:
+  roots-staging-network:
+    driver: bridge
