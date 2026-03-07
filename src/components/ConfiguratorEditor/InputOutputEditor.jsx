@@ -11,9 +11,10 @@ export default function InputOutputEditor({ connector, type, onUpdate, onDelete,
   const [connectionType, setConnectionType] = useState(connector.connectionType || CONNECTION_TYPES.HYDRAULIC);
   const [allowedModuleTypes, setAllowedModuleTypes] = useState(connector.allowedModuleTypes || []);
 
-  // Pump configuration (only for outputs with hydraulic connection type)
+  // Pump configuration (for inputs and outputs with hydraulic connection type)
   const [pumpEnabled, setPumpEnabled] = useState(connector.pump?.enabled || false);
   const [pumpCapacity, setPumpCapacity] = useState(connector.pump?.förderhoehe_m || 0);
+  const [pumpExcludeFromBOM, setPumpExcludeFromBOM] = useState(connector.pump?.nicht_in_stueckliste || false);
 
   // Finde das Kürzel der gewählten Verbindungsart
   const getKuerzel = (verbindungsartName) => {
@@ -31,11 +32,13 @@ export default function InputOutputEditor({ connector, type, onUpdate, onDelete,
     const finalConnectionType = updates.connectionType !== undefined ? updates.connectionType : connectionType;
     const finalPumpEnabled = updates.pumpEnabled !== undefined ? updates.pumpEnabled : pumpEnabled;
     const finalPumpCapacity = updates.pumpCapacity !== undefined ? updates.pumpCapacity : pumpCapacity;
+    const finalPumpExcludeFromBOM = updates.pumpExcludeFromBOM !== undefined ? updates.pumpExcludeFromBOM : pumpExcludeFromBOM;
 
-    // Include pump data only for hydraulic outputs
-    const pumpData = (type === 'output' && finalConnectionType === CONNECTION_TYPES.HYDRAULIC) ? {
+    // Include pump data for both inputs and outputs with hydraulic connection type
+    const pumpData = (finalConnectionType === CONNECTION_TYPES.HYDRAULIC) ? {
       enabled: finalPumpEnabled,
       förderhoehe_m: finalPumpEnabled ? parseFloat(finalPumpCapacity) || 0 : 0,
+      nicht_in_stueckliste: finalPumpExcludeFromBOM,
     } : null;
 
     onUpdate({
@@ -278,8 +281,8 @@ export default function InputOutputEditor({ connector, type, onUpdate, onDelete,
         </div>
       </div>
 
-      {/* Pump Configuration (only for hydraulic outputs) */}
-      {type === 'output' && connectionType === CONNECTION_TYPES.HYDRAULIC && (
+      {/* Pump Configuration (for hydraulic inputs and outputs) */}
+      {connectionType === CONNECTION_TYPES.HYDRAULIC && (
         <div style={{
           marginBottom: '12px',
           padding: '12px',
@@ -341,8 +344,33 @@ export default function InputOutputEditor({ connector, type, onUpdate, onDelete,
                 }}
                 placeholder="z.B. 10"
               />
-              <div style={{ fontSize: '10px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+              <div style={{ fontSize: '10px', color: 'var(--text-secondary)', marginTop: '4px', marginBottom: '12px' }}>
                 Maximale Förderhöhe der Pumpe in Metern
+              </div>
+
+              <label style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontSize: '11px',
+                fontWeight: 400,
+                cursor: 'pointer',
+                color: 'var(--text-secondary)',
+              }}>
+                <input
+                  type="checkbox"
+                  checked={pumpExcludeFromBOM}
+                  onChange={(e) => {
+                    const exclude = e.target.checked;
+                    setPumpExcludeFromBOM(exclude);
+                    handleSave({ pumpExcludeFromBOM: exclude });
+                  }}
+                  style={{ cursor: 'pointer' }}
+                />
+                <span>Nicht separat in Stückliste anführen</span>
+              </label>
+              <div style={{ fontSize: '10px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                Pumpe wird nicht in Stückliste aufgeführt und Preis wird ignoriert
               </div>
             </div>
           )}
