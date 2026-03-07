@@ -418,42 +418,7 @@ function ConfiguratorEditorInner({ modules: moduleTemplates, configuration, setC
           >
             Neues Gebäude
           </button>
-        ) : (
-          <>
-            <button
-              onClick={() => openModal(configuration.building)}
-              style={{
-                padding: '10px 16px',
-                background: 'var(--bg-secondary)',
-                color: 'var(--text-primary)',
-                border: '2px solid var(--accent)',
-                borderRadius: '4px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-                fontSize: '13px',
-              }}
-            >
-              📋 {configuration.building?.name || 'Gebäude'} bearbeiten
-            </button>
-            <button
-              onClick={handleClearConfiguration}
-              style={{
-                padding: '10px 16px',
-                background: 'var(--error)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-                fontSize: '13px',
-              }}
-            >
-              Konfiguration löschen
-            </button>
-          </>
-        )}
+        ) : null}
       </div>
 
       {/* React Flow Canvas */}

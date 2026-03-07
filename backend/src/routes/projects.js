@@ -23,6 +23,11 @@ router.get('/', async (req, res) => {
         p.building_name,
         p.building_year,
         p.building_address,
+        p.beheizte_flaeche,
+        p.anzahl_wohnungen,
+        p.anzahl_stockwerke,
+        p.eigentuemer,
+        p.odoo_kontakt_link,
         p.created_at,
         p.updated_at,
         u.name as owner_name,
@@ -174,7 +179,20 @@ router.put('/:id', async (req, res) => {
 
   try {
     const { id } = req.params;
-    const { name, description, tags, nodes, edges, building, viewport } = req.body;
+    const {
+      name,
+      description,
+      tags,
+      nodes,
+      edges,
+      building,
+      viewport,
+      beheizte_flaeche,
+      anzahl_wohnungen,
+      anzahl_stockwerke,
+      eigentuemer,
+      odoo_kontakt_link,
+    } = req.body;
 
     await client.query('BEGIN');
 
@@ -190,7 +208,17 @@ router.put('/:id', async (req, res) => {
     }
 
     // Update project metadata if provided
-    if (name || description !== undefined || tags !== undefined || building) {
+    if (
+      name ||
+      description !== undefined ||
+      tags !== undefined ||
+      building ||
+      beheizte_flaeche !== undefined ||
+      anzahl_wohnungen !== undefined ||
+      anzahl_stockwerke !== undefined ||
+      eigentuemer !== undefined ||
+      odoo_kontakt_link !== undefined
+    ) {
       const updateFields = [];
       const updateValues = [];
       let paramCount = 1;
@@ -223,6 +251,31 @@ router.put('/:id', async (req, res) => {
         updateValues.push(buildingYear);
         updateFields.push(`building_address = $${paramCount++}`);
         updateValues.push(buildingAddress);
+      }
+
+      if (beheizte_flaeche !== undefined) {
+        updateFields.push(`beheizte_flaeche = $${paramCount++}`);
+        updateValues.push(beheizte_flaeche);
+      }
+
+      if (anzahl_wohnungen !== undefined) {
+        updateFields.push(`anzahl_wohnungen = $${paramCount++}`);
+        updateValues.push(anzahl_wohnungen);
+      }
+
+      if (anzahl_stockwerke !== undefined) {
+        updateFields.push(`anzahl_stockwerke = $${paramCount++}`);
+        updateValues.push(anzahl_stockwerke);
+      }
+
+      if (eigentuemer !== undefined) {
+        updateFields.push(`eigentuemer = $${paramCount++}`);
+        updateValues.push(sanitizeString(eigentuemer));
+      }
+
+      if (odoo_kontakt_link !== undefined) {
+        updateFields.push(`odoo_kontakt_link = $${paramCount++}`);
+        updateValues.push(sanitizeString(odoo_kontakt_link));
       }
 
       if (updateFields.length > 0) {
@@ -370,9 +423,14 @@ router.post('/:id/duplicate', async (req, res) => {
         tags,
         building_name,
         building_year,
-        building_address
+        building_address,
+        beheizte_flaeche,
+        anzahl_wohnungen,
+        anzahl_stockwerke,
+        eigentuemer,
+        odoo_kontakt_link
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
       RETURNING *
     `, [
       `${original.name} (Kopie)`,
@@ -382,6 +440,11 @@ router.post('/:id/duplicate', async (req, res) => {
       original.building_name,
       original.building_year,
       original.building_address,
+      original.beheizte_flaeche,
+      original.anzahl_wohnungen,
+      original.anzahl_stockwerke,
+      original.eigentuemer,
+      original.odoo_kontakt_link,
     ]);
 
     const newProject = projectResult.rows[0];

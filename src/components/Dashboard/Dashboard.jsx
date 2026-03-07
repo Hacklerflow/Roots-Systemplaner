@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { projectsAPI } from '../../api/client';
+import ProjectSettingsModal from './ProjectSettingsModal';
 import './Dashboard.css';
 
 export default function Dashboard() {
@@ -10,6 +11,7 @@ export default function Dashboard() {
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('updated_at'); // 'updated_at' or 'name'
+  const [settingsModalProject, setSettingsModalProject] = useState(null);
 
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -185,6 +187,13 @@ export default function Dashboard() {
                       📂
                     </button>
                     <button
+                      onClick={() => setSettingsModalProject(project)}
+                      className="project-action-button"
+                      title="Einstellungen"
+                    >
+                      ⚙️
+                    </button>
+                    <button
                       onClick={() => handleDuplicateProject(project.id)}
                       className="project-action-button"
                       title="Duplizieren"
@@ -220,6 +229,34 @@ export default function Dashboard() {
                     </div>
                   )}
 
+                  {project.beheizte_flaeche && (
+                    <div className="metadata-item">
+                      <span className="metadata-label">Beheizte Fläche:</span>
+                      <span className="metadata-value">{project.beheizte_flaeche} m²</span>
+                    </div>
+                  )}
+
+                  {project.anzahl_wohnungen && (
+                    <div className="metadata-item">
+                      <span className="metadata-label">Wohnungen:</span>
+                      <span className="metadata-value">{project.anzahl_wohnungen}</span>
+                    </div>
+                  )}
+
+                  {project.anzahl_stockwerke && (
+                    <div className="metadata-item">
+                      <span className="metadata-label">Stockwerke:</span>
+                      <span className="metadata-value">{project.anzahl_stockwerke}</span>
+                    </div>
+                  )}
+
+                  {project.eigentuemer && (
+                    <div className="metadata-item">
+                      <span className="metadata-label">Eigentümer:</span>
+                      <span className="metadata-value">{project.eigentuemer}</span>
+                    </div>
+                  )}
+
                   <div className="metadata-item">
                     <span className="metadata-label">Erstellt von:</span>
                     <span className="metadata-value">{project.owner_name}</span>
@@ -245,6 +282,17 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+
+      {/* Project Settings Modal */}
+      {settingsModalProject && (
+        <ProjectSettingsModal
+          project={settingsModalProject}
+          onClose={() => setSettingsModalProject(null)}
+          onSave={() => {
+            loadProjects(); // Reload projects to show updated metadata
+          }}
+        />
+      )}
     </div>
   );
 }
