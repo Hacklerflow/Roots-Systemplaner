@@ -5,6 +5,7 @@ import CatalogManagement from './CatalogManagement';
 import UserManagement from './UserManagement';
 import DatabaseTools from './DatabaseTools';
 import SystemSettings from './SystemSettings';
+import ConnectionTypes from './ConnectionTypes';
 import './AdminDashboard.css';
 
 export default function AdminDashboard() {
@@ -51,6 +52,12 @@ export default function AdminDashboard() {
           📦 Katalog-Verwaltung
         </button>
         <button
+          className={`admin-tab ${activeTab === 'connectiontypes' ? 'active' : ''}`}
+          onClick={() => setActiveTab('connectiontypes')}
+        >
+          🔌 Verbindungstypen
+        </button>
+        <button
           className={`admin-tab ${activeTab === 'users' ? 'active' : ''}`}
           onClick={() => setActiveTab('users')}
         >
@@ -73,6 +80,7 @@ export default function AdminDashboard() {
       {/* Content */}
       <div className="admin-content">
         {activeTab === 'catalog' && <CatalogManagement />}
+        {activeTab === 'connectiontypes' && <ConnectionTypes />}
         {activeTab === 'users' && <UserManagement />}
         {activeTab === 'database' && <DatabaseTools />}
         {activeTab === 'settings' && <SystemSettings />}

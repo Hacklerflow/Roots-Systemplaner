@@ -260,4 +260,278 @@ router.put('/settings', async (req, res) => {
   }
 });
 
+// ============================================
+// DEFAULT CATALOG SET MANAGEMENT
+// ============================================
+
+/**
+ * POST /api/admin/default-catalog/save-current
+ * Save current catalog state as default
+ */
+router.post('/default-catalog/save-current', async (req, res) => {
+  try {
+    const client = await pool.connect();
+
+    try {
+      await client.query('BEGIN');
+
+      // Fetch all current catalog data
+      const [moduleTypes, modules, connections, pipes, dimensions, formulas, pumps] = await Promise.all([
+        client.query('SELECT * FROM catalog_module_types ORDER BY id'),
+        client.query('SELECT * FROM catalog_modules ORDER BY id'),
+        client.query('SELECT * FROM catalog_connections ORDER BY id'),
+        client.query('SELECT * FROM catalog_pipes ORDER BY id'),
+        client.query('SELECT * FROM catalog_dimensions ORDER BY id'),
+        client.query('SELECT * FROM catalog_formulas ORDER BY id'),
+        client.query('SELECT * FROM catalog_pumps ORDER BY id'),
+      ]);
+
+      // Update default config with current data
+      await client.query(`
+        UPDATE default_catalog_config
+        SET
+          module_types = $1,
+          modules = $2,
+          connections = $3,
+          pipes = $4,
+          dimensions = $5,
+          formulas = $6,
+          pumps = $7,
+          updated_at = CURRENT_TIMESTAMP,
+          updated_by = $8
+        WHERE config_type = 'default'
+      `, [
+        JSON.stringify(moduleTypes.rows),
+        JSON.stringify(modules.rows),
+        JSON.stringify(connections.rows),
+        JSON.stringify(pipes.rows),
+        JSON.stringify(dimensions.rows),
+        JSON.stringify(formulas.rows),
+        JSON.stringify(pumps.rows),
+        req.user.id,
+      ]);
+
+      await client.query('COMMIT');
+
+      res.json({
+        message: 'Default catalog set saved successfully',
+        counts: {
+          module_types: moduleTypes.rows.length,
+          modules: modules.rows.length,
+          connections: connections.rows.length,
+          pipes: pipes.rows.length,
+          dimensions: dimensions.rows.length,
+          formulas: formulas.rows.length,
+          pumps: pumps.rows.length,
+        }
+      });
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Error saving default catalog:', error);
+    res.status(500).json({ error: 'Failed to save default catalog' });
+  }
+});
+
+/**
+ * POST /api/admin/default-catalog/load
+ * Load default catalog set into current catalogs
+ */
+router.post('/default-catalog/load', async (req, res) => {
+  try {
+    const client = await pool.connect();
+
+    try {
+      await client.query('BEGIN');
+
+      // Get default config
+      const configResult = await client.query(`
+        SELECT * FROM default_catalog_config
+        WHERE config_type = 'default' AND is_active = true
+      `);
+
+      if (configResult.rows.length === 0) {
+        throw new Error('No default catalog configuration found');
+      }
+
+      const config = configResult.rows[0];
+
+      // Clear existing catalogs
+      await client.query('DELETE FROM catalog_pipes');
+      await client.query('DELETE FROM catalog_connections');
+      await client.query('DELETE FROM catalog_modules');
+      await client.query('DELETE FROM catalog_module_types');
+      await client.query('DELETE FROM catalog_dimensions');
+      await client.query('DELETE FROM catalog_formulas');
+      await client.query('DELETE FROM catalog_pumps');
+
+      let counts = {
+        module_types: 0,
+        modules: 0,
+        connections: 0,
+        pipes: 0,
+        dimensions: 0,
+        formulas: 0,
+        pumps: 0,
+      };
+
+      // Insert module types
+      if (config.module_types && config.module_types.length > 0) {
+        for (const mt of config.module_types) {
+          await client.query(`
+            INSERT INTO catalog_module_types (name, kategorie, berechnungsart, einheit)
+            VALUES ($1, $2, $3, $4)
+          `, [mt.name, mt.kategorie, mt.berechnungsart, mt.einheit]);
+          counts.module_types++;
+        }
+      }
+
+      // Insert connections
+      if (config.connections && config.connections.length > 0) {
+        for (const conn of config.connections) {
+          await client.query(`
+            INSERT INTO catalog_connections (name, kuerzel, typ, kompatible_leitungen)
+            VALUES ($1, $2, $3, $4)
+          `, [conn.name, conn.kuerzel, conn.typ, conn.kompatible_leitungen || '[]']);
+          counts.connections++;
+        }
+      }
+
+      // Insert modules
+      if (config.modules && config.modules.length > 0) {
+        for (const mod of config.modules) {
+          await client.query(`
+            INSERT INTO catalog_modules (name, modultyp, hersteller, abmessungen, gewicht_kg, leistung_kw, volumen_l, preis, eingaenge, ausgaenge)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+          `, [mod.name, mod.modultyp, mod.hersteller, mod.abmessungen, mod.gewicht_kg, mod.leistung_kw, mod.volumen_l, mod.preis, mod.eingaenge || '[]', mod.ausgaenge || '[]']);
+          counts.modules++;
+        }
+      }
+
+      // Insert pipes
+      if (config.pipes && config.pipes.length > 0) {
+        for (const pipe of config.pipes) {
+          await client.query(`
+            INSERT INTO catalog_pipes (connection_type, leitungstyp, dimension, preis_pro_meter)
+            VALUES ($1, $2, $3, $4)
+          `, [pipe.connection_type, pipe.leitungstyp, pipe.dimension, pipe.preis_pro_meter]);
+          counts.pipes++;
+        }
+      }
+
+      // Insert dimensions
+      if (config.dimensions && config.dimensions.length > 0) {
+        for (const dim of config.dimensions) {
+          await client.query(`
+            INSERT INTO catalog_dimensions (name, value)
+            VALUES ($1, $2)
+          `, [dim.name, dim.value]);
+          counts.dimensions++;
+        }
+      }
+
+      // Insert formulas
+      if (config.formulas && config.formulas.length > 0) {
+        for (const formula of config.formulas) {
+          await client.query(`
+            INSERT INTO catalog_formulas (name, formula, beschreibung, variablen, is_active)
+            VALUES ($1, $2, $3, $4, $5)
+          `, [formula.name, formula.formula, formula.beschreibung, formula.variablen || '[]', formula.is_active || false]);
+          counts.formulas++;
+        }
+      }
+
+      // Insert pumps
+      if (config.pumps && config.pumps.length > 0) {
+        for (const pump of config.pumps) {
+          await client.query(`
+            INSERT INTO catalog_pumps (name, hersteller, modell, foerdermenge_m3h, foerderhoehe_m, leistung_kw, spannung, anschlussgroesse, preis, notizen)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+          `, [pump.name, pump.hersteller, pump.modell, pump.foerdermenge_m3h, pump.foerderhoehe_m, pump.leistung_kw, pump.spannung, pump.anschlussgroesse, pump.preis, pump.notizen]);
+          counts.pumps++;
+        }
+      }
+
+      await client.query('COMMIT');
+
+      res.json({
+        message: 'Default catalog loaded successfully',
+        counts
+      });
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Error loading default catalog:', error);
+    res.status(500).json({ error: 'Failed to load default catalog: ' + error.message });
+  }
+});
+
+/**
+ * GET /api/admin/default-catalog
+ * Get current default catalog configuration
+ */
+router.get('/default-catalog', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+        config_type,
+        jsonb_array_length(module_types) as module_types_count,
+        jsonb_array_length(modules) as modules_count,
+        jsonb_array_length(connections) as connections_count,
+        jsonb_array_length(pipes) as pipes_count,
+        jsonb_array_length(dimensions) as dimensions_count,
+        jsonb_array_length(formulas) as formulas_count,
+        jsonb_array_length(pumps) as pumps_count,
+        updated_at,
+        updated_by,
+        is_active
+      FROM default_catalog_config
+      WHERE config_type = 'default'
+    `);
+
+    if (result.rows.length === 0) {
+      return res.json({
+        exists: false,
+        counts: {
+          module_types: 0,
+          modules: 0,
+          connections: 0,
+          pipes: 0,
+          dimensions: 0,
+          formulas: 0,
+          pumps: 0,
+        }
+      });
+    }
+
+    const config = result.rows[0];
+
+    res.json({
+      exists: true,
+      counts: {
+        module_types: config.module_types_count || 0,
+        modules: config.modules_count || 0,
+        connections: config.connections_count || 0,
+        pipes: config.pipes_count || 0,
+        dimensions: config.dimensions_count || 0,
+        formulas: config.formulas_count || 0,
+        pumps: config.pumps_count || 0,
+      },
+      updated_at: config.updated_at,
+      is_active: config.is_active,
+    });
+  } catch (error) {
+    console.error('Error fetching default catalog:', error);
+    res.status(500).json({ error: 'Failed to fetch default catalog' });
+  }
+});
+
 export default router;

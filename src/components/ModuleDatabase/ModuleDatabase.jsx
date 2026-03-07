@@ -177,7 +177,18 @@ export default function ModuleDatabase({ modules, setModules, leitungskatalog = 
                   key={module.id}
                   module={module}
                   onEdit={() => {
-                    setEditingModule({ ...module });
+                    // Convert backend format to frontend format
+                    const editModule = {
+                      ...module,
+                      moduleType: module.moduleType || module.modultyp,
+                      properties: {
+                        hersteller: module.hersteller || module.properties?.hersteller || '',
+                        abmessungen: module.abmessungen || module.properties?.abmessungen || '',
+                        gewicht_kg: module.gewichtKg || module.properties?.gewicht_kg || null,
+                        preis_euro: module.preis || module.properties?.preis_euro || null,
+                      },
+                    };
+                    setEditingModule(editModule);
                     setIsCreating(false);
                   }}
                   disabled={!!editingModule}

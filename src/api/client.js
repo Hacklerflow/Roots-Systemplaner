@@ -257,10 +257,55 @@ export const catalogsAPI = {
       method: 'DELETE',
     });
   },
+
+  getPumps: async () => {
+    return apiRequest('/api/catalogs/pumps');
+  },
+
+  addPump: async (pumpData) => {
+    return apiRequest('/api/catalogs/pumps', {
+      method: 'POST',
+      body: JSON.stringify(pumpData),
+    });
+  },
+
+  updatePump: async (id, pumpData) => {
+    return apiRequest(`/api/catalogs/pumps/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(pumpData),
+    });
+  },
+
+  deletePump: async (id) => {
+    return apiRequest(`/api/catalogs/pumps/${id}`, {
+      method: 'DELETE',
+    });
+  },
+};
+
+// Admin API
+export const adminAPI = {
+  // Default Catalog Set Management
+  getDefaultCatalog: async () => {
+    return apiRequest('/api/admin/default-catalog');
+  },
+
+  saveCurrentAsDefault: async () => {
+    return apiRequest('/api/admin/default-catalog/save-current', {
+      method: 'POST',
+    });
+  },
+
+  loadDefaultCatalog: async () => {
+    return apiRequest('/api/admin/default-catalog/load', {
+      method: 'POST',
+    });
+  },
 };
 
 export default {
   auth: authAPI,
   projects: projectsAPI,
   catalogs: catalogsAPI,
+  admin: adminAPI,
 };

@@ -1,7 +1,7 @@
 import express from 'express';
 import bcrypt from 'bcrypt';
 import { query } from '../config/database.js';
-import { generateToken } from '../middleware/auth.js';
+import { generateToken, authenticateToken } from '../middleware/auth.js';
 import { isValidEmail, isValidPassword, sanitizeString } from '../utils/validation.js';
 
 const router = express.Router();
@@ -131,11 +131,31 @@ router.post('/login', async (req, res) => {
  * GET /api/auth/me
  * Get current user info (requires authentication)
  */
-router.get('/me', async (req, res) => {
+router.get('/me', authenticateToken, async (req, res) => {
   try {
-    // This endpoint would use authenticateToken middleware
-    // For now, return placeholder
-    res.json({ message: 'Protected endpoint - add authenticateToken middleware' });
+    const userId = req.user.id;
+
+    // Fetch current user data from database
+    const result = await query(
+      'SELECT id, email, name, role, created_at FROM users WHERE id = $1',
+      [userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const user = result.rows[0];
+
+    res.json({
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        created_at: user.created_at,
+      },
+    });
   } catch (error) {
     console.error('Get user error:', error);
     res.status(500).json({ error: 'Internal server error' });

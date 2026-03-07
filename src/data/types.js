@@ -96,7 +96,7 @@ export function createModuleInstance(moduleTemplate) {
 /**
  * Factory-Funktion für ein neues Modul-Template
  */
-export function createModuleTemplate(name = 'Neues Modul', moduleType = MODULE_TYPES.HUB) {
+export function createModuleTemplate(name = 'Neues Modul', moduleType = MODULE_TYPES.HEAT_PUMP) {
   return {
     id: `template-${Date.now()}`,
     type: 'module',

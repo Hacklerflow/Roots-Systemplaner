@@ -11,6 +11,7 @@ import Leitungen from './Leitungen/Leitungen';
 import Dimensionen from './Dimensionen/Dimensionen';
 import Modultypen from './Modultypen/Modultypen';
 import Formulas from './Formulas/Formulas';
+import Pumpen from './Settings/Pumpen';
 import SystemSets from './SystemSets/SystemSets';
 import PumpAnalysis from './PumpAnalysis/PumpAnalysis';
 import ErrorBoundary from './ErrorBoundary';
@@ -38,6 +39,8 @@ export default function ConfiguratorWrapper({
   setModultypen,
   formulaskatalog,
   setFormulaskatalog,
+  pumpenkatalog,
+  setPumpenkatalog,
   onReloadCatalogs,
   systemSets,
   activeSetId,
@@ -336,6 +339,7 @@ export default function ConfiguratorWrapper({
               leitungskatalog={leitungskatalog}
               setLeitungskatalog={setLeitungskatalog}
               dimensionskatalog={dimensionskatalog}
+              verbindungsartenkatalog={verbindungsartenkatalog}
             />
           )}
 
@@ -357,6 +361,13 @@ export default function ConfiguratorWrapper({
             <Formulas
               formulaskatalog={formulaskatalog}
               setFormulaskatalog={setFormulaskatalog}
+            />
+          )}
+
+          {activeTab === 'einstellungen' && activeSettingsTab === 'pumpen' && (
+            <Pumpen
+              pumpenkatalog={pumpenkatalog}
+              setPumpenkatalog={setPumpenkatalog}
             />
           )}
 

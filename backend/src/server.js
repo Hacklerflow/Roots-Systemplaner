@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import rateLimit from 'express-rate-limit';
 import authRoutes from './routes/auth.js';
 import projectsRoutes from './routes/projects.js';
 import catalogsRoutes from './routes/catalogs.js';
@@ -14,6 +15,28 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:5173';
 
+// Rate Limiting (gegen Brute-Force Angriffe)
+// FÜR PRODUCTION: max sollte 100 sein
+// FÜR DEVELOPMENT: Deaktiviert (nur leerer Middleware)
+const limiter = process.env.NODE_ENV === 'production' ? rateLimit({
+  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 Minuten
+  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100, // Max 100 Requests pro Window
+  message: { error: 'Too many requests, please try again later' },
+  standardHeaders: true,
+  legacyHeaders: false,
+}) : (req, res, next) => next(); // Development: Kein Rate-Limiting
+
+// Auth-spezifisches Rate-Limiting (kann für Testing deaktiviert werden)
+// FÜR PRODUCTION: max sollte 10-30 sein
+// FÜR DEVELOPMENT: Deaktiviert (nur leerer Middleware)
+const authLimiter = process.env.NODE_ENV === 'production' ? rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 Minuten
+  max: 30, // Max 30 Login/Register Versuche pro Window (erhöht)
+  message: { error: 'Too many authentication attempts, please try again later' },
+  standardHeaders: true,
+  legacyHeaders: false,
+}) : (req, res, next) => next(); // Development: Kein Rate-Limiting
+
 // Middleware
 app.use(cors({
   origin: CORS_ORIGIN,
@@ -21,6 +44,9 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '10mb' })); // For large configurations
 app.use(express.urlencoded({ extended: true }));
+
+// Apply general rate limiting to all requests
+app.use(limiter);
 
 // Request logging middleware
 app.use((req, res, next) => {
@@ -38,7 +64,7 @@ app.get('/health', (req, res) => {
 });
 
 // API Routes
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authLimiter, authRoutes); // Strengeres Rate-Limiting für Auth
 app.use('/api/projects', projectsRoutes);
 app.use('/api/catalogs', catalogsRoutes);
 app.use('/api/admin', adminRoutes);

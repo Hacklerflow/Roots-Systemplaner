@@ -69,7 +69,7 @@ router.get('/pipes', async (req, res) => {
   try {
     const result = await query(`
       SELECT * FROM catalog_pipes
-      ORDER BY verbindungsart, leitungstyp, dimension
+      ORDER BY connection_type, leitungstyp, dimension
     `);
 
     res.json({ pipes: result.rows });
@@ -93,6 +93,120 @@ router.get('/dimensions', async (req, res) => {
     res.json({ dimensions: result.rows });
   } catch (error) {
     console.error('Get dimensions error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * POST /api/catalogs/dimensions
+ * Add a new dimension
+ */
+router.post('/dimensions', async (req, res) => {
+  try {
+    const { name, value } = req.body;
+
+    if (!name) {
+      return res.status(400).json({ error: 'Name is required' });
+    }
+
+    const result = await query(`
+      INSERT INTO catalog_dimensions (name, value)
+      VALUES ($1, $2)
+      RETURNING *
+    `, [name, value || name]);
+
+    res.status(201).json({
+      message: 'Dimension created',
+      dimension: result.rows[0],
+    });
+  } catch (error) {
+    if (error.code === '23505') { // Unique violation
+      return res.status(409).json({ error: 'Dimension with this name already exists' });
+    }
+    console.error('Create dimension error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * PUT /api/catalogs/dimensions/:id
+ * Update a dimension
+ */
+router.put('/dimensions/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, value } = req.body;
+
+    const fields = [];
+    const values = [];
+    let paramCount = 1;
+
+    if (name !== undefined) {
+      fields.push(`name = $${paramCount++}`);
+      values.push(name);
+    }
+    if (value !== undefined) {
+      fields.push(`value = $${paramCount++}`);
+      values.push(value);
+    }
+
+    if (fields.length === 0) {
+      return res.status(400).json({ error: 'No valid fields to update' });
+    }
+
+    values.push(id);
+
+    const result = await query(`
+      UPDATE catalog_dimensions
+      SET ${fields.join(', ')}
+      WHERE id = $${paramCount}
+      RETURNING *
+    `, values);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Dimension not found' });
+    }
+
+    res.json({
+      message: 'Dimension updated',
+      dimension: result.rows[0],
+    });
+  } catch (error) {
+    if (error.code === '23505') {
+      return res.status(409).json({ error: 'Dimension with this name already exists' });
+    }
+    console.error('Update dimension error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * DELETE /api/catalogs/dimensions/:id
+ * Delete a dimension
+ */
+router.delete('/dimensions/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await query(`
+      DELETE FROM catalog_dimensions
+      WHERE id = $1
+      RETURNING *
+    `, [id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Dimension not found' });
+    }
+
+    res.json({
+      message: 'Dimension deleted',
+      dimension: result.rows[0],
+    });
+  } catch (error) {
+    if (error.code === '23503') {
+      return res.status(409).json({ error: 'Cannot delete dimension that is being used' });
+    }
+    console.error('Delete dimension error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -151,6 +265,9 @@ router.post('/modules', async (req, res) => {
       return res.status(400).json({ error: 'Name is required' });
     }
 
+    // Sanitize values: empty strings and undefined should become NULL
+    const sanitizeValue = (val) => (val === '' || val === undefined) ? null : val;
+
     const result = await query(`
       INSERT INTO catalog_modules (
         name, modultyp, hersteller, abmessungen,
@@ -161,13 +278,13 @@ router.post('/modules', async (req, res) => {
       RETURNING *
     `, [
       name,
-      modultyp,
-      hersteller,
-      abmessungen,
-      gewicht_kg,
-      leistung_kw,
-      volumen_l,
-      preis,
+      sanitizeValue(modultyp),
+      sanitizeValue(hersteller),
+      sanitizeValue(abmessungen),
+      sanitizeValue(gewicht_kg),
+      sanitizeValue(leistung_kw),
+      sanitizeValue(volumen_l),
+      sanitizeValue(preis),
       JSON.stringify(eingaenge || []),
       JSON.stringify(ausgaenge || []),
     ]);
@@ -180,8 +297,13 @@ router.post('/modules', async (req, res) => {
     if (error.code === '23505') {
       return res.status(409).json({ error: 'Module with this name already exists' });
     }
+    if (error.code === '23503') { // Foreign key violation
+      return res.status(400).json({
+        error: 'Invalid modultyp. The module type does not exist in catalog_module_types. Please create the module type first.'
+      });
+    }
     console.error('Create module error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error: ' + error.message });
   }
 });
 
@@ -224,15 +346,16 @@ router.post('/pipes', async (req, res) => {
   try {
     const { connection_type, leitungstyp, dimension, preis_pro_meter } = req.body;
 
-    if (!connection_type || !leitungstyp || !dimension) {
-      return res.status(400).json({ error: 'connection_type, leitungstyp, and dimension are required' });
+    // Only preis_pro_meter is required, others can be null for flexible creation
+    if (preis_pro_meter === undefined || preis_pro_meter === null) {
+      return res.status(400).json({ error: 'preis_pro_meter is required' });
     }
 
     const result = await query(`
       INSERT INTO catalog_pipes (connection_type, leitungstyp, dimension, preis_pro_meter)
       VALUES ($1, $2, $3, $4)
       RETURNING *
-    `, [connection_type, leitungstyp, dimension, preis_pro_meter]);
+    `, [connection_type || null, leitungstyp || null, dimension || null, preis_pro_meter]);
 
     res.status(201).json({
       message: 'Pipe created',
@@ -487,8 +610,13 @@ router.put('/modules/:id', async (req, res) => {
       module: result.rows[0],
     });
   } catch (error) {
+    if (error.code === '23503') { // Foreign key violation
+      return res.status(400).json({
+        error: 'Invalid modultyp. The module type does not exist in catalog_module_types. Please create the module type first.'
+      });
+    }
     console.error('Update module error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error: ' + error.message });
   }
 });
 
@@ -664,6 +792,165 @@ router.delete('/formulas/:id', async (req, res) => {
     });
   } catch (error) {
     console.error('Delete formula error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * GET /api/catalogs/pumps
+ * Get all pumps
+ */
+router.get('/pumps', async (req, res) => {
+  try {
+    const result = await query(`
+      SELECT * FROM catalog_pumps
+      ORDER BY hersteller, name
+    `);
+
+    res.json({ pumps: result.rows });
+  } catch (error) {
+    console.error('Get pumps error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * POST /api/catalogs/pumps
+ * Add a new pump
+ */
+router.post('/pumps', async (req, res) => {
+  try {
+    const {
+      name,
+      hersteller,
+      modell,
+      foerdermenge_m3h,
+      foerderhoehe_m,
+      leistung_kw,
+      spannung,
+      anschlussgroesse,
+      preis,
+      notizen,
+    } = req.body;
+
+    if (!name) {
+      return res.status(400).json({ error: 'Name is required' });
+    }
+
+    const result = await query(`
+      INSERT INTO catalog_pumps (
+        name, hersteller, modell, foerdermenge_m3h,
+        foerderhoehe_m, leistung_kw, spannung, anschlussgroesse,
+        preis, notizen
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      RETURNING *
+    `, [
+      name,
+      hersteller || null,
+      modell || null,
+      foerdermenge_m3h || null,
+      foerderhoehe_m || null,
+      leistung_kw || null,
+      spannung || null,
+      anschlussgroesse || null,
+      preis || null,
+      notizen || null,
+    ]);
+
+    res.status(201).json({
+      message: 'Pump created',
+      pump: result.rows[0],
+    });
+  } catch (error) {
+    if (error.code === '23505') {
+      return res.status(409).json({ error: 'Pump with this name/model already exists' });
+    }
+    console.error('Create pump error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * PUT /api/catalogs/pumps/:id
+ * Update a pump
+ */
+router.put('/pumps/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+    const fields = [];
+    const values = [];
+    let paramCount = 1;
+
+    const allowedFields = [
+      'name', 'hersteller', 'modell', 'foerdermenge_m3h',
+      'foerderhoehe_m', 'leistung_kw', 'spannung', 'anschlussgroesse',
+      'preis', 'notizen',
+    ];
+
+    for (const field of allowedFields) {
+      if (updates[field] !== undefined) {
+        fields.push(`${field} = $${paramCount++}`);
+        values.push(updates[field]);
+      }
+    }
+
+    if (fields.length === 0) {
+      return res.status(400).json({ error: 'No valid fields to update' });
+    }
+
+    values.push(id);
+
+    const result = await query(`
+      UPDATE catalog_pumps
+      SET ${fields.join(', ')}
+      WHERE id = $${paramCount}
+      RETURNING *
+    `, values);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Pump not found' });
+    }
+
+    res.json({
+      message: 'Pump updated',
+      pump: result.rows[0],
+    });
+  } catch (error) {
+    if (error.code === '23505') {
+      return res.status(409).json({ error: 'Pump with this name/model already exists' });
+    }
+    console.error('Update pump error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * DELETE /api/catalogs/pumps/:id
+ * Delete a pump
+ */
+router.delete('/pumps/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await query(`
+      DELETE FROM catalog_pumps
+      WHERE id = $1
+      RETURNING *
+    `, [id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Pump not found' });
+    }
+
+    res.json({
+      message: 'Pump deleted',
+      pump: result.rows[0],
+    });
+  } catch (error) {
+    console.error('Delete pump error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

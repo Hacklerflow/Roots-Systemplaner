@@ -2,11 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import ConfiguratorWrapper from './components/ConfiguratorWrapper';
 import SystemSetsModal from './components/SystemSets/SystemSetsModal';
 import { catalogsAPI } from './api/client';
-import { initialModules } from './data/moduleDatabase';
-import { initialLeitungen } from './data/leitungskatalog';
-import { initialVerbindungsarten } from './data/verbindungsartenkatalog';
-import { initialDimensionen } from './data/dimensionskatalog';
-import { initialModultypen } from './data/modultypenkatalog';
+// Keine Fallback-Daten mehr - alle Kataloge kommen aus der Datenbank
 
 /**
  * ConfiguratorApp - Container for the configurator
@@ -45,6 +41,7 @@ function ConfiguratorApp() {
   const [dimensionskatalog, setDimensionskatalog] = useState([]);
   const [modultypen, setModultypen] = useState([]);
   const [formulaskatalog, setFormulaskatalog] = useState([]);
+  const [pumpenkatalog, setPumpenkatalog] = useState([]);
 
   // Load all catalogs from backend on mount
   useEffect(() => {
@@ -63,6 +60,7 @@ function ConfiguratorApp() {
         pipesRes,
         dimensionsRes,
         formulasRes,
+        pumpsRes,
       ] = await Promise.all([
         catalogsAPI.getModuleTypes(),
         catalogsAPI.getModules(),
@@ -70,6 +68,7 @@ function ConfiguratorApp() {
         catalogsAPI.getPipes(),
         catalogsAPI.getDimensions(),
         catalogsAPI.getFormulas(),
+        catalogsAPI.getPumps(),
       ]);
 
       // Convert backend format to frontend format
@@ -102,6 +101,9 @@ function ConfiguratorApp() {
                    (typeof m.ausgaenge === 'string' ? JSON.parse(m.ausgaenge) : []),
         }));
         setModules(convertedModules);
+      } else {
+        // Set empty array if no modules from backend
+        setModules([]);
       }
 
       // Connections
@@ -152,6 +154,11 @@ function ConfiguratorApp() {
         setFormulaskatalog(convertedFormulas);
       }
 
+      // Pumps
+      if (pumpsRes.pumps?.length > 0) {
+        setPumpenkatalog(pumpsRes.pumps);
+      }
+
       setCatalogsLoaded(true);
       console.log('✅ Kataloge vom Backend geladen');
     } catch (error) {
@@ -191,6 +198,11 @@ function ConfiguratorApp() {
   const handleFormulaskatalogChange = async (newFormulas) => {
     setFormulaskatalog(newFormulas);
     // Sync to backend handled in Formulas component
+  };
+
+  const handlePumpenkatalogChange = async (newPumpen) => {
+    setPumpenkatalog(newPumpen);
+    // Sync to backend handled in Pumpen component
   };
 
   // System Sets (keeping for now - can be migrated later)
@@ -377,13 +389,14 @@ function ConfiguratorApp() {
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
               zIndex: 1000,
             }}>
-              {['verbindungen', 'leitungen', 'dimensionen', 'modultypen', 'formulas', 'systemsets'].map(tab => {
+              {['dimensionen', 'leitungen', 'verbindungen', 'modultypen', 'formulas', 'pumpen', 'systemsets'].map(tab => {
                 const labels = {
                   verbindungen: 'Verbindungen',
                   leitungen: 'Leitungen',
                   dimensionen: 'Dimensionen',
                   modultypen: 'Modultypen',
                   formulas: 'Formeln',
+                  pumpen: 'Pumpen',
                   systemsets: 'System Sets',
                 };
                 return (
@@ -432,6 +445,8 @@ function ConfiguratorApp() {
         setModultypen={handleModultypenChange}
         formulaskatalog={formulaskatalog}
         setFormulaskatalog={handleFormulaskatalogChange}
+        pumpenkatalog={pumpenkatalog}
+        setPumpenkatalog={handlePumpenkatalogChange}
         onReloadCatalogs={loadCatalogs}
         systemSets={systemSets}
         activeSetId={activeSetId}

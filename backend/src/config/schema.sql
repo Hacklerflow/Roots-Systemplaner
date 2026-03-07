@@ -2,6 +2,7 @@
 -- PostgreSQL
 
 -- Drop existing tables (be careful in production!)
+DROP TABLE IF EXISTS catalog_formulas CASCADE;
 DROP TABLE IF EXISTS catalog_dimensions CASCADE;
 DROP TABLE IF EXISTS catalog_pipes CASCADE;
 DROP TABLE IF EXISTS catalog_connections CASCADE;
@@ -17,8 +18,10 @@ CREATE TABLE users (
   email VARCHAR(255) UNIQUE NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
   name VARCHAR(255) NOT NULL,
+  role VARCHAR(20) DEFAULT 'user',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT check_user_role CHECK (role IN ('admin', 'user'))
 );
 
 -- Projects table
@@ -87,6 +90,7 @@ CREATE TABLE catalog_connections (
   name VARCHAR(255) UNIQUE NOT NULL,
   kuerzel VARCHAR(10) NOT NULL,
   typ VARCHAR(50) NOT NULL, -- hydraulisch, elektrisch, steuerung
+  kompatible_leitungen JSONB DEFAULT '[]',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -94,13 +98,13 @@ CREATE TABLE catalog_connections (
 -- Pipes Catalog (Leitungskatalog)
 CREATE TABLE catalog_pipes (
   id SERIAL PRIMARY KEY,
-  verbindungsart VARCHAR(255) REFERENCES catalog_connections(name),
+  connection_type VARCHAR(255) REFERENCES catalog_connections(name),
   leitungstyp VARCHAR(255) NOT NULL,
   dimension VARCHAR(100) NOT NULL,
   preis_pro_meter DECIMAL(10,2),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE(verbindungsart, leitungstyp, dimension)
+  UNIQUE(connection_type, leitungstyp, dimension)
 );
 
 -- Dimensions Catalog (Dimensionskatalog)
@@ -112,12 +116,26 @@ CREATE TABLE catalog_dimensions (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Formulas Catalog (Formelkatalog)
+CREATE TABLE catalog_formulas (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) UNIQUE NOT NULL,
+  formula TEXT NOT NULL,
+  beschreibung TEXT,
+  variablen JSONB DEFAULT '[]',
+  is_active BOOLEAN DEFAULT false,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Indexes for performance
 CREATE INDEX idx_projects_user_id ON projects(user_id);
 CREATE INDEX idx_projects_created_at ON projects(created_at DESC);
 CREATE INDEX idx_configurations_project_id ON configurations(project_id);
 CREATE INDEX idx_catalog_modules_modultyp ON catalog_modules(modultyp);
-CREATE INDEX idx_catalog_pipes_verbindungsart ON catalog_pipes(verbindungsart);
+CREATE INDEX idx_catalog_pipes_connection_type ON catalog_pipes(connection_type);
+CREATE INDEX idx_catalog_formulas_is_active ON catalog_formulas(is_active) WHERE is_active = true;
+CREATE INDEX idx_users_role ON users(role);
 
 -- Trigger to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -153,6 +171,9 @@ CREATE TRIGGER update_catalog_pipes_updated_at BEFORE UPDATE ON catalog_pipes
 CREATE TRIGGER update_catalog_dimensions_updated_at BEFORE UPDATE ON catalog_dimensions
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+CREATE TRIGGER update_catalog_formulas_updated_at BEFORE UPDATE ON catalog_formulas
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
 -- Comments for documentation
 COMMENT ON TABLE users IS 'User accounts for authentication';
 COMMENT ON TABLE projects IS 'Project metadata and overview information';
@@ -162,3 +183,4 @@ COMMENT ON TABLE catalog_modules IS 'Shared catalog of available modules';
 COMMENT ON TABLE catalog_connections IS 'Shared catalog of connection types';
 COMMENT ON TABLE catalog_pipes IS 'Shared catalog of pipes/cables';
 COMMENT ON TABLE catalog_dimensions IS 'Shared catalog of standard dimensions';
+COMMENT ON TABLE catalog_formulas IS 'Shared catalog of hydraulic calculation formulas';

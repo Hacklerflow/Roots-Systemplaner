@@ -1,24 +1,29 @@
 import { useState, useEffect } from 'react';
-import { catalogsAPI } from '../../api/client';
+import { catalogsAPI, adminAPI } from '../../api/client';
 
 export default function CatalogManagement() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [defaultSetInfo, setDefaultSetInfo] = useState(null);
+  const [loadingDefault, setLoadingDefault] = useState(false);
+  const [message, setMessage] = useState(null);
 
   useEffect(() => {
     loadStats();
+    loadDefaultSetInfo();
   }, []);
 
   const loadStats = async () => {
     try {
       setLoading(true);
-      const [moduleTypes, modules, connections, pipes, dimensions, formulas] = await Promise.all([
+      const [moduleTypes, modules, connections, pipes, dimensions, formulas, pumps] = await Promise.all([
         catalogsAPI.getModuleTypes(),
         catalogsAPI.getModules(),
         catalogsAPI.getConnections(),
         catalogsAPI.getPipes(),
         catalogsAPI.getDimensions(),
         catalogsAPI.getFormulas(),
+        catalogsAPI.getPumps(),
       ]);
 
       setStats({
@@ -28,11 +33,61 @@ export default function CatalogManagement() {
         pipes: pipes.pipes?.length || 0,
         dimensions: dimensions.dimensions?.length || 0,
         formulas: formulas.formulas?.length || 0,
+        pumps: pumps.pumps?.length || 0,
       });
     } catch (error) {
       console.error('Fehler beim Laden der Statistiken:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadDefaultSetInfo = async () => {
+    try {
+      const data = await adminAPI.getDefaultCatalog();
+      setDefaultSetInfo(data);
+    } catch (error) {
+      console.error('Fehler beim Laden der Standard-Set-Info:', error);
+    }
+  };
+
+  const handleSaveAsDefault = async () => {
+    if (!confirm('Möchtest du die aktuellen Kataloge als Standard-Set speichern? Dies überschreibt das vorherige Standard-Set.')) {
+      return;
+    }
+
+    try {
+      setLoadingDefault(true);
+      await adminAPI.saveCurrentAsDefault();
+      setMessage({ type: 'success', text: '✅ Aktueller Katalog wurde als Standard-Set gespeichert!' });
+      loadDefaultSetInfo(); // Reload info
+      setTimeout(() => setMessage(null), 5000);
+    } catch (error) {
+      console.error('Fehler beim Speichern des Standard-Sets:', error);
+      setMessage({ type: 'error', text: '❌ Fehler beim Speichern des Standard-Sets: ' + error.message });
+      setTimeout(() => setMessage(null), 5000);
+    } finally {
+      setLoadingDefault(false);
+    }
+  };
+
+  const handleLoadDefault = async () => {
+    if (!confirm('Möchtest du das Standard-Set laden? Dies überschreibt alle aktuellen Kataloge.')) {
+      return;
+    }
+
+    try {
+      setLoadingDefault(true);
+      await adminAPI.loadDefaultCatalog();
+      setMessage({ type: 'success', text: '✅ Standard-Set wurde in die Kataloge geladen!' });
+      loadStats(); // Reload stats to show new data
+      setTimeout(() => setMessage(null), 5000);
+    } catch (error) {
+      console.error('Fehler beim Laden des Standard-Sets:', error);
+      setMessage({ type: 'error', text: '❌ Fehler beim Laden des Standard-Sets: ' + error.message });
+      setTimeout(() => setMessage(null), 5000);
+    } finally {
+      setLoadingDefault(false);
     }
   };
 
@@ -42,6 +97,20 @@ export default function CatalogManagement() {
 
   return (
     <div>
+      {/* Message Display */}
+      {message && (
+        <div style={{
+          padding: '12px 16px',
+          marginBottom: '16px',
+          borderRadius: '6px',
+          background: message.type === 'success' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+          border: `1px solid ${message.type === 'success' ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+          color: message.type === 'success' ? '#22c55e' : '#ef4444',
+        }}>
+          {message.text}
+        </div>
+      )}
+
       <div className="admin-section">
         <div className="admin-section-header">
           <div>
@@ -93,8 +162,102 @@ export default function CatalogManagement() {
               icon="🧮"
               description="Berechnungsformeln"
             />
+            <CatalogCard
+              title="Pumpen"
+              count={stats.pumps}
+              icon="⚙️"
+              description="Pumpen-Katalog"
+            />
           </div>
         )}
+      </div>
+
+      {/* Default Catalog Set Management */}
+      <div className="admin-section">
+        <div className="admin-section-header">
+          <div>
+            <h2 className="admin-section-title">⭐ Standard-Set</h2>
+            <p className="admin-section-description">
+              Definiere ein Standard-Set, das für alle Benutzer geladen wird
+            </p>
+          </div>
+        </div>
+
+        {defaultSetInfo && (
+          <div style={{ marginBottom: '20px' }}>
+            <div style={{
+              background: 'var(--bg-tertiary)',
+              border: '1px solid var(--border)',
+              borderRadius: '8px',
+              padding: '20px',
+            }}>
+              <div style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
+                <strong>Aktuelles Standard-Set:</strong>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '12px', fontSize: '13px' }}>
+                <div>
+                  <span style={{ color: 'var(--text-secondary)' }}>Modultypen:</span>{' '}
+                  <strong style={{ color: 'var(--accent)' }}>{defaultSetInfo.counts?.moduleTypes || 0}</strong>
+                </div>
+                <div>
+                  <span style={{ color: 'var(--text-secondary)' }}>Module:</span>{' '}
+                  <strong style={{ color: 'var(--accent)' }}>{defaultSetInfo.counts?.modules || 0}</strong>
+                </div>
+                <div>
+                  <span style={{ color: 'var(--text-secondary)' }}>Verbindungen:</span>{' '}
+                  <strong style={{ color: 'var(--accent)' }}>{defaultSetInfo.counts?.connections || 0}</strong>
+                </div>
+                <div>
+                  <span style={{ color: 'var(--text-secondary)' }}>Leitungen:</span>{' '}
+                  <strong style={{ color: 'var(--accent)' }}>{defaultSetInfo.counts?.pipes || 0}</strong>
+                </div>
+                <div>
+                  <span style={{ color: 'var(--text-secondary)' }}>Dimensionen:</span>{' '}
+                  <strong style={{ color: 'var(--accent)' }}>{defaultSetInfo.counts?.dimensions || 0}</strong>
+                </div>
+                <div>
+                  <span style={{ color: 'var(--text-secondary)' }}>Formeln:</span>{' '}
+                  <strong style={{ color: 'var(--accent)' }}>{defaultSetInfo.counts?.formulas || 0}</strong>
+                </div>
+                <div>
+                  <span style={{ color: 'var(--text-secondary)' }}>Pumpen:</span>{' '}
+                  <strong style={{ color: 'var(--accent)' }}>{defaultSetInfo.counts?.pumps || 0}</strong>
+                </div>
+              </div>
+              {defaultSetInfo.lastUpdated && (
+                <div style={{ marginTop: '12px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                  Zuletzt aktualisiert: {new Date(defaultSetInfo.lastUpdated).toLocaleString('de-DE')}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <button
+            onClick={handleSaveAsDefault}
+            disabled={loadingDefault}
+            className="admin-button admin-button-primary"
+            style={{ opacity: loadingDefault ? 0.6 : 1 }}
+          >
+            💾 Aktuellen Katalog als Standard speichern
+          </button>
+          <button
+            onClick={handleLoadDefault}
+            disabled={loadingDefault}
+            className="admin-button admin-button-secondary"
+            style={{ opacity: loadingDefault ? 0.6 : 1 }}
+          >
+            📥 Standard-Set in Kataloge laden
+          </button>
+        </div>
+
+        <div style={{ marginTop: '16px', padding: '16px', background: 'var(--bg-tertiary)', borderRadius: '6px', border: '1px solid var(--border)' }}>
+          <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-secondary)' }}>
+            💡 <strong>Hinweis:</strong> Das Standard-Set wird für alle Benutzer geladen, wenn ihre Kataloge leer sind.
+            Du kannst hier die aktuellen Kataloge als Standard definieren oder das Standard-Set in die aktuellen Kataloge laden.
+          </p>
+        </div>
       </div>
 
       <div className="admin-section">
