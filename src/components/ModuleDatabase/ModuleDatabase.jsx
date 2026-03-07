@@ -167,7 +167,10 @@ export default function ModuleDatabase({ modules, setModules, leitungskatalog = 
           return acc;
         }, {});
 
-        return Object.entries(grouped).map(([type, typeModules]) => (
+        // Sortiere die Gruppen alphabetisch nach Modultyp
+        return Object.entries(grouped)
+          .sort(([typeA], [typeB]) => typeA.localeCompare(typeB))
+          .map(([type, typeModules]) => (
           <div key={type} style={{ marginBottom: '32px' }}>
             <h3 style={{ marginBottom: '16px', color: 'var(--accent)', fontSize: '16px' }}>
               {type}
