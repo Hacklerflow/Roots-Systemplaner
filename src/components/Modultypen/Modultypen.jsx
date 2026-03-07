@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { catalogsAPI } from '../../api/client';
 
 export default function Modultypen({ modultypen, setModultypen }) {
   const [editingType, setEditingType] = useState(null);
@@ -7,7 +8,7 @@ export default function Modultypen({ modultypen, setModultypen }) {
   const [newEinheit, setNewEinheit] = useState('');
   const [editFormData, setEditFormData] = useState(null);
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!newTypeName.trim()) {
       alert('Bitte einen Namen eingeben!');
       return;
@@ -18,20 +19,30 @@ export default function Modultypen({ modultypen, setModultypen }) {
       return;
     }
 
-    const newType = {
-      id: `type-${Date.now()}`,
-      name: newTypeName.trim(),
-      berechnungsart: newBerechnungsart,
-      einheit: newBerechnungsart === 'pro_einheit' ? newEinheit.trim() : '',
-    };
+    try {
+      const response = await catalogsAPI.addModuleType({
+        name: newTypeName.trim(),
+        berechnungsart: newBerechnungsart,
+        einheit: newBerechnungsart === 'pro_einheit' ? newEinheit.trim() : '',
+      });
 
-    setModultypen([...modultypen, newType]);
-    setNewTypeName('');
-    setNewBerechnungsart('pro_unit');
-    setNewEinheit('');
+      const newType = {
+        id: response.moduleType.id,
+        name: response.moduleType.name,
+        berechnungsart: response.moduleType.berechnungsart,
+        einheit: response.moduleType.einheit || '',
+      };
+
+      setModultypen([...modultypen, newType]);
+      setNewTypeName('');
+      setNewBerechnungsart('pro_unit');
+      setNewEinheit('');
+    } catch (error) {
+      alert(`Fehler beim Speichern: ${error.message}`);
+    }
   };
 
-  const handleUpdate = (id, updates) => {
+  const handleUpdate = async (id, updates) => {
     if (!updates.name.trim()) {
       alert('Name darf nicht leer sein!');
       return;
@@ -42,18 +53,33 @@ export default function Modultypen({ modultypen, setModultypen }) {
       return;
     }
 
-    setModultypen(modultypen.map(t => t.id === id ? {
-      ...t,
-      name: updates.name.trim(),
-      berechnungsart: updates.berechnungsart,
-      einheit: updates.berechnungsart === 'pro_einheit' ? updates.einheit.trim() : '',
-    } : t));
-    setEditingType(null);
+    try {
+      await catalogsAPI.updateModuleType(id, {
+        name: updates.name.trim(),
+        berechnungsart: updates.berechnungsart,
+        einheit: updates.berechnungsart === 'pro_einheit' ? updates.einheit.trim() : '',
+      });
+
+      setModultypen(modultypen.map(t => t.id === id ? {
+        ...t,
+        name: updates.name.trim(),
+        berechnungsart: updates.berechnungsart,
+        einheit: updates.berechnungsart === 'pro_einheit' ? updates.einheit.trim() : '',
+      } : t));
+      setEditingType(null);
+    } catch (error) {
+      alert(`Fehler beim Aktualisieren: ${error.message}`);
+    }
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (confirm('Modultyp wirklich löschen?\n\nHinweis: Bestehende Module mit diesem Typ werden nicht gelöscht, aber der Typ wird nicht mehr in der Auswahl erscheinen.')) {
-      setModultypen(modultypen.filter(t => t.id !== id));
+      try {
+        await catalogsAPI.deleteModuleType(id);
+        setModultypen(modultypen.filter(t => t.id !== id));
+      } catch (error) {
+        alert(`Fehler beim Löschen: ${error.message}`);
+      }
     }
   };
 

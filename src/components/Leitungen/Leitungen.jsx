@@ -89,16 +89,8 @@ export default function Leitungen({ leitungskatalog, setLeitungskatalog, dimensi
       // Nicht zugeordnete Leitungen (connectionType ist "--" oder null)
       return leitungskatalog.filter(l => !l.connectionType || l.connectionType === '--');
     }
-    return leitungskatalog.filter(l => {
-      if (!l.connectionType || l.connectionType === '--') return false;
-      const type = getConnectionTypeFromName(l.connectionType);
-      return type === verbindungsTyp;
-    });
-  };
-
-  // Get connections by type (hydraulisch/elektrisch/steuerung)
-  const getConnectionsByType = (typ) => {
-    return verbindungsartenkatalog.filter(v => v.connectionType === typ);
+    // Direkter Vergleich des connectionType (ist jetzt schon der Typ, nicht mehr der Name)
+    return leitungskatalog.filter(l => l.connectionType === verbindungsTyp);
   };
 
   // Verfügbare Dimensionen (alle, da nicht verbindungstyp-spezifisch)
@@ -117,7 +109,6 @@ export default function Leitungen({ leitungskatalog, setLeitungskatalog, dimensi
       <Section
         title="Hydraulische Leitungen"
         leitungen={getLeitungenByType(CONNECTION_TYPES.HYDRAULIC)}
-        connections={getConnectionsByType(CONNECTION_TYPES.HYDRAULIC)}
         dimensionen={getAvailableDimensionen()}
         editingLeitung={editingLeitung}
         setEditingLeitung={setEditingLeitung}
@@ -129,7 +120,6 @@ export default function Leitungen({ leitungskatalog, setLeitungskatalog, dimensi
       <Section
         title="Elektrische Leitungen"
         leitungen={getLeitungenByType(CONNECTION_TYPES.ELECTRIC)}
-        connections={getConnectionsByType(CONNECTION_TYPES.ELECTRIC)}
         dimensionen={getAvailableDimensionen()}
         editingLeitung={editingLeitung}
         setEditingLeitung={setEditingLeitung}
@@ -141,7 +131,6 @@ export default function Leitungen({ leitungskatalog, setLeitungskatalog, dimensi
       <Section
         title="Steuerungsleitungen"
         leitungen={getLeitungenByType(CONNECTION_TYPES.CONTROL)}
-        connections={getConnectionsByType(CONNECTION_TYPES.CONTROL)}
         dimensionen={getAvailableDimensionen()}
         editingLeitung={editingLeitung}
         setEditingLeitung={setEditingLeitung}
@@ -154,7 +143,6 @@ export default function Leitungen({ leitungskatalog, setLeitungskatalog, dimensi
         <Section
           title="Nicht zugeordnete Leitungen"
           leitungen={getLeitungenByType(null)}
-          connections={verbindungsartenkatalog}
           dimensionen={getAvailableDimensionen()}
           editingLeitung={editingLeitung}
           setEditingLeitung={setEditingLeitung}
@@ -322,12 +310,7 @@ export default function Leitungen({ leitungskatalog, setLeitungskatalog, dimensi
   );
 }
 
-function Section({ title, leitungen, connections, dimensionen, editingLeitung, setEditingLeitung, onUpdate, onDelete, showAllConnections = false }) {
-  // Group connections by type for showAllConnections mode
-  const getConnectionsByType = (typ) => {
-    return connections.filter(v => v.connectionType === typ);
-  };
-
+function Section({ title, leitungen, dimensionen, editingLeitung, setEditingLeitung, onUpdate, onDelete, showAllConnections = false }) {
   return (
     <div style={{ marginBottom: '32px' }}>
       <h3 style={{ marginBottom: '16px', color: 'var(--accent)' }}>{title}</h3>

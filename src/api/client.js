@@ -194,6 +194,19 @@ export const catalogsAPI = {
     });
   },
 
+  updateModuleType: async (id, moduleTypeData) => {
+    return apiRequest(`/api/catalogs/module-types/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(moduleTypeData),
+    });
+  },
+
+  deleteModuleType: async (id) => {
+    return apiRequest(`/api/catalogs/module-types/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
   addConnection: async (connectionData) => {
     return apiRequest('/api/catalogs/connections', {
       method: 'POST',

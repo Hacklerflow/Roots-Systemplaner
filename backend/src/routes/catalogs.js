@@ -243,6 +243,97 @@ router.post('/module-types', async (req, res) => {
 });
 
 /**
+ * PUT /api/catalogs/module-types/:id
+ * Update a module type
+ */
+router.put('/module-types/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, kategorie, berechnungsart, einheit } = req.body;
+
+    const fields = [];
+    const values = [];
+    let paramCount = 1;
+
+    if (name !== undefined) {
+      fields.push(`name = $${paramCount++}`);
+      values.push(name);
+    }
+    if (kategorie !== undefined) {
+      fields.push(`kategorie = $${paramCount++}`);
+      values.push(kategorie);
+    }
+    if (berechnungsart !== undefined) {
+      fields.push(`berechnungsart = $${paramCount++}`);
+      values.push(berechnungsart);
+    }
+    if (einheit !== undefined) {
+      fields.push(`einheit = $${paramCount++}`);
+      values.push(einheit);
+    }
+
+    if (fields.length === 0) {
+      return res.status(400).json({ error: 'No valid fields to update' });
+    }
+
+    values.push(id);
+
+    const result = await query(`
+      UPDATE catalog_module_types
+      SET ${fields.join(', ')}
+      WHERE id = $${paramCount}
+      RETURNING *
+    `, values);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Module type not found' });
+    }
+
+    res.json({
+      message: 'Module type updated',
+      moduleType: result.rows[0],
+    });
+  } catch (error) {
+    if (error.code === '23505') {
+      return res.status(409).json({ error: 'Module type with this name already exists' });
+    }
+    console.error('Update module type error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * DELETE /api/catalogs/module-types/:id
+ * Delete a module type
+ */
+router.delete('/module-types/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await query(`
+      DELETE FROM catalog_module_types
+      WHERE id = $1
+      RETURNING *
+    `, [id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Module type not found' });
+    }
+
+    res.json({
+      message: 'Module type deleted',
+      moduleType: result.rows[0],
+    });
+  } catch (error) {
+    if (error.code === '23503') {
+      return res.status(409).json({ error: 'Cannot delete module type that is being used' });
+    }
+    console.error('Delete module type error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
  * POST /api/catalogs/modules
  * Add a new module
  */
@@ -296,11 +387,6 @@ router.post('/modules', async (req, res) => {
   } catch (error) {
     if (error.code === '23505') {
       return res.status(409).json({ error: 'Module with this name already exists' });
-    }
-    if (error.code === '23503') { // Foreign key violation
-      return res.status(400).json({
-        error: 'Invalid modultyp. The module type does not exist in catalog_module_types. Please create the module type first.'
-      });
     }
     console.error('Create module error:', error);
     res.status(500).json({ error: 'Internal server error: ' + error.message });
@@ -610,11 +696,6 @@ router.put('/modules/:id', async (req, res) => {
       module: result.rows[0],
     });
   } catch (error) {
-    if (error.code === '23503') { // Foreign key violation
-      return res.status(400).json({
-        error: 'Invalid modultyp. The module type does not exist in catalog_module_types. Please create the module type first.'
-      });
-    }
     console.error('Update module error:', error);
     res.status(500).json({ error: 'Internal server error: ' + error.message });
   }
