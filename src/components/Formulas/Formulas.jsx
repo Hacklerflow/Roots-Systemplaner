@@ -16,6 +16,11 @@ export default function Formulas({ formulaskatalog, setFormulaskatalog }) {
     beschreibung: '',
     variablen: [],
   });
+  const [availableVariables, setAvailableVariables] = useState([
+    'Rohrlänge',
+    'Rohrdimension',
+    'Faktor',
+  ]);
 
   const handleAdd = async () => {
     if (!newFormula.name) {
@@ -112,6 +117,18 @@ export default function Formulas({ formulaskatalog, setFormulaskatalog }) {
     }
   };
 
+  const handleRefreshVariables = () => {
+    // Standard-Variablen die in Verbindungen verfügbar sind
+    const standardVars = [
+      'Rohrlänge',       // connection.rohrlänge_m oder connection.laenge_meter
+      'Rohrdimension',   // connection.dimension (z.B. "DN50" -> 50)
+      'Faktor',          // connection.faktor (Standard: 1.4)
+    ];
+
+    setAvailableVariables(standardVars);
+    alert('Variablen aktualisiert! Diese Felder sind in Verbindungsdaten verfügbar.');
+  };
+
   return (
     <div style={{ padding: '32px', maxWidth: '1400px', margin: '0 auto' }}>
       <h2 style={{ marginTop: 0, marginBottom: '8px' }}>Formelkatalog</h2>
@@ -127,22 +144,51 @@ export default function Formulas({ formulaskatalog, setFormulaskatalog }) {
         padding: '16px',
         marginBottom: '24px',
       }}>
-        <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 600 }}>
-          Verfügbare Variablen
-        </h3>
-        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', fontSize: '13px' }}>
-          <code style={{ background: 'var(--bg-tertiary)', padding: '4px 8px', borderRadius: '4px' }}>
-            {'{{'} Rohrlänge {'}}'}
-          </code>
-          <code style={{ background: 'var(--bg-tertiary)', padding: '4px 8px', borderRadius: '4px' }}>
-            {'{{'} Rohrdimension {'}}'}
-          </code>
-          <code style={{ background: 'var(--bg-tertiary)', padding: '4px 8px', borderRadius: '4px' }}>
-            {'{{'} Faktor {'}}'}
-          </code>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+          <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 600 }}>
+            Verfügbare Variablen
+          </h3>
+          <button
+            onClick={handleRefreshVariables}
+            style={{
+              padding: '6px 12px',
+              background: 'var(--accent)',
+              color: 'var(--bg-primary)',
+              border: 'none',
+              borderRadius: '4px',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+            }}
+          >
+            🔄 Aktualisieren
+          </button>
         </div>
-        <p style={{ margin: '8px 0 0 0', fontSize: '12px', color: 'var(--text-secondary)' }}>
-          Beispiel: <code>(&#123;&#123;Rohrlänge&#125;&#125; * 2.4) / &#123;&#123;Faktor&#125;&#125;</code>
+        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', fontSize: '13px' }}>
+          {availableVariables.map((varName) => (
+            <code
+              key={varName}
+              style={{
+                background: 'var(--bg-tertiary)',
+                padding: '4px 8px',
+                borderRadius: '4px',
+                border: '1px solid var(--border)',
+              }}
+            >
+              {'{{'} {varName} {'}}'}
+            </code>
+          ))}
+        </div>
+        <p style={{ margin: '12px 0 0 0', fontSize: '12px', color: 'var(--text-secondary)' }}>
+          💡 Beispiel: <code>(&#123;&#123;Rohrlänge&#125;&#125; * 2.4) / &#123;&#123;Faktor&#125;&#125;</code>
+        </p>
+        <p style={{ margin: '8px 0 0 0', fontSize: '11px', color: 'var(--text-secondary)' }}>
+          <strong>Rohrlänge:</strong> Aus connection.rohrlänge_m oder connection.laenge_meter<br/>
+          <strong>Rohrdimension:</strong> Aus connection.dimension (z.B. "DN50" → 50)<br/>
+          <strong>Faktor:</strong> Aus connection.faktor (Standard: 1.4)
         </p>
       </div>
 
