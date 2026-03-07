@@ -41,9 +41,9 @@ export default function Verbindungen({ verbindungsartenkatalog, setVerbindungsar
         kuerzel: response.connection.kuerzel,
         connectionType: response.connection.typ,
         kompatible_leitungen: Array.isArray(response.connection.kompatible_leitungen)
-          ? response.connection.kompatible_leitungen
+          ? response.connection.kompatible_leitungen.map(id => parseInt(id))
           : (typeof response.connection.kompatible_leitungen === 'string'
-              ? JSON.parse(response.connection.kompatible_leitungen)
+              ? JSON.parse(response.connection.kompatible_leitungen).map(id => parseInt(id))
               : []),
       };
 
@@ -230,9 +230,9 @@ export default function Verbindungen({ verbindungsartenkatalog, setVerbindungsar
             </label>
             <select
               multiple
-              value={newVerbindungsart.kompatible_leitungen}
+              value={newVerbindungsart.kompatible_leitungen.map(id => String(id))}
               onChange={(e) => {
-                const selected = Array.from(e.target.selectedOptions, option => option.value);
+                const selected = Array.from(e.target.selectedOptions, option => parseInt(option.value));
                 setNewVerbindungsart({ ...newVerbindungsart, kompatible_leitungen: selected });
               }}
               style={{
@@ -358,9 +358,9 @@ function Section({ title, verbindungsarten, leitungen, connectionType, editingVe
                     <div>
                       <select
                         multiple
-                        value={verbindungsart.kompatible_leitungen || []}
+                        value={(verbindungsart.kompatible_leitungen || []).map(id => String(id))}
                         onChange={(e) => {
-                          const selected = Array.from(e.target.selectedOptions, option => option.value);
+                          const selected = Array.from(e.target.selectedOptions, option => parseInt(option.value));
                           onUpdate(verbindungsart.id, { kompatible_leitungen: selected });
                         }}
                         style={{

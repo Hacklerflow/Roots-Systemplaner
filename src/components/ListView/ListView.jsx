@@ -169,7 +169,7 @@ function ModuleCard({ module, modultypen = [], onUpdateModule }) {
             )}
           </div>
           <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-            {module.moduleType} | {module.inputs.length} Ein | {module.outputs.length} Aus
+            {module.moduleType} | {(module.inputs || []).length} Ein | {(module.outputs || []).length} Aus
             {hasPumps && ` | ${pumps.length} Pumpe${pumps.length > 1 ? 'n' : ''}`}
           </div>
         </div>
@@ -291,9 +291,9 @@ function ModuleCard({ module, modultypen = [], onUpdateModule }) {
           )}
 
           {/* Eingänge */}
-          {module.inputs.length > 0 && (
+          {(module.inputs || []).length > 0 && (
             <DetailSection title="Eingänge">
-              {module.inputs.map((input, idx) => (
+              {(module.inputs || []).map((input, idx) => (
                 <div
                   key={input.id}
                   style={{
@@ -308,8 +308,8 @@ function ModuleCard({ module, modultypen = [], onUpdateModule }) {
                   </div>
                   <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px' }}>
                     Typ: {CONNECTION_TYPE_LABELS[input.connectionType]}
-                    {input.allowedModuleTypes.length > 0 && (
-                      <div>Erlaubt: {input.allowedModuleTypes.join(', ')}</div>
+                    {(input.allowedModuleTypes || []).length > 0 && (
+                      <div>Erlaubt: {(input.allowedModuleTypes || []).join(', ')}</div>
                     )}
                   </div>
                 </div>
@@ -318,9 +318,9 @@ function ModuleCard({ module, modultypen = [], onUpdateModule }) {
           )}
 
           {/* Ausgänge */}
-          {module.outputs.length > 0 && (
+          {(module.outputs || []).length > 0 && (
             <DetailSection title="Ausgänge">
-              {module.outputs.map((output, idx) => (
+              {(module.outputs || []).map((output, idx) => (
                 <div
                   key={output.id}
                   style={{
@@ -348,8 +348,8 @@ function ModuleCard({ module, modultypen = [], onUpdateModule }) {
                   </div>
                   <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px' }}>
                     Typ: {CONNECTION_TYPE_LABELS[output.connectionType]}
-                    {output.allowedModuleTypes.length > 0 && (
-                      <div>Erlaubt: {output.allowedModuleTypes.join(', ')}</div>
+                    {(output.allowedModuleTypes || []).length > 0 && (
+                      <div>Erlaubt: {(output.allowedModuleTypes || []).join(', ')}</div>
                     )}
                     {output.pump?.enabled && output.pump?.förderhoehe_m > 0 && (
                       <div style={{ color: 'var(--accent)', fontWeight: 600, marginTop: '4px' }}>

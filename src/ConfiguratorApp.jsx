@@ -108,14 +108,22 @@ function ConfiguratorApp() {
 
       // Connections
       if (connectionsRes.connections?.length > 0) {
-        const convertedConnections = connectionsRes.connections.map(c => ({
-          id: c.id,
-          name: c.name,
-          kuerzel: c.kuerzel,
-          connectionType: c.typ,
-          kompatible_leitungen: Array.isArray(c.kompatible_leitungen) ? c.kompatible_leitungen :
-                                 (typeof c.kompatible_leitungen === 'string' ? JSON.parse(c.kompatible_leitungen) : []),
-        }));
+        const convertedConnections = connectionsRes.connections.map(c => {
+          let kompatible = [];
+          if (Array.isArray(c.kompatible_leitungen)) {
+            kompatible = c.kompatible_leitungen.map(id => parseInt(id));
+          } else if (typeof c.kompatible_leitungen === 'string') {
+            kompatible = JSON.parse(c.kompatible_leitungen).map(id => parseInt(id));
+          }
+
+          return {
+            id: c.id,
+            name: c.name,
+            kuerzel: c.kuerzel,
+            connectionType: c.typ,
+            kompatible_leitungen: kompatible,
+          };
+        });
         setVerbindungsartenkatalog(convertedConnections);
       }
 
