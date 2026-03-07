@@ -84,22 +84,52 @@ function ConfiguratorApp() {
         setModultypen(convertedModuleTypes);
       }
 
-      // Modules
+      // Modules - convert and resolve pump references
       if (modulesRes.modules?.length > 0) {
-        const convertedModules = modulesRes.modules.map(m => ({
-          name: m.name,
-          modultyp: m.modultyp,
-          hersteller: m.hersteller,
-          abmessungen: m.abmessungen,
-          gewichtKg: m.gewicht_kg,
-          leistungKw: m.leistung_kw,
-          volumenL: m.volumen_l,
-          preis: m.preis,
-          inputs: Array.isArray(m.eingaenge) ? m.eingaenge :
-                  (typeof m.eingaenge === 'string' ? JSON.parse(m.eingaenge) : []),
-          outputs: Array.isArray(m.ausgaenge) ? m.ausgaenge :
-                   (typeof m.ausgaenge === 'string' ? JSON.parse(m.ausgaenge) : []),
-        }));
+        const convertedModules = modulesRes.modules.map(m => {
+          const inputs = Array.isArray(m.eingaenge) ? m.eingaenge :
+                  (typeof m.eingaenge === 'string' ? JSON.parse(m.eingaenge) : []);
+          const outputs = Array.isArray(m.ausgaenge) ? m.ausgaenge :
+                   (typeof m.ausgaenge === 'string' ? JSON.parse(m.ausgaenge) : []);
+
+          // Resolve pump_id to full pump data
+          const resolvedinputs = inputs.map(inp => ({
+            ...inp,
+            pump: inp.pump?.pump_id && pumpsRes.pumps
+              ? {
+                  ...(pumpsRes.pumps.find(p => p.id === inp.pump.pump_id) || {}),
+                  pump_id: inp.pump.pump_id,
+                  nicht_in_stueckliste: inp.pump.nicht_in_stueckliste || false,
+                }
+              : inp.pump,
+          }));
+
+          const resolvedOutputs = outputs.map(out => ({
+            ...out,
+            pump: out.pump?.pump_id && pumpsRes.pumps
+              ? {
+                  ...(pumpsRes.pumps.find(p => p.id === out.pump.pump_id) || {}),
+                  pump_id: out.pump.pump_id,
+                  nicht_in_stueckliste: out.pump.nicht_in_stueckliste || false,
+                }
+              : out.pump,
+          }));
+
+          return {
+            id: m.id,
+            name: m.name,
+            modultyp: m.modultyp,
+            moduleType: m.modultyp,
+            hersteller: m.hersteller,
+            abmessungen: m.abmessungen,
+            gewichtKg: m.gewicht_kg,
+            leistungKw: m.leistung_kw,
+            volumenL: m.volumen_l,
+            preis: m.preis,
+            inputs: resolvedinputs,
+            outputs: resolvedOutputs,
+          };
+        });
         setModules(convertedModules);
       } else {
         // Set empty array if no modules from backend

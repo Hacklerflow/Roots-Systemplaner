@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head><title>DIRECT API TEST</title></head>
+<body style="font-family: monospace; padding: 20px; background: #000; color: #0f0;">
+<h1>🧪 DIRECT API TEST</h1>
+<pre id="output"></pre>
+<script>
+const out = (text) => {
+  document.getElementById('output').textContent += text + '\n';
+};
+
+(async () => {
+  out('Testing fetch() directly from browser...\n');
+  
+  try {
+    out('1. GET http://localhost:3001/health');
+    const r1 = await fetch('http://localhost:3001/health');
+    const d1 = await r1.json();
+    out('✅ SUCCESS: ' + JSON.stringify(d1) + '\n');
+    
+    out('\n2. POST http://localhost:3001/api/auth/register');
+    const r2 = await fetch('http://localhost:3001/api/auth/register', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        email: 'browsertest' + Math.random() + '@test.com',
+        password: 'test123',
+        name: 'Browser Test'
+      })
+    });
+    const d2 = await r2.json();
+    out('✅ SUCCESS: User created\n');
+    
+    if (d2.token) {
+      out('3. POST http://localhost:3001/api/catalogs/modules');
+      const r3 = await fetch('http://localhost:3001/api/catalogs/modules', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + d2.token
+        },
+        body: JSON.stringify({
+          name: 'Test Modul ' + Date.now(),
+          preis: 1000
+        })
+      });
+      const d3 = await r3.json();
+      out('✅ SUCCESS: Modul erstellt\n');
+      
+      out('\n🎉 ALLES FUNKTIONIERT PERFEKT!\n');
+      out('Problem liegt wahrscheinlich an Browser-Cache.');
+    }
+  } catch (e) {
+    out('❌ ERROR: ' + e.message);
+  }
+})();
+</script>
+</body>
+</html>

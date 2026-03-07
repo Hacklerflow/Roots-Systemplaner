@@ -5,15 +5,14 @@ import {
   getConnectionTypeOptions,
 } from '../../data/types';
 
-export default function InputOutputEditor({ connector, type, onUpdate, onDelete, leitungskatalog = [], verbindungsartenkatalog = [], dimensionskatalog = [], modultypen = [] }) {
+export default function InputOutputEditor({ connector, type, onUpdate, onDelete, leitungskatalog = [], verbindungsartenkatalog = [], dimensionskatalog = [], modultypen = [], pumpenkatalog = [] }) {
   const [dimension, setDimension] = useState(connector.dimension || '');
   const [verbindungsart, setVerbindungsart] = useState(connector.verbindungsart || '');
   const [connectionType, setConnectionType] = useState(connector.connectionType || CONNECTION_TYPES.HYDRAULIC);
   const [allowedModuleTypes, setAllowedModuleTypes] = useState(connector.allowedModuleTypes || []);
 
   // Pump configuration (for inputs and outputs with hydraulic connection type)
-  const [pumpEnabled, setPumpEnabled] = useState(connector.pump?.enabled || false);
-  const [pumpCapacity, setPumpCapacity] = useState(connector.pump?.förderhoehe_m || 0);
+  const [selectedPumpId, setSelectedPumpId] = useState(connector.pump?.pump_id || null);
   const [pumpExcludeFromBOM, setPumpExcludeFromBOM] = useState(connector.pump?.nicht_in_stueckliste || false);
 
   // Finde das Kürzel der gewählten Verbindungsart
@@ -30,14 +29,12 @@ export default function InputOutputEditor({ connector, type, onUpdate, onDelete,
     const finalVerbindungsart = updates.verbindungsart !== undefined ? updates.verbindungsart : verbindungsart;
     const label = getKuerzel(finalVerbindungsart);
     const finalConnectionType = updates.connectionType !== undefined ? updates.connectionType : connectionType;
-    const finalPumpEnabled = updates.pumpEnabled !== undefined ? updates.pumpEnabled : pumpEnabled;
-    const finalPumpCapacity = updates.pumpCapacity !== undefined ? updates.pumpCapacity : pumpCapacity;
+    const finalSelectedPumpId = updates.selectedPumpId !== undefined ? updates.selectedPumpId : selectedPumpId;
     const finalPumpExcludeFromBOM = updates.pumpExcludeFromBOM !== undefined ? updates.pumpExcludeFromBOM : pumpExcludeFromBOM;
 
     // Include pump data for both inputs and outputs with hydraulic connection type
-    const pumpData = (finalConnectionType === CONNECTION_TYPES.HYDRAULIC) ? {
-      enabled: finalPumpEnabled,
-      förderhoehe_m: finalPumpEnabled ? parseFloat(finalPumpCapacity) || 0 : 0,
+    const pumpData = (finalConnectionType === CONNECTION_TYPES.HYDRAULIC && finalSelectedPumpId) ? {
+      pump_id: finalSelectedPumpId,
       nicht_in_stueckliste: finalPumpExcludeFromBOM,
     } : null;
 
@@ -290,64 +287,44 @@ export default function InputOutputEditor({ connector, type, onUpdate, onDelete,
           border: '1px solid var(--border)',
           borderRadius: '4px',
         }}>
-          <div style={{ marginBottom: '8px' }}>
-            <label style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              fontSize: '12px',
-              fontWeight: 500,
-              cursor: 'pointer',
-            }}>
-              <input
-                type="checkbox"
-                checked={pumpEnabled}
-                onChange={(e) => {
-                  const enabled = e.target.checked;
-                  setPumpEnabled(enabled);
-                  handleSave({ pumpEnabled: enabled });
-                }}
-                style={{ cursor: 'pointer' }}
-              />
-              <span>Pumpe aktivieren</span>
+          <div style={{ marginBottom: '12px' }}>
+            <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', fontWeight: 500 }}>
+              Pumpe zuweisen
             </label>
+            <select
+              value={selectedPumpId || ''}
+              onChange={(e) => {
+                const pumpId = e.target.value ? parseInt(e.target.value) : null;
+                setSelectedPumpId(pumpId);
+                handleSave({ selectedPumpId: pumpId });
+              }}
+              style={{
+                width: '100%',
+                padding: '6px',
+                background: 'var(--bg-secondary)',
+                border: '1px solid var(--border)',
+                borderRadius: '4px',
+                color: 'var(--text-primary)',
+                fontFamily: 'inherit',
+                fontSize: '12px',
+              }}
+            >
+              <option value="">Keine Pumpe</option>
+              {pumpenkatalog.map(pump => (
+                <option key={pump.id} value={pump.id}>
+                  {pump.name} {pump.hersteller && `(${pump.hersteller})`} {pump.foerderhoehe_m && `- ${pump.foerderhoehe_m}m`}
+                </option>
+              ))}
+            </select>
+            {pumpenkatalog.length === 0 && (
+              <div style={{ fontSize: '10px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                Keine Pumpen im Katalog verfügbar. Legen Sie Pumpen im Einstellungen-Tab an.
+              </div>
+            )}
           </div>
 
-          {pumpEnabled && (
+          {selectedPumpId && (
             <div>
-              <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', fontWeight: 500 }}>
-                Förderhöhe (m)
-              </label>
-              <input
-                type="number"
-                min="0"
-                step="0.1"
-                value={pumpCapacity}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setPumpCapacity(value);
-                }}
-                onBlur={(e) => {
-                  const value = parseFloat(e.target.value) || 0;
-                  setPumpCapacity(value);
-                  handleSave({ pumpCapacity: value });
-                }}
-                style={{
-                  width: '100%',
-                  padding: '6px',
-                  background: 'var(--bg-secondary)',
-                  border: '1px solid var(--border)',
-                  borderRadius: '4px',
-                  color: 'var(--text-primary)',
-                  fontFamily: 'inherit',
-                  fontSize: '12px',
-                }}
-                placeholder="z.B. 10"
-              />
-              <div style={{ fontSize: '10px', color: 'var(--text-secondary)', marginTop: '4px', marginBottom: '12px' }}>
-                Maximale Förderhöhe der Pumpe in Metern
-              </div>
-
               <label style={{
                 display: 'flex',
                 alignItems: 'center',

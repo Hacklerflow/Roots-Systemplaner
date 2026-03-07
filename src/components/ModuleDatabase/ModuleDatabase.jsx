@@ -3,7 +3,7 @@ import { createModuleTemplate, createInput, createOutput } from '../../data/type
 import InputOutputEditor from '../ConfiguratorEditor/InputOutputEditor';
 import { catalogsAPI } from '../../api/client';
 
-export default function ModuleDatabase({ modules, setModules, leitungskatalog = [], verbindungsartenkatalog = [], dimensionskatalog = [], modultypen = [], onReloadCatalogs }) {
+export default function ModuleDatabase({ modules, setModules, leitungskatalog = [], verbindungsartenkatalog = [], dimensionskatalog = [], modultypen = [], pumpenkatalog = [], onReloadCatalogs }) {
   const [editingModule, setEditingModule] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -154,6 +154,7 @@ export default function ModuleDatabase({ modules, setModules, leitungskatalog = 
           verbindungsartenkatalog={verbindungsartenkatalog}
           dimensionskatalog={dimensionskatalog}
           modultypen={modultypen}
+          pumpenkatalog={pumpenkatalog}
         />
       )}
 
@@ -281,7 +282,7 @@ function ModuleCard({ module, onEdit, disabled, modultypen }) {
   );
 }
 
-function ModuleForm({ module, onSave, onCancel, onDelete, isCreating, leitungskatalog = [], verbindungsartenkatalog = [], dimensionskatalog = [], modultypen = [] }) {
+function ModuleForm({ module, onSave, onCancel, onDelete, isCreating, leitungskatalog = [], verbindungsartenkatalog = [], dimensionskatalog = [], modultypen = [], pumpenkatalog = [] }) {
   const [formData, setFormData] = useState(module);
 
   // Find module type info to determine if we need quantity field
@@ -480,6 +481,7 @@ function ModuleForm({ module, onSave, onCancel, onDelete, isCreating, leitungska
                 leitungskatalog={leitungskatalog}
                 verbindungsartenkatalog={verbindungsartenkatalog}
                 dimensionskatalog={dimensionskatalog}
+                pumpenkatalog={pumpenkatalog}
               />
             ))}
           </div>
@@ -521,6 +523,7 @@ function ModuleForm({ module, onSave, onCancel, onDelete, isCreating, leitungska
                 leitungskatalog={leitungskatalog}
                 verbindungsartenkatalog={verbindungsartenkatalog}
                 dimensionskatalog={dimensionskatalog}
+                pumpenkatalog={pumpenkatalog}
               />
             ))}
           </div>

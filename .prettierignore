@@ -1,0 +1,37 @@
+# Dependencies
+node_modules
+backend/node_modules
+
+# Build outputs
+dist
+build
+.next
+out
+
+# Backend generated files
+backend/uploads
+
+# Git
+.git
+
+# Docker
+Dockerfile
+docker-compose.yml
+
+# Package managers
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Environment
+.env
+.env.*
+
+# Logs
+*.log
+
+# Database
+*.sql
+
+# Documentation
+CHANGELOG.md

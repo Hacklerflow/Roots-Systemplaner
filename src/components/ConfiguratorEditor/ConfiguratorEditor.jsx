@@ -31,7 +31,7 @@ const edgeTypes = {
 };
 
 // Wrapper Komponente mit ReactFlowProvider
-export default function ConfiguratorEditor({ modules: moduleTemplates, configuration, setConfiguration, leitungskatalog, verbindungsartenkatalog, dimensionskatalog, modultypen, formulaskatalog }) {
+export default function ConfiguratorEditor({ modules: moduleTemplates, configuration, setConfiguration, leitungskatalog, verbindungsartenkatalog, dimensionskatalog, modultypen, formulaskatalog, pumpenkatalog }) {
   return (
     <ReactFlowProvider>
       <ConfiguratorEditorInner
@@ -43,13 +43,14 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
         dimensionskatalog={dimensionskatalog}
         modultypen={modultypen}
         formulaskatalog={formulaskatalog}
+        pumpenkatalog={pumpenkatalog}
       />
     </ReactFlowProvider>
   );
 }
 
 // Innere Komponente die useReactFlow verwenden kann
-function ConfiguratorEditorInner({ modules: moduleTemplates, configuration, setConfiguration, leitungskatalog, verbindungsartenkatalog, dimensionskatalog, modultypen, formulaskatalog }) {
+function ConfiguratorEditorInner({ modules: moduleTemplates, configuration, setConfiguration, leitungskatalog, verbindungsartenkatalog, dimensionskatalog, modultypen, formulaskatalog, pumpenkatalog }) {
   const reactFlowInstance = useReactFlow();
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -558,6 +559,7 @@ function ConfiguratorEditorInner({ modules: moduleTemplates, configuration, setC
           verbindungsartenkatalog={verbindungsartenkatalog}
           dimensionskatalog={dimensionskatalog}
           modultypen={modultypen}
+          pumpenkatalog={pumpenkatalog}
         />
       )}
 

@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { checkConnection } from '../../data/compatibilityChecker';
-import { CONNECTION_TYPE_LABELS, isBuilding } from '../../data/types';
+import { CONNECTION_TYPE_LABELS } from '../../data/types';
 
 export default function ListView({ configuration, setConfiguration, modultypen = [] }) {
-  const { building, modules = [], connections = [] } = configuration || {};
+  const { modules = [], connections = [] } = configuration || {};
 
-  if (!building && (!modules || modules.length === 0)) {
+  if (!modules || modules.length === 0) {
     return (
       <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-secondary)' }}>
-        Keine Konfiguration vorhanden. Erstelle zuerst ein Gebäude im Konfigurator.
+        Keine Konfiguration vorhanden. Erstelle zuerst Module im Konfigurator.
       </div>
     );
   }
@@ -16,13 +16,6 @@ export default function ListView({ configuration, setConfiguration, modultypen =
   return (
     <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto', minHeight: '100%' }}>
       <h2 style={{ marginTop: 0, marginBottom: '24px' }}>System-Übersicht</h2>
-
-      {/* Gebäude */}
-      {building && (
-        <Section title="Gebäude">
-          <ModuleCard module={building} />
-        </Section>
-      )}
 
       {/* Module */}
       {modules.length > 0 && (
@@ -106,7 +99,6 @@ function Section({ title, children }) {
 
 function ModuleCard({ module, modultypen = [], onUpdateModule }) {
   const [expanded, setExpanded] = useState(false);
-  const isBuildingModule = isBuilding(module);
 
   // Find module type info
   const moduleTypeInfo = modultypen?.find(t => t.name === module.moduleType);
@@ -133,7 +125,7 @@ function ModuleCard({ module, modultypen = [], onUpdateModule }) {
     <div
       style={{
         background: 'var(--bg-secondary)',
-        border: `2px solid ${isBuildingModule ? 'var(--accent)' : 'var(--success)'}`,
+        border: '2px solid var(--success)',
         borderRadius: '8px',
         marginBottom: '12px',
       }}

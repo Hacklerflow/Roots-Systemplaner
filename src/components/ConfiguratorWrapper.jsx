@@ -300,6 +300,7 @@ export default function ConfiguratorWrapper({
               dimensionskatalog={dimensionskatalog}
               modultypen={modultypen}
               formulaskatalog={formulaskatalog}
+              pumpenkatalog={pumpenkatalog}
             />
           )}
 
@@ -316,6 +317,7 @@ export default function ConfiguratorWrapper({
               configuration={configuration}
               setConfiguration={setConfiguration}
               modultypen={modultypen}
+              project={project}
             />
           )}
 
@@ -390,6 +392,7 @@ export default function ConfiguratorWrapper({
               verbindungsartenkatalog={verbindungsartenkatalog}
               dimensionskatalog={dimensionskatalog}
               modultypen={modultypen}
+              pumpenkatalog={pumpenkatalog}
               onReloadCatalogs={onReloadCatalogs}
             />
           )}

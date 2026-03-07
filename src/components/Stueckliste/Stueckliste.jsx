@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { utils, writeFile } from 'xlsx';
-import { isBuilding, CONNECTION_TYPE_LABELS } from '../../data/types';
+import { CONNECTION_TYPE_LABELS } from '../../data/types';
 import AirtableSettings from '../Settings/AirtableSettings';
 
-export default function Stueckliste({ configuration, setConfiguration, modultypen = [] }) {
-  const { building, modules = [], connections = [] } = configuration || {};
+export default function Stueckliste({ configuration, setConfiguration, modultypen = [], project = null }) {
+  const { modules = [], connections = [] } = configuration || {};
   const [showAirtableSettings, setShowAirtableSettings] = useState(false);
   const [isSendingToAirtable, setIsSendingToAirtable] = useState(false);
 
@@ -69,15 +69,17 @@ export default function Stueckliste({ configuration, setConfiguration, modultype
       const exportData = {
         // Metadaten
         exportDatum: new Date().toISOString(),
-        projektName: building?.name || 'Unbenanntes System',
+        projektName: project?.name || 'Unbenanntes Projekt',
 
-        // Gebäude-Informationen
-        gebaeude: building ? {
-          name: building.name || '',
-          baujahr: building.properties?.baujahr || '',
-          strasse: building.properties?.strasse || '',
-          hausnummer: building.properties?.hausnummer || '',
-          stockwerke: building.properties?.stockwerke || '',
+        // Projekt-Informationen
+        projekt: project ? {
+          name: project.name || '',
+          adresse: project.building_address || '',
+          baujahr: project.building_year || '',
+          beheizte_flaeche_m2: project.beheizte_flaeche || '',
+          anzahl_wohnungen: project.anzahl_wohnungen || '',
+          anzahl_stockwerke: project.anzahl_stockwerke || '',
+          eigentuemer: project.eigentuemer || '',
         } : null,
 
         // Komponenten/Module
@@ -113,7 +115,7 @@ export default function Stueckliste({ configuration, setConfiguration, modultype
 
         // Leitungen/Verbindungen
         leitungen: connections.map((conn, index) => {
-          const sourceModule = modules.find(m => m.id === conn.source) || building;
+          const sourceModule = modules.find(m => m.id === conn.source);
           const targetModule = modules.find(m => m.id === conn.target);
           const output = sourceModule?.outputs?.find(o => o.id === conn.sourceHandle);
           const input = targetModule?.inputs?.find(i => i.id === conn.targetHandle);
@@ -156,11 +158,12 @@ export default function Stueckliste({ configuration, setConfiguration, modultype
           fields: {
             'Projektname': exportData.projektName,
             'Exportdatum': exportData.exportDatum,
-            'Gebaeude_Name': exportData.gebaeude?.name || '',
-            'Gebaeude_Baujahr': exportData.gebaeude?.baujahr || null,
-            'Gebaeude_Strasse': exportData.gebaeude?.strasse || '',
-            'Gebaeude_Hausnummer': exportData.gebaeude?.hausnummer || '',
-            'Gebaeude_Stockwerke': exportData.gebaeude?.stockwerke || null,
+            'Projekt_Adresse': exportData.projekt?.adresse || '',
+            'Projekt_Baujahr': exportData.projekt?.baujahr || null,
+            'Projekt_Beheizte_Flaeche_m2': exportData.projekt?.beheizte_flaeche_m2 || null,
+            'Projekt_Anzahl_Wohnungen': exportData.projekt?.anzahl_wohnungen || null,
+            'Projekt_Anzahl_Stockwerke': exportData.projekt?.anzahl_stockwerke || null,
+            'Projekt_Eigentuemer': exportData.projekt?.eigentuemer || '',
             'Komponenten_Summe': exportData.summen.komponenten_summe_euro,
             'Leitungen_Summe': exportData.summen.leitungen_summe_euro,
             'Gesamtsumme': exportData.summen.gesamtsumme_euro,
@@ -273,7 +276,7 @@ export default function Stueckliste({ configuration, setConfiguration, modultype
     const exportData = {
       // Metadaten
       exportDatum: new Date().toISOString(),
-      projektName: building?.name || 'Unbenanntes System',
+      projektName: project?.name || 'Unbenanntes Projekt',
 
       // Gebäude-Informationen
       gebaeude: building ? {
@@ -317,7 +320,7 @@ export default function Stueckliste({ configuration, setConfiguration, modultype
 
       // Leitungen/Verbindungen
       leitungen: connections.map((conn, index) => {
-        const sourceModule = modules.find(m => m.id === conn.source) || building;
+        const sourceModule = modules.find(m => m.id === conn.source);
         const targetModule = modules.find(m => m.id === conn.target);
         const output = sourceModule?.outputs?.find(o => o.id === conn.sourceHandle);
         const input = targetModule?.inputs?.find(i => i.id === conn.targetHandle);
@@ -358,7 +361,7 @@ export default function Stueckliste({ configuration, setConfiguration, modultype
     const link = document.createElement('a');
     const timestamp = new Date().toISOString().slice(0, 10);
     link.href = url;
-    link.download = `Roots_Stueckliste_${building?.name || 'System'}_${timestamp}.json`;
+    link.download = `Roots_Stueckliste_${project?.name || 'Projekt'}_${timestamp}.json`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -399,7 +402,7 @@ export default function Stueckliste({ configuration, setConfiguration, modultype
 
     // Sheet 2: Verbindungen/Leitungen
     const connectionData = connections.map((conn, index) => {
-      const sourceModule = modules.find(m => m.id === conn.source) || building;
+      const sourceModule = modules.find(m => m.id === conn.source);
       const targetModule = modules.find(m => m.id === conn.target);
       const output = sourceModule?.outputs?.find(o => o.id === conn.sourceHandle);
       const input = targetModule?.inputs?.find(i => i.id === conn.targetHandle);
@@ -427,7 +430,7 @@ export default function Stueckliste({ configuration, setConfiguration, modultype
 
     // Dateiname mit Timestamp
     const timestamp = new Date().toISOString().slice(0, 10);
-    const filename = `Roots_Stueckliste_${building?.name || 'System'}_${timestamp}.xlsx`;
+    const filename = `Roots_Stueckliste_${project?.name || 'Projekt'}_${timestamp}.xlsx`;
 
     // Download
     writeFile(wb, filename);
@@ -455,18 +458,18 @@ export default function Stueckliste({ configuration, setConfiguration, modultype
 
   const gesamtsumme = moduleSumme + leitungenSumme;
 
-  if (!building && modules.length === 0) {
+  if (modules.length === 0) {
     return (
       <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-secondary)' }}>
-        Keine Konfiguration vorhanden. Erstelle zuerst ein System im Konfigurator.
+        Keine Konfiguration vorhanden. Erstelle zuerst Module im Konfigurator.
       </div>
     );
   }
 
   return (
     <div style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto' }}>
-      {/* Header mit Gebäude-Info */}
-      {building && (
+      {/* Header mit Projekteckdaten */}
+      {project && (
         <div style={{
           background: 'var(--bg-secondary)',
           border: '2px solid var(--accent)',
@@ -475,17 +478,26 @@ export default function Stueckliste({ configuration, setConfiguration, modultype
           marginBottom: '32px'
         }}>
           <h2 style={{ margin: 0, marginBottom: '16px', color: 'var(--accent)' }}>
-            {building.name}
+            {project.name || 'Projekt'}
           </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', fontSize: '13px' }}>
-            {building.properties?.baujahr && (
-              <div><span style={{ color: 'var(--text-secondary)' }}>Baujahr:</span> <strong>{building.properties.baujahr}</strong></div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px', fontSize: '13px' }}>
+            {project.building_address && (
+              <div><span style={{ color: 'var(--text-secondary)' }}>Adresse:</span> <strong>{project.building_address}</strong></div>
             )}
-            {building.properties?.strasse && building.properties?.hausnummer && (
-              <div><span style={{ color: 'var(--text-secondary)' }}>Adresse:</span> <strong>{building.properties.strasse} {building.properties.hausnummer}</strong></div>
+            {project.beheizte_flaeche && (
+              <div><span style={{ color: 'var(--text-secondary)' }}>Beheizte Fläche:</span> <strong>{project.beheizte_flaeche} m²</strong></div>
             )}
-            {building.properties?.stockwerke && (
-              <div><span style={{ color: 'var(--text-secondary)' }}>Stockwerke:</span> <strong>{building.properties.stockwerke}</strong></div>
+            {project.anzahl_wohnungen && (
+              <div><span style={{ color: 'var(--text-secondary)' }}>Anzahl Wohnungen:</span> <strong>{project.anzahl_wohnungen}</strong></div>
+            )}
+            {project.anzahl_stockwerke && (
+              <div><span style={{ color: 'var(--text-secondary)' }}>Anzahl Stockwerke:</span> <strong>{project.anzahl_stockwerke}</strong></div>
+            )}
+            {project.eigentuemer && (
+              <div><span style={{ color: 'var(--text-secondary)' }}>Eigentümer:</span> <strong>{project.eigentuemer}</strong></div>
+            )}
+            {project.building_year && (
+              <div><span style={{ color: 'var(--text-secondary)' }}>Baujahr:</span> <strong>{project.building_year}</strong></div>
             )}
           </div>
         </div>
@@ -698,7 +710,7 @@ export default function Stueckliste({ configuration, setConfiguration, modultype
             </thead>
             <tbody>
               {connections.map((conn, index) => {
-                const sourceModule = modules.find(m => m.id === conn.source) || building;
+                const sourceModule = modules.find(m => m.id === conn.source);
                 const targetModule = modules.find(m => m.id === conn.target);
                 const output = sourceModule?.outputs?.find(o => o.id === conn.sourceHandle);
                 const input = targetModule?.inputs?.find(i => i.id === conn.targetHandle);

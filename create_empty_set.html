@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Leeres System Set erstellen</title>
+</head>
+<body>
+    <h1>System Set Initialisierung</h1>
+    <button onclick="createEmptySet()">Leeres Set erstellen und aktivieren</button>
+    <button onclick="clearAll()">Alles löschen</button>
+    <div id="status"></div>
+
+    <script>
+        function createEmptySet() {
+            const emptySet = {
+                id: 'empty-set-' + Date.now(),
+                name: 'Leeres Set',
+                createdAt: new Date().toISOString(),
+                modules: [],
+                leitungskatalog: [],
+                verbindungsartenkatalog: [],
+                dimensionskatalog: [],
+                modultypen: []
+            };
+
+            // Speichere das Set
+            localStorage.setItem('roots-system-sets', JSON.stringify([emptySet]));
+            localStorage.setItem('roots-active-set-id', emptySet.id);
+
+            document.getElementById('status').innerHTML = '<p style="color: green;">✓ Leeres Set erstellt und aktiviert!</p><p>Gehe zurück zu <a href="http://localhost">http://localhost</a> und lade die Seite neu (Cmd+Shift+R)</p>';
+        }
+
+        function clearAll() {
+            localStorage.removeItem('roots-system-sets');
+            localStorage.removeItem('roots-active-set-id');
+            document.getElementById('status').innerHTML = '<p style="color: orange;">Alle System Sets gelöscht</p>';
+        }
+    </script>
+</body>
+</html>

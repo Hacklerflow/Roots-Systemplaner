@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import InputOutputEditor from './InputOutputEditor';
 import { createInput, createOutput, isBuilding, getModuleTypeOptions } from '../../data/types';
 
-export default function ElementModal({ element, onClose, onSave, onDelete, leitungskatalog = [], verbindungsartenkatalog = [], dimensionskatalog = [], modultypen = [] }) {
+export default function ElementModal({ element, onClose, onSave, onDelete, leitungskatalog = [], verbindungsartenkatalog = [], dimensionskatalog = [], modultypen = [], pumpenkatalog = [] }) {
   const [formData, setFormData] = useState({
     ...element,
     inputs: element?.inputs || [],
@@ -227,6 +227,7 @@ export default function ElementModal({ element, onClose, onSave, onDelete, leitu
                     verbindungsartenkatalog={verbindungsartenkatalog}
                     dimensionskatalog={dimensionskatalog}
                     modultypen={modultypen}
+                    pumpenkatalog={pumpenkatalog}
                   />
                 ))}
                 <button
@@ -267,6 +268,7 @@ export default function ElementModal({ element, onClose, onSave, onDelete, leitu
                     verbindungsartenkatalog={verbindungsartenkatalog}
                     dimensionskatalog={dimensionskatalog}
                     modultypen={modultypen}
+                    pumpenkatalog={pumpenkatalog}
                   />
                 ))}
                 <button

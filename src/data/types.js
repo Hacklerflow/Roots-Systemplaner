@@ -88,8 +88,18 @@ export function createModuleInstance(moduleTemplate) {
     ...moduleTemplate,
     id: `module-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     // Deep-copy inputs/outputs um Referenzen zu vermeiden
-    inputs: moduleTemplate.inputs.map(inp => ({ ...inp, id: `input-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` })),
-    outputs: moduleTemplate.outputs.map(out => ({ ...out, id: `output-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` })),
+    inputs: (moduleTemplate.inputs || []).map(inp => ({
+      ...inp,
+      id: `input-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      // Deep-copy pump data if exists
+      pump: inp.pump ? { ...inp.pump } : null,
+    })),
+    outputs: (moduleTemplate.outputs || []).map(out => ({
+      ...out,
+      id: `output-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      // Deep-copy pump data if exists
+      pump: out.pump ? { ...out.pump } : null,
+    })),
   };
 }
 

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug - Failed to fetch</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1e1e1e; color: #00ff00; }
+        .section { margin: 20px 0; padding: 15px; background: #2d2d2d; border-radius: 5px; }
+        .error { color: #ff5555; }
+        .success { color: #00ff00; }
+        .warning { color: #ffff55; }
+        button { background: #4CAF50; color: white; padding: 10px 20px; border: none; cursor: pointer; margin: 5px; }
+        pre { background: #1a1a1a; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Frontend Debug Console</h1>
+
+    <div class="section">
+        <h3>Schritt 1: API URL prüfen</h3>
+        <button onclick="checkAPIURL()">API URL anzeigen</button>
+        <pre id="apiurl-result">Warte auf Test...</pre>
+    </div>
+
+    <div class="section">
+        <h3>Schritt 2: Direkter fetch() Test</h3>
+        <button onclick="testDirectFetch()">fetch() Test</button>
+        <pre id="fetch-result">Warte auf Test...</pre>
+    </div>
+
+    <div class="section">
+        <h3>Schritt 3: CORS Preflight Test</h3>
+        <button onclick="testCORS()">CORS Test</button>
+        <pre id="cors-result">Warte auf Test...</pre>
+    </div>
+
+    <div class="section">
+        <h3>Schritt 4: Token prüfen</h3>
+        <button onclick="checkToken()">Token anzeigen</button>
+        <pre id="token-result">Warte auf Test...</pre>
+    </div>
+
+    <div class="section">
+        <h3>Schritt 5: Vollständiger API Test</h3>
+        <button onclick="fullAPITest()">Vollständiger Test</button>
+        <pre id="full-result">Warte auf Test...</pre>
+    </div>
+
+    <script>
+        function log(elementId, message, type = 'info') {
+            const el = document.getElementById(elementId);
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : 'warning';
+            el.innerHTML = `<span class="${className}">${message}</span>`;
+        }
+
+        function checkAPIURL() {
+            try {
+                // Versuche import.meta.env zu lesen (Vite)
+                const apiURL = 'http://localhost:3001'; // Fallback
+                const msg = `API URL: ${apiURL}\n\nVon wo läuft diese Seite?\nOrigin: ${window.location.origin}\n\nBrowser: ${navigator.userAgent}`;
+                log('apiurl-result', msg, 'success');
+            } catch (error) {
+                log('apiurl-result', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testDirectFetch() {
+            try {
+                log('fetch-result', 'Testing fetch()...', 'warning');
+
+                const response = await fetch('http://localhost:3001/health');
+                const data = await response.json();
+
+                const msg = `✅ SUCCESS!\n\nStatus: ${response.status}\nData: ${JSON.stringify(data, null, 2)}`;
+                log('fetch-result', msg, 'success');
+            } catch (error) {
+                const msg = `❌ FAILED!\n\nError: ${error.message}\nError Type: ${error.name}\n\nMögliche Ursachen:\n- Backend läuft nicht\n- CORS blockiert\n- Browser-Extension blockiert\n- Firewall`;
+                log('fetch-result', msg, 'error');
+            }
+        }
+
+        async function testCORS() {
+            try {
+                log('cors-result', 'Testing CORS...', 'warning');
+
+                const response = await fetch('http://localhost:3001/api/auth/login', {
+                    method: 'OPTIONS',
+                    headers: {
+                        'Origin': window.location.origin,
+                        'Access-Control-Request-Method': 'POST',
+                        'Access-Control-Request-Headers': 'content-type'
+                    }
+                });
+
+                const corsHeaders = {
+                    'Access-Control-Allow-Origin': response.headers.get('Access-Control-Allow-Origin'),
+                    'Access-Control-Allow-Methods': response.headers.get('Access-Control-Allow-Methods'),
+                    'Access-Control-Allow-Headers': response.headers.get('Access-Control-Allow-Headers'),
+                };
+
+                const msg = `✅ CORS OK!\n\nStatus: ${response.status}\nHeaders:\n${JSON.stringify(corsHeaders, null, 2)}`;
+                log('cors-result', msg, 'success');
+            } catch (error) {
+                const msg = `❌ CORS FAILED!\n\nError: ${error.message}`;
+                log('cors-result', msg, 'error');
+            }
+        }
+
+        function checkToken() {
+            try {
+                const token = localStorage.getItem('auth_token');
+                const user = localStorage.getItem('auth_user');
+
+                if (token) {
+                    const msg = `Token gefunden:\n${token.substring(0, 50)}...\n\nUser:\n${user}`;
+                    log('token-result', msg, 'success');
+                } else {
+                    log('token-result', '⚠️  Kein Token gefunden!\n\nSie müssen sich erst einloggen.', 'warning');
+                }
+            } catch (error) {
+                log('token-result', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function fullAPITest() {
+            const resultDiv = document.getElementById('full-result');
+            let output = '';
+
+            try {
+                output += '=== SCHRITT 1: Health Check ===\n';
+                const healthResponse = await fetch('http://localhost:3001/health');
+                const healthData = await healthResponse.json();
+                output += `✅ Health: ${JSON.stringify(healthData)}\n\n`;
+
+                output += '=== SCHRITT 2: Registrierung ===\n';
+                const testEmail = `test${Date.now()}@example.com`;
+                const registerResponse = await fetch('http://localhost:3001/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: testEmail,
+                        password: 'test123',
+                        name: 'Debug Test'
+                    })
+                });
+                const registerData = await registerResponse.json();
+
+                if (registerResponse.ok) {
+                    output += `✅ Registrierung: ${registerData.user.email}\n`;
+                    const token = registerData.token;
+                    output += `Token: ${token.substring(0, 30)}...\n\n`;
+
+                    output += '=== SCHRITT 3: Modul erstellen ===\n';
+                    const moduleResponse = await fetch('http://localhost:3001/api/catalogs/modules', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            name: `Debug Modul ${Date.now()}`,
+                            hersteller: 'Debug AG',
+                            preis: 1000
+                        })
+                    });
+                    const moduleData = await moduleResponse.json();
+
+                    if (moduleResponse.ok) {
+                        output += `✅✅✅ MODUL ERFOLGREICH ERSTELLT!\n`;
+                        output += `Name: ${moduleData.module.name}\n`;
+                        output += `ID: ${moduleData.module.id}\n\n`;
+                        output += '🎉 ALLE TESTS ERFOLGREICH!\n';
+                        output += '\nDas bedeutet:\n';
+                        output += '- Backend läuft ✅\n';
+                        output += '- API ist erreichbar ✅\n';
+                        output += '- CORS funktioniert ✅\n';
+                        output += '- Module können erstellt werden ✅\n\n';
+                        output += '⚠️  Wenn es in der Hauptapp nicht funktioniert:\n';
+                        output += '1. Browser-Cache leeren (Cmd+Shift+R)\n';
+                        output += '2. Alle Tabs schließen und neu öffnen\n';
+                        output += '3. Browser-Extensions deaktivieren\n';
+                        log('full-result', output, 'success');
+                    } else {
+                        output += `❌ Modul-Fehler: ${JSON.stringify(moduleData)}\n`;
+                        log('full-result', output, 'error');
+                    }
+                } else {
+                    output += `❌ Registrierungs-Fehler: ${JSON.stringify(registerData)}\n`;
+                    log('full-result', output, 'error');
+                }
+
+            } catch (error) {
+                output += `\n\n❌ ERROR: ${error.message}\n`;
+                output += `Error Type: ${error.name}\n`;
+                output += `\nDas ist der GLEICHE Fehler wie in der Hauptapp!\n`;
+                log('full-result', output, 'error');
+            }
+        }
+
+        // Auto-run on load
+        window.addEventListener('load', () => {
+            checkAPIURL();
+            setTimeout(() => testDirectFetch(), 500);
+        });
+    </script>
+</body>
+</html>

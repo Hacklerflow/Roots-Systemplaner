@@ -1,0 +1,29 @@
+{
+  "recommendations": [
+    // Frontend Development
+    "dbaeumer.vscode-eslint",
+    "dsznajder.es7-react-js-snippets",
+    "formulahendry.auto-rename-tag",
+    "christian-kohler.path-intellisense",
+
+    // Backend & Database
+    "ckolkman.vscode-postgres",
+    "mtxr.sqltools",
+    "mtxr.sqltools-driver-pg",
+
+    // DevOps
+    "ms-azuretools.vscode-docker",
+    "ms-vscode-remote.remote-ssh",
+
+    // Productivity
+    "wallabyjs.console-ninja",
+    "usernamehm.errorlens",
+    "mhutchie.git-graph",
+    "rangav.vscode-thunder-client",
+
+    // Code Quality
+    "wix.vscode-import-cost",
+    "wayou.vscode-todo-highlight",
+    "aaron-bond.better-comments"
+  ]
+}
