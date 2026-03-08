@@ -12,6 +12,7 @@ import Dimensionen from './Dimensionen/Dimensionen';
 import Modultypen from './Modultypen/Modultypen';
 import Formulas from './Formulas/Formulas';
 import Pumpen from './Settings/Pumpen';
+import Soles from './Soles/Soles';
 import SystemSets from './SystemSets/SystemSets';
 import PumpAnalysis from './PumpAnalysis/PumpAnalysis';
 import ErrorBoundary from './ErrorBoundary';
@@ -41,6 +42,8 @@ export default function ConfiguratorWrapper({
   setFormulaskatalog,
   pumpenkatalog,
   setPumpenkatalog,
+  soleskatalog,
+  setSoleskatalog,
   onReloadCatalogs,
   systemSets,
   activeSetId,
@@ -370,6 +373,13 @@ export default function ConfiguratorWrapper({
             <Pumpen
               pumpenkatalog={pumpenkatalog}
               setPumpenkatalog={setPumpenkatalog}
+            />
+          )}
+
+          {activeTab === 'einstellungen' && activeSettingsTab === 'soles' && (
+            <Soles
+              soleskatalog={soleskatalog}
+              onReload={onReloadCatalogs}
             />
           )}
 

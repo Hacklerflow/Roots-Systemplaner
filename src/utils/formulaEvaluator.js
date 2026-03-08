@@ -8,12 +8,15 @@
  * - {{Rohrlänge}} - Pipe length in meters
  * - {{Rohrdimension}} - Pipe dimension (DN value)
  * - {{Faktor}} - Correction factor (default 1.4)
+ * - {{Sole Name}} - Any sole factor from the sole catalog (e.g. "Wasser", "Glykol 30%")
+ *
+ * Variable names can contain letters, numbers, spaces, and special characters.
  *
  * Example usage:
  * ```javascript
- * const formula = "({{Rohrlänge}} * 2.4) / {{Faktor}}";
- * const data = { Rohrlänge: 10, Rohrdimension: 50, Faktor: 1.4 };
- * const result = evaluateFormula(formula, data); // Returns 17.14...
+ * const formula = "({{Rohrlänge}} * 2.4) / {{Glykol 30%}}";
+ * const data = { Rohrlänge: 10, "Glykol 30%": 1.10 };
+ * const result = evaluateFormula(formula, data); // Returns 21.82...
  * ```
  */
 
@@ -36,23 +39,28 @@ export function evaluateFormula(formula, values) {
 
   // Replace variables with actual values
   let expression = formula;
-  const variablePattern = /{{(\w+)}}/g;
+  // Pattern allows alphanumeric, spaces, underscores, and common punctuation for sole names
+  const variablePattern = /{{([^}]+)}}/g;
   const matches = [...formula.matchAll(variablePattern)];
 
   // Replace each variable
   matches.forEach(([placeholder, varName]) => {
-    const value = values[varName];
+    // Trim whitespace from variable name
+    const trimmedVarName = varName.trim();
+    const value = values[trimmedVarName];
 
     if (value === undefined || value === null) {
-      throw new Error(`Missing required variable: ${varName}`);
+      throw new Error(`Missing required variable: ${trimmedVarName}`);
     }
 
     if (typeof value !== 'number' || isNaN(value)) {
-      throw new Error(`Variable ${varName} must be a valid number, got: ${value}`);
+      throw new Error(`Variable ${trimmedVarName} must be a valid number, got: ${value}`);
     }
 
+    // Escape special regex characters in variable name for safe replacement
+    const escapedVarName = varName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     // Replace all occurrences of this variable
-    expression = expression.replace(new RegExp(`{{${varName}}}`, 'g'), value);
+    expression = expression.replace(new RegExp(`{{${escapedVarName}}}`, 'g'), value);
   });
 
   // Check if any unreplaced variables remain
@@ -101,9 +109,9 @@ export function validateFormula(formula) {
 
   try {
     // Extract variables from formula
-    const variablePattern = /{{(\w+)}}/g;
+    const variablePattern = /{{([^}]+)}}/g;
     const matches = [...formula.matchAll(variablePattern)];
-    const variables = [...new Set(matches.map(m => m[1]))];
+    const variables = [...new Set(matches.map(m => m[1].trim()))];
 
     // Test with dummy values
     const testData = {};
@@ -137,9 +145,9 @@ export function extractVariables(formula) {
     return [];
   }
 
-  const variablePattern = /{{(\w+)}}/g;
+  const variablePattern = /{{([^}]+)}}/g;
   const matches = [...formula.matchAll(variablePattern)];
-  return [...new Set(matches.map(m => m[1]))];
+  return [...new Set(matches.map(m => m[1].trim()))];
 }
 
 /**
@@ -165,13 +173,16 @@ export function getFormulaPreview(formula, values) {
   try {
     // Replace variables with values to show expanded formula
     let expression = formula;
-    const variablePattern = /{{(\w+)}}/g;
+    const variablePattern = /{{([^}]+)}}/g;
     const matches = [...formula.matchAll(variablePattern)];
 
     matches.forEach(([placeholder, varName]) => {
-      const value = values[varName];
+      const trimmedVarName = varName.trim();
+      const value = values[trimmedVarName];
       if (value !== undefined && value !== null) {
-        expression = expression.replace(new RegExp(`{{${varName}}}`, 'g'), value);
+        // Escape special regex characters in variable name for safe replacement
+        const escapedVarName = varName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        expression = expression.replace(new RegExp(`{{${escapedVarName}}}`, 'g'), value);
       }
     });
 

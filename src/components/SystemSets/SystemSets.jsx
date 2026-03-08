@@ -151,10 +151,63 @@ export default function SystemSets({
       padding: '24px',
     }}>
       {/* Header */}
-      <div style={{ marginBottom: '32px' }}>
+      <div style={{ marginBottom: '24px' }}>
         <h2 style={{ margin: 0, marginBottom: '4px', fontSize: '24px' }}>System Sets</h2>
         <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-secondary)' }}>
           Verwalte deine Katalog-Vorlagen (Module, Leitungen, Dimensionen, etc.)
+        </p>
+      </div>
+
+      {/* Info Box - Was wird gespeichert */}
+      <div style={{
+        background: 'var(--bg-secondary)',
+        border: '1px solid var(--border)',
+        borderRadius: '8px',
+        padding: '16px',
+        marginBottom: '24px',
+        maxWidth: '700px',
+      }}>
+        <h3 style={{
+          margin: '0 0 12px 0',
+          fontSize: '14px',
+          fontWeight: 600,
+          color: 'var(--text-primary)',
+        }}>
+          ℹ️ Ein System Set speichert folgende Kataloge:
+        </h3>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '8px',
+          fontSize: '13px',
+          color: 'var(--text-secondary)',
+        }}>
+          <div>
+            <strong style={{ color: 'var(--text-primary)' }}>Moduldatenbank:</strong>
+            <div style={{ marginLeft: '12px', marginTop: '4px', lineHeight: '1.6' }}>
+              • Module<br/>
+              • Modultypen
+            </div>
+          </div>
+          <div>
+            <strong style={{ color: 'var(--text-primary)' }}>Einstellungen:</strong>
+            <div style={{ marginLeft: '12px', marginTop: '4px', lineHeight: '1.6' }}>
+              • Verbindungen<br/>
+              • Leitungen<br/>
+              • Dimensionen<br/>
+              • Formeln<br/>
+              • Pumpen<br/>
+              • Sole
+            </div>
+          </div>
+        </div>
+        <p style={{
+          margin: '12px 0 0 0',
+          fontSize: '12px',
+          color: 'var(--text-secondary)',
+          fontStyle: 'italic',
+        }}>
+          💡 Tipp: Erstelle Sets für verschiedene Projekttypen (z.B. "Einfamilienhaus Standard", "Gewerbe 2024")
         </p>
       </div>
 

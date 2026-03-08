@@ -117,16 +117,31 @@ export default function Formulas({ formulaskatalog, setFormulaskatalog }) {
     }
   };
 
-  const handleRefreshVariables = () => {
-    // Standard-Variablen die in Verbindungen verfügbar sind
-    const standardVars = [
-      'Rohrlänge',       // connection.rohrlänge_m oder connection.laenge_meter
-      'Rohrdimension',   // connection.dimension (z.B. "DN50" -> 50)
-      'Faktor',          // connection.faktor (Standard: 1.4)
-    ];
+  const handleRefreshVariables = async () => {
+    try {
+      // Standard-Variablen die in Verbindungen verfügbar sind
+      const standardVars = [
+        'Rohrlänge',       // connection.rohrlänge_m oder connection.laenge_meter
+        'Rohrdimension',   // connection.dimension (z.B. "DN50" -> 50)
+        'Faktor',          // connection.faktor (Standard: 1.4)
+      ];
 
-    setAvailableVariables(standardVars);
-    alert('Variablen aktualisiert! Diese Felder sind in Verbindungsdaten verfügbar.');
+      // Lade Sole-Faktoren vom Backend
+      const solesResponse = await catalogsAPI.getSoles();
+      const soleFactors = solesResponse.soles || [];
+
+      // Füge jeden Sole-Faktor als Variable hinzu
+      const soleVars = soleFactors.map(sole => sole.name);
+
+      // Kombiniere alle Variablen
+      const allVars = [...standardVars, ...soleVars];
+
+      setAvailableVariables(allVars);
+      alert(`Variablen aktualisiert! ${soleVars.length} Sole-Faktoren gefunden.`);
+    } catch (error) {
+      console.error('Fehler beim Laden der Variablen:', error);
+      alert('Fehler beim Laden der Variablen: ' + error.message);
+    }
   };
 
   return (
@@ -183,12 +198,18 @@ export default function Formulas({ formulaskatalog, setFormulaskatalog }) {
           ))}
         </div>
         <p style={{ margin: '12px 0 0 0', fontSize: '12px', color: 'var(--text-secondary)' }}>
-          💡 Beispiel: <code>(&#123;&#123;Rohrlänge&#125;&#125; * 2.4) / &#123;&#123;Faktor&#125;&#125;</code>
+          💡 Beispiel: <code>(&#123;&#123;Rohrlänge&#125;&#125; * 2.4) / &#123;&#123;Glykol 30%&#125;&#125;</code>
         </p>
-        <p style={{ margin: '8px 0 0 0', fontSize: '11px', color: 'var(--text-secondary)' }}>
-          <strong>Rohrlänge:</strong> Aus connection.rohrlänge_m oder connection.laenge_meter<br/>
-          <strong>Rohrdimension:</strong> Aus connection.dimension (z.B. "DN50" → 50)<br/>
-          <strong>Faktor:</strong> Aus connection.faktor (Standard: 1.4)
+        <p style={{ margin: '8px 0 0 0', fontSize: '11px', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
+          <strong>Standard-Variablen:</strong><br/>
+          • <strong>Rohrlänge:</strong> Aus connection.rohrlänge_m oder connection.laenge_meter<br/>
+          • <strong>Rohrdimension:</strong> Aus connection.dimension (z.B. "DN50" → 50)<br/>
+          • <strong>Faktor:</strong> Aus connection.faktor (Standard: 1.4)<br/>
+          <br/>
+          <strong>Sole-Faktoren:</strong><br/>
+          • Jede Sole aus dem Sole-Katalog kann verwendet werden (z.B. "Wasser", "Glykol 30%")<br/>
+          • Der Faktor-Wert der Sole wird automatisch in die Formel eingesetzt<br/>
+          • Klicke "Aktualisieren" um die neuesten Sole-Daten zu laden
         </p>
       </div>
 

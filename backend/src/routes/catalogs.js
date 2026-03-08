@@ -1036,4 +1036,159 @@ router.delete('/pumps/:id', async (req, res) => {
   }
 });
 
+/**
+ * GET /api/catalogs/soles
+ * Get all soles (heat transfer fluids)
+ */
+router.get('/soles', async (req, res) => {
+  try {
+    console.log('📋 GET /soles - Fetching soles...');
+    const result = await query(`
+      SELECT * FROM catalog_soles
+      ORDER BY name
+    `);
+
+    res.json({ soles: result.rows });
+  } catch (error) {
+    console.error('Get soles error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * POST /api/catalogs/soles
+ * Create a new sole
+ */
+router.post('/soles', async (req, res) => {
+  try {
+    const { name, frostschutzmittel, notiz, faktor } = req.body;
+
+    // Validation
+    if (!name) {
+      return res.status(400).json({ error: 'Name is required' });
+    }
+    if (faktor === undefined || faktor === null) {
+      return res.status(400).json({ error: 'Faktor is required' });
+    }
+    if (isNaN(parseFloat(faktor))) {
+      return res.status(400).json({ error: 'Faktor must be a number' });
+    }
+
+    console.log('➕ POST /soles - Creating new sole:', { name, frostschutzmittel, notiz, faktor });
+
+    const result = await query(`
+      INSERT INTO catalog_soles (name, frostschutzmittel, notiz, faktor)
+      VALUES ($1, $2, $3, $4)
+      RETURNING *
+    `, [name, frostschutzmittel || null, notiz || null, parseFloat(faktor)]);
+
+    res.status(201).json({
+      message: 'Sole created',
+      sole: result.rows[0],
+    });
+  } catch (error) {
+    if (error.code === '23505') { // Unique violation
+      return res.status(409).json({ error: 'Sole with this name already exists' });
+    }
+    console.error('Create sole error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * PUT /api/catalogs/soles/:id
+ * Update a sole
+ */
+router.put('/soles/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, frostschutzmittel, notiz, faktor } = req.body;
+
+    // Build dynamic update query
+    const fields = [];
+    const values = [];
+    let paramCount = 1;
+
+    if (name !== undefined) {
+      fields.push(`name = $${paramCount++}`);
+      values.push(name);
+    }
+    if (frostschutzmittel !== undefined) {
+      fields.push(`frostschutzmittel = $${paramCount++}`);
+      values.push(frostschutzmittel || null);
+    }
+    if (notiz !== undefined) {
+      fields.push(`notiz = $${paramCount++}`);
+      values.push(notiz || null);
+    }
+    if (faktor !== undefined) {
+      if (isNaN(parseFloat(faktor))) {
+        return res.status(400).json({ error: 'Faktor must be a number' });
+      }
+      fields.push(`faktor = $${paramCount++}`);
+      values.push(parseFloat(faktor));
+    }
+
+    if (fields.length === 0) {
+      return res.status(400).json({ error: 'No fields to update' });
+    }
+
+    values.push(id);
+
+    console.log('✏️ PUT /soles/:id - Updating sole:', { id, fields: req.body });
+
+    const result = await query(`
+      UPDATE catalog_soles
+      SET ${fields.join(', ')}
+      WHERE id = $${paramCount}
+      RETURNING *
+    `, values);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Sole not found' });
+    }
+
+    res.json({
+      message: 'Sole updated',
+      sole: result.rows[0],
+    });
+  } catch (error) {
+    if (error.code === '23505') { // Unique violation
+      return res.status(409).json({ error: 'Sole with this name already exists' });
+    }
+    console.error('Update sole error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * DELETE /api/catalogs/soles/:id
+ * Delete a sole
+ */
+router.delete('/soles/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    console.log('🗑️ DELETE /soles/:id - Deleting sole:', id);
+
+    const result = await query(`
+      DELETE FROM catalog_soles
+      WHERE id = $1
+      RETURNING *
+    `, [id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Sole not found' });
+    }
+
+    res.json({
+      message: 'Sole deleted',
+      sole: result.rows[0],
+    });
+  } catch (error) {
+    console.error('Delete sole error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 export default router;

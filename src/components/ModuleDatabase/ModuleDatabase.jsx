@@ -74,23 +74,37 @@ export default function ModuleDatabase({ modules, setModules, leitungskatalog = 
     setError('');
 
     try {
+      // Validate module has a name
+      if (!moduleToDelete || !moduleToDelete.name) {
+        throw new Error('Modul hat keinen Namen - kann nicht gelöscht werden');
+      }
+
       // Find module in backend by name
       const backendModules = await catalogsAPI.getModules();
-      const backendMod = backendModules.modules.find(m => m.name === moduleToDelete.name);
+
+      if (!backendModules || !backendModules.modules || !Array.isArray(backendModules.modules)) {
+        throw new Error('Backend returned invalid data structure');
+      }
+
+      // Try exact match first, then trimmed match
+      let backendMod = backendModules.modules.find(m => m.name === moduleToDelete.name);
+      if (!backendMod) {
+        backendMod = backendModules.modules.find(m => m.name.trim() === moduleToDelete.name.trim());
+      }
 
       if (backendMod) {
         await catalogsAPI.deleteModule(backendMod.id);
       }
 
-      // Update local state
-      setModules(modules.filter((m) => m.id !== moduleToDelete.id));
-
-      // Reload catalogs
+      // Always reload catalogs from backend to ensure sync
       if (onReloadCatalogs) {
         await onReloadCatalogs();
+      } else {
+        // Fallback: Update local state if onReloadCatalogs is not available
+        setModules(modules.filter((m) => m.name !== moduleToDelete.name));
       }
     } catch (err) {
-      console.error('Fehler beim Löschen:', err);
+      console.error('❌ Fehler beim Löschen:', err);
       setError('Fehler beim Löschen: ' + err.message);
     } finally {
       setSaving(false);
@@ -594,7 +608,7 @@ function ModuleForm({ module, onSave, onCancel, onDelete, isCreating, leitungska
           <button
             type="button"
             onClick={() => {
-              onDelete(formData.id);
+              onDelete(formData);  // Pass the whole module, not just the ID
               onCancel();
             }}
             style={{

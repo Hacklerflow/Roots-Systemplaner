@@ -42,6 +42,7 @@ function ConfiguratorApp() {
   const [modultypen, setModultypen] = useState([]);
   const [formulaskatalog, setFormulaskatalog] = useState([]);
   const [pumpenkatalog, setPumpenkatalog] = useState([]);
+  const [soleskatalog, setSoleskatalog] = useState([]);
 
   // Load all catalogs from backend on mount
   useEffect(() => {
@@ -61,6 +62,7 @@ function ConfiguratorApp() {
         dimensionsRes,
         formulasRes,
         pumpsRes,
+        solesRes,
       ] = await Promise.all([
         catalogsAPI.getModuleTypes(),
         catalogsAPI.getModules(),
@@ -69,6 +71,7 @@ function ConfiguratorApp() {
         catalogsAPI.getDimensions(),
         catalogsAPI.getFormulas(),
         catalogsAPI.getPumps(),
+        catalogsAPI.getSoles(),
       ]);
 
       // Convert backend format to frontend format
@@ -197,6 +200,11 @@ function ConfiguratorApp() {
         setPumpenkatalog(pumpsRes.pumps);
       }
 
+      // Soles
+      if (solesRes.soles?.length > 0) {
+        setSoleskatalog(solesRes.soles);
+      }
+
       setCatalogsLoaded(true);
       console.log('✅ Kataloge vom Backend geladen');
     } catch (error) {
@@ -243,6 +251,11 @@ function ConfiguratorApp() {
     // Sync to backend handled in Pumpen component
   };
 
+  const handleSoleskatalogChange = async (newSoles) => {
+    setSoleskatalog(newSoles);
+    // Sync to backend handled in Soles component
+  };
+
   // System Sets (keeping for now - can be migrated later)
   const [systemSets, setSystemSets] = useState(() => {
     try {
@@ -285,6 +298,9 @@ function ConfiguratorApp() {
       verbindungsartenkatalog,
       dimensionskatalog,
       modultypen,
+      formulaskatalog,
+      pumpenkatalog,
+      soleskatalog,
     };
     setSystemSets([...systemSets, newSet]);
     setActiveSetId(newSet.id);
@@ -298,6 +314,9 @@ function ConfiguratorApp() {
     setVerbindungsartenkatalog(set.verbindungsartenkatalog || []);
     setDimensionskatalog(set.dimensionskatalog || []);
     setModultypen(set.modultypen || []);
+    setFormulaskatalog(set.formulaskatalog || []);
+    setPumpenkatalog(set.pumpenkatalog || []);
+    setSoleskatalog(set.soleskatalog || []);
     setActiveSetId(setId);
   };
 
@@ -427,7 +446,7 @@ function ConfiguratorApp() {
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
               zIndex: 1000,
             }}>
-              {['dimensionen', 'leitungen', 'verbindungen', 'modultypen', 'formulas', 'pumpen', 'systemsets'].map(tab => {
+              {['dimensionen', 'leitungen', 'verbindungen', 'modultypen', 'formulas', 'pumpen', 'soles', 'systemsets'].map(tab => {
                 const labels = {
                   verbindungen: 'Verbindungen',
                   leitungen: 'Leitungen',
@@ -435,6 +454,7 @@ function ConfiguratorApp() {
                   modultypen: 'Modultypen',
                   formulas: 'Formeln',
                   pumpen: 'Pumpen',
+                  soles: 'Sole',
                   systemsets: 'System Sets',
                 };
                 return (
@@ -485,6 +505,8 @@ function ConfiguratorApp() {
         setFormulaskatalog={handleFormulaskatalogChange}
         pumpenkatalog={pumpenkatalog}
         setPumpenkatalog={handlePumpenkatalogChange}
+        soleskatalog={soleskatalog}
+        setSoleskatalog={handleSoleskatalogChange}
         onReloadCatalogs={loadCatalogs}
         systemSets={systemSets}
         activeSetId={activeSetId}

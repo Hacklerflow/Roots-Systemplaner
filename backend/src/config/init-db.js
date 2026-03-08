@@ -86,6 +86,16 @@ async function insertDefaultData() {
     ON CONFLICT (name) DO NOTHING;
   `);
 
+  // Insert default soles
+  await pool.query(`
+    INSERT INTO catalog_soles (name, frostschutzmittel, notiz, faktor) VALUES
+    ('Wasser', 'Keins', 'Reines Wasser ohne Frostschutz', 1.0),
+    ('Glykol 25%', 'Ethylenglykol', '25% Glykol-Wasser-Gemisch, Frostschutz bis -12°C', 1.08),
+    ('Glykol 30%', 'Ethylenglykol', '30% Glykol-Wasser-Gemisch, Frostschutz bis -15°C', 1.10),
+    ('Glykol 35%', 'Ethylenglykol', '35% Glykol-Wasser-Gemisch, Frostschutz bis -18°C', 1.13)
+    ON CONFLICT (name) DO NOTHING;
+  `);
+
   console.log('✅ Default catalog data inserted');
 }
 

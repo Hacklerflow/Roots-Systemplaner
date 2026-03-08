@@ -294,6 +294,30 @@ export const catalogsAPI = {
       method: 'DELETE',
     });
   },
+
+  getSoles: async () => {
+    return apiRequest('/api/catalogs/soles');
+  },
+
+  addSole: async (soleData) => {
+    return apiRequest('/api/catalogs/soles', {
+      method: 'POST',
+      body: JSON.stringify(soleData),
+    });
+  },
+
+  updateSole: async (id, soleData) => {
+    return apiRequest(`/api/catalogs/soles/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(soleData),
+    });
+  },
+
+  deleteSole: async (id) => {
+    return apiRequest(`/api/catalogs/soles/${id}`, {
+      method: 'DELETE',
+    });
+  },
 };
 
 // Admin API

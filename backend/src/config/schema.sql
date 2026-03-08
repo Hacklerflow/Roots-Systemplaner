@@ -2,6 +2,7 @@
 -- PostgreSQL
 
 -- Drop existing tables (be careful in production!)
+DROP TABLE IF EXISTS catalog_soles CASCADE;
 DROP TABLE IF EXISTS catalog_formulas CASCADE;
 DROP TABLE IF EXISTS catalog_dimensions CASCADE;
 DROP TABLE IF EXISTS catalog_pipes CASCADE;
@@ -128,6 +129,17 @@ CREATE TABLE catalog_formulas (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Soles Catalog (Sole-Katalog)
+CREATE TABLE catalog_soles (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) UNIQUE NOT NULL,
+  frostschutzmittel VARCHAR(255),
+  notiz TEXT,
+  faktor DECIMAL(10,4) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Indexes for performance
 CREATE INDEX idx_projects_user_id ON projects(user_id);
 CREATE INDEX idx_projects_created_at ON projects(created_at DESC);
@@ -174,6 +186,9 @@ CREATE TRIGGER update_catalog_dimensions_updated_at BEFORE UPDATE ON catalog_dim
 CREATE TRIGGER update_catalog_formulas_updated_at BEFORE UPDATE ON catalog_formulas
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+CREATE TRIGGER update_catalog_soles_updated_at BEFORE UPDATE ON catalog_soles
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
 -- Comments for documentation
 COMMENT ON TABLE users IS 'User accounts for authentication';
 COMMENT ON TABLE projects IS 'Project metadata and overview information';
@@ -184,3 +199,4 @@ COMMENT ON TABLE catalog_connections IS 'Shared catalog of connection types';
 COMMENT ON TABLE catalog_pipes IS 'Shared catalog of pipes/cables';
 COMMENT ON TABLE catalog_dimensions IS 'Shared catalog of standard dimensions';
 COMMENT ON TABLE catalog_formulas IS 'Shared catalog of hydraulic calculation formulas';
+COMMENT ON TABLE catalog_soles IS 'Shared catalog of heat transfer fluids (Sole) with calculation factors';
