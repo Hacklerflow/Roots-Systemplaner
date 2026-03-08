@@ -118,7 +118,7 @@ export default function Dashboard() {
           <div className="user-info">
             {user?.role === 'admin' && (
               <button onClick={() => navigate('/admin')} className="admin-button" style={{ marginRight: '12px' }}>
-                🛠️ Admin
+                Admin
               </button>
             )}
             <span className="user-name">{user?.name}</span>
@@ -184,28 +184,28 @@ export default function Dashboard() {
                       className="project-action-button"
                       title="Öffnen"
                     >
-                      📂
+                      ▶
                     </button>
                     <button
                       onClick={() => setSettingsModalProject(project)}
                       className="project-action-button"
                       title="Einstellungen"
                     >
-                      ⚙️
+                      ⚙
                     </button>
                     <button
                       onClick={() => handleDuplicateProject(project.id)}
                       className="project-action-button"
                       title="Duplizieren"
                     >
-                      📋
+                      ⊕
                     </button>
                     <button
                       onClick={() => handleDeleteProject(project.id, project.name)}
                       className="project-action-button project-action-delete"
                       title="Löschen"
                     >
-                      🗑️
+                      ✕
                     </button>
                   </div>
                 </div>

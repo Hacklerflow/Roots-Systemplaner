@@ -235,7 +235,7 @@ export default function SystemSetsModal({
                 opacity: systemSets.length === 0 ? 0.5 : 1,
               }}
             >
-              📥 Alle Sets exportieren
+              Alle Sets exportieren
             </button>
             <button
               onClick={() => fileInputRef.current?.click()}
@@ -252,7 +252,7 @@ export default function SystemSetsModal({
                 fontSize: '13px',
               }}
             >
-              📂 Sets importieren
+              Sets importieren
             </button>
             <input
               ref={fileInputRef}
@@ -490,7 +490,7 @@ export default function SystemSetsModal({
                           fontSize: '12px',
                         }}
                       >
-                        💾 Export
+                        Export
                       </button>
                       <button
                         onClick={() => handleDelete(set.id, set.name)}

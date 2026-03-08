@@ -173,7 +173,7 @@ export default function SystemSets({
           fontWeight: 600,
           color: 'var(--text-primary)',
         }}>
-          ℹ️ Ein System Set speichert folgende Kataloge:
+          Ein System Set speichert folgende Kataloge:
         </h3>
         <div style={{
           display: 'grid',
@@ -207,7 +207,7 @@ export default function SystemSets({
           color: 'var(--text-secondary)',
           fontStyle: 'italic',
         }}>
-          💡 Tipp: Erstelle Sets für verschiedene Projekttypen (z.B. "Einfamilienhaus Standard", "Gewerbe 2024")
+          Tipp: Erstelle Sets für verschiedene Projekttypen (z.B. "Einfamilienhaus Standard", "Gewerbe 2024")
         </p>
       </div>
 
@@ -230,7 +230,7 @@ export default function SystemSets({
             opacity: systemSets.length === 0 ? 0.5 : 1,
           }}
         >
-          📥 Alle Sets exportieren
+          Alle Sets exportieren
         </button>
         <button
           onClick={() => fileInputRef.current?.click()}
@@ -247,7 +247,7 @@ export default function SystemSets({
             fontSize: '14px',
           }}
         >
-          📂 Sets importieren
+          Sets importieren
         </button>
         <input
           ref={fileInputRef}
@@ -471,7 +471,7 @@ export default function SystemSets({
                       fontSize: '13px',
                     }}
                   >
-                    💾 Export
+                    Export
                   </button>
                   <button
                     onClick={() => handleDelete(set.id, set.name)}

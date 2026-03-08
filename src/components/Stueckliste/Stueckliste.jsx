@@ -563,7 +563,7 @@ export default function Stueckliste({ configuration, setConfiguration, modultype
               opacity: modules.length === 0 && connections.length === 0 ? 0.5 : 1,
             }}
           >
-            📄 JSON Export
+            JSON Export
           </button>
           <button
             onClick={handleExportExcel}
@@ -581,7 +581,7 @@ export default function Stueckliste({ configuration, setConfiguration, modultype
               opacity: modules.length === 0 && connections.length === 0 ? 0.5 : 1,
             }}
           >
-            📥 Excel Export
+            Excel Export
           </button>
         </div>
       </div>

@@ -59,12 +59,12 @@ export default function CatalogManagement() {
     try {
       setLoadingDefault(true);
       await adminAPI.saveCurrentAsDefault();
-      setMessage({ type: 'success', text: '✅ Aktueller Katalog wurde als Standard-Set gespeichert!' });
+      setMessage({ type: 'success', text: 'Aktueller Katalog wurde als Standard-Set gespeichert!' });
       loadDefaultSetInfo(); // Reload info
       setTimeout(() => setMessage(null), 5000);
     } catch (error) {
       console.error('Fehler beim Speichern des Standard-Sets:', error);
-      setMessage({ type: 'error', text: '❌ Fehler beim Speichern des Standard-Sets: ' + error.message });
+      setMessage({ type: 'error', text: 'Fehler beim Speichern des Standard-Sets: ' + error.message });
       setTimeout(() => setMessage(null), 5000);
     } finally {
       setLoadingDefault(false);

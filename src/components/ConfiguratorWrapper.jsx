@@ -285,7 +285,7 @@ export default function ConfiguratorWrapper({
                 fontSize: '13px',
               }}
             >
-              {saving ? '💾 Speichert...' : '💾 Speichern'}
+              {saving ? 'Speichert...' : 'Speichern'}
             </button>
           )}
         </div>

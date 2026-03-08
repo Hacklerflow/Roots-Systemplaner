@@ -4,21 +4,6 @@
 
 ---
 
-## 📑 Inhaltsverzeichnis
-
-1. [Willkommen](#willkommen)
-2. [Erste Schritte](#erste-schritte)
-3. [Projekte verwalten](#projekte-verwalten)
-4. [System planen (Konfigurator)](#system-planen-konfigurator)
-5. [Stückliste & Pumpenanalyse](#stückliste--pumpenanalyse)
-6. [Kataloge anpassen](#kataloge-anpassen)
-7. [System Sets](#system-sets)
-8. [Export-Funktionen](#export-funktionen)
-9. [Tipps & Tricks](#tipps--tricks)
-10. [Häufige Fragen](#häufige-fragen)
-
----
-
 ## 🎯 Willkommen
 
 ### Was ist der Roots-Systemplaner?

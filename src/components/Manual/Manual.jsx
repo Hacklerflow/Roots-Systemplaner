@@ -61,7 +61,13 @@ export default function Manual() {
     html = html.replace(/_([^_]+)_/g, '<em>$1</em>');
 
     // Links [text](url)
-    html = html.replace(/\[([^\]]+)\]\(([^\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+    // Anchor links (starting with #) should not open in new tab
+    html = html.replace(/\[([^\]]+)\]\(([^\)]+)\)/g, (match, text, url) => {
+      if (url.startsWith('#')) {
+        return `<a href="${url}" class="anchor-link">${text}</a>`;
+      }
+      return `<a href="${url}" target="_blank" rel="noopener noreferrer">${text}</a>`;
+    });
 
     // Unordered lists
     html = html.replace(/^\s*[-*+]\s+(.+)$/gm, '<li>$1</li>');
@@ -183,6 +189,38 @@ export default function Manual() {
     return matches ? matches.length : 0;
   }, [manualContent, searchTerm]);
 
+  // Handle anchor link clicks
+  const handleContentClick = (e) => {
+    // Check if clicked element is an anchor link
+    const target = e.target;
+    if (target.tagName === 'A' && target.classList.contains('anchor-link')) {
+      e.preventDefault();
+      const href = target.getAttribute('href');
+      if (href && href.startsWith('#')) {
+        const id = href.substring(1);
+        // Find the element with matching id
+        // Since headers are generated from markdown, we need to find by text content
+        const headings = document.querySelectorAll('.manual-content h1, .manual-content h2, .manual-content h3, .manual-content h4, .manual-content h5, .manual-content h6');
+        for (const heading of headings) {
+          // Create id from heading text (lowercase, replace spaces with hyphens)
+          const headingId = heading.textContent
+            .toLowerCase()
+            .replace(/[^a-z0-9äöüß\s-]/g, '')
+            .replace(/\s+/g, '-')
+            .replace(/-+/g, '-')
+            .trim();
+
+          if (headingId === id) {
+            heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // Add some offset for sticky header
+            window.scrollBy(0, -100);
+            break;
+          }
+        }
+      }
+    }
+  };
+
   if (loading) {
     return (
       <div style={{
@@ -253,7 +291,7 @@ export default function Manual() {
         marginBottom: '24px',
       }}>
         <h2 style={{ margin: 0, marginBottom: '16px', fontSize: '24px' }}>
-          📖 Benutzerhandbuch
+          Benutzerhandbuch
         </h2>
 
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
@@ -309,6 +347,7 @@ export default function Manual() {
           maxWidth: '900px',
           margin: '0 auto',
         }}
+        onClick={handleContentClick}
         dangerouslySetInnerHTML={{ __html: displayContent }}
       />
 
@@ -385,9 +424,13 @@ export default function Manual() {
         .manual-content a {
           color: var(--accent);
           text-decoration: none;
+          cursor: pointer;
         }
         .manual-content a:hover {
           text-decoration: underline;
+        }
+        .manual-content a.anchor-link {
+          color: var(--accent);
         }
         .manual-content hr {
           border: none;

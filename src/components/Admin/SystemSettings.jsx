@@ -20,10 +20,10 @@ export default function SystemSettings() {
       setSaving(true);
       // TODO: API call to save settings
       // await adminAPI.updateSettings(settings);
-      alert('✓ Einstellungen gespeichert!');
+      alert('Einstellungen gespeichert!');
     } catch (error) {
       console.error('Fehler beim Speichern:', error);
-      alert('❌ Fehler beim Speichern der Einstellungen!');
+      alert('Fehler beim Speichern der Einstellungen!');
     } finally {
       setSaving(false);
     }
@@ -35,7 +35,7 @@ export default function SystemSettings() {
       <div className="admin-section">
         <div className="admin-section-header">
           <div>
-            <h2 className="admin-section-title">⚙️ Allgemeine Einstellungen</h2>
+            <h2 className="admin-section-title">Allgemeine Einstellungen</h2>
             <p className="admin-section-description">
               Grundlegende System-Konfiguration
             </p>
@@ -45,7 +45,7 @@ export default function SystemSettings() {
             disabled={saving}
             className="admin-button admin-button-success"
           >
-            {saving ? 'Speichert...' : '💾 Speichern'}
+            {saving ? 'Speichert...' : 'Speichern'}
           </button>
         </div>
 
