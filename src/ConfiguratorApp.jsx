@@ -446,7 +446,7 @@ function ConfiguratorApp() {
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
               zIndex: 1000,
             }}>
-              {['dimensionen', 'leitungen', 'verbindungen', 'modultypen', 'formulas', 'pumpen', 'soles', 'systemsets'].map(tab => {
+              {['dimensionen', 'leitungen', 'verbindungen', 'modultypen', 'formulas', 'pumpen', 'soles', 'manual', 'systemsets'].map(tab => {
                 const labels = {
                   verbindungen: 'Verbindungen',
                   leitungen: 'Leitungen',
@@ -455,6 +455,7 @@ function ConfiguratorApp() {
                   formulas: 'Formeln',
                   pumpen: 'Pumpen',
                   soles: 'Sole',
+                  manual: 'Benutzerhandbuch',
                   systemsets: 'System Sets',
                 };
                 return (

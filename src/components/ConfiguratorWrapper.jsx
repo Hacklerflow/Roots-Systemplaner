@@ -13,6 +13,7 @@ import Modultypen from './Modultypen/Modultypen';
 import Formulas from './Formulas/Formulas';
 import Pumpen from './Settings/Pumpen';
 import Soles from './Soles/Soles';
+import Manual from './Manual/Manual';
 import SystemSets from './SystemSets/SystemSets';
 import PumpAnalysis from './PumpAnalysis/PumpAnalysis';
 import ErrorBoundary from './ErrorBoundary';
@@ -381,6 +382,10 @@ export default function ConfiguratorWrapper({
               soleskatalog={soleskatalog}
               onReload={onReloadCatalogs}
             />
+          )}
+
+          {activeTab === 'einstellungen' && activeSettingsTab === 'manual' && (
+            <Manual />
           )}
 
           {activeTab === 'einstellungen' && activeSettingsTab === 'systemsets' && (
