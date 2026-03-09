@@ -75,9 +75,11 @@ export default function AirtableSettings({ onClose }) {
       const failedTables = results.filter(r => !r.success);
 
       if (allSuccess) {
+        // Automatisch speichern bei erfolgreichem Test
+        localStorage.setItem('airtable_settings', JSON.stringify(settings));
         setTestResult({
           success: true,
-          message: '✅ Alle Tabellen gefunden!\n\n✓ Projekte\n✓ Komponenten\n✓ Leitungen\n\nDie Einstellungen sind korrekt.'
+          message: '✅ Alle Tabellen gefunden!\n\n✓ Projekte\n✓ Komponenten\n✓ Leitungen\n\nDie Einstellungen wurden automatisch gespeichert.'
         });
       } else {
         let errorMessage = '❌ Folgende Tabellen fehlen:\n\n';

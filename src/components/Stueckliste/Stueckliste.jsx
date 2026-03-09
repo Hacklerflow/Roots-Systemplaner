@@ -54,9 +54,9 @@ export default function Stueckliste({ configuration, setConfiguration, modultype
     }
 
     const settings = JSON.parse(savedSettings);
-    const { personalAccessToken, baseId, tableName } = settings;
+    const { personalAccessToken, baseId } = settings;
 
-    if (!personalAccessToken || !baseId || !tableName) {
+    if (!personalAccessToken || !baseId) {
       alert('Airtable-Einstellungen sind unvollständig!');
       setShowAirtableSettings(true);
       return;
@@ -158,12 +158,11 @@ export default function Stueckliste({ configuration, setConfiguration, modultype
           fields: {
             'Projektname': exportData.projektName,
             'Exportdatum': exportData.exportDatum,
-            'Projekt_Adresse': exportData.projekt?.adresse || '',
-            'Projekt_Baujahr': exportData.projekt?.baujahr || null,
-            'Projekt_Beheizte_Flaeche_m2': exportData.projekt?.beheizte_flaeche_m2 || null,
-            'Projekt_Anzahl_Wohnungen': exportData.projekt?.anzahl_wohnungen || null,
-            'Projekt_Anzahl_Stockwerke': exportData.projekt?.anzahl_stockwerke || null,
-            'Projekt_Eigentuemer': exportData.projekt?.eigentuemer || '',
+            'Gebaeude_Name': project?.name || '',
+            'Gebaeude_Baujahr': project?.building_year || '',
+            'Gebaeude_Strasse': project?.building_address || '',
+            'Gebaeude_Hausnummer': '',
+            'Gebaeude_Stockwerke': project?.anzahl_stockwerke || '',
             'Komponenten_Summe': exportData.summen.komponenten_summe_euro,
             'Leitungen_Summe': exportData.summen.leitungen_summe_euro,
             'Gesamtsumme': exportData.summen.gesamtsumme_euro,
