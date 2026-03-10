@@ -1,0 +1,34 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"emmet.includeLanguages": {
+			"javascript": "javascriptreact"
+		},
+		"git.confirmSync": false,
+		"vscode-postgres.showExplorer": true,
+		"console-ninja.featureSet": "Community",
+		"todohighlight.keywords": [
+			{
+				"text": "TODO:",
+				"color": "#fff",
+				"backgroundColor": "#ffbd2e",
+				"overviewRulerColor": "grey"
+			},
+			{
+				"text": "FIXME:",
+				"color": "#fff",
+				"backgroundColor": "#f06292",
+				"overviewRulerColor": "grey"
+			},
+			{
+				"text": "NOTE:",
+				"color": "#fff",
+				"backgroundColor": "#64b5f6"
+			}
+		]
+	}
+}

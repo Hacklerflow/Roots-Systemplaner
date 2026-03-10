@@ -3,23 +3,13 @@ export default function BuildingNode({ data }) {
 
   return (
     <div
-      className="building-node"
+      className="bg-background-secondary border-2 border-accent rounded-lg p-4 min-w-[200px] min-h-[100px] cursor-pointer relative"
       onClick={onClick}
-      style={{
-        background: 'var(--bg-secondary)',
-        border: '2px solid var(--accent)',
-        borderRadius: '8px',
-        padding: '16px',
-        minWidth: '200px',
-        minHeight: '100px',
-        cursor: 'pointer',
-        position: 'relative',
-      }}
     >
-      <div style={{ fontWeight: 600, fontSize: '14px', marginBottom: '4px' }}>
+      <div className="font-semibold text-sm mb-1">
         {name}
       </div>
-      <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+      <div className="text-xs text-foreground-secondary">
         Gebäude
       </div>
       {/* Gebäude hat keine Ein-/Ausgänge - ist nur Info-Container */}

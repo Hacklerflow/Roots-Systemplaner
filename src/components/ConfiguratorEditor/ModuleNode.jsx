@@ -1,5 +1,6 @@
 import { Handle, Position } from '@xyflow/react';
 import { getConnectionTypeColor } from '../../data/compatibilityChecker';
+import { cn } from '@/lib/utils';
 
 export default function ModuleNode({ data }) {
   const { name, moduleType, properties, inputs = [], outputs = [], onClick } = data;
@@ -17,40 +18,23 @@ export default function ModuleNode({ data }) {
 
   return (
     <div
-      className="module-node"
+      className="bg-background-secondary border-2 border-success rounded-md p-2.5 min-w-[160px] min-h-[80px] cursor-pointer relative"
       onClick={onClick}
-      style={{
-        background: 'var(--bg-secondary)',
-        border: '2px solid var(--success)',
-        borderRadius: '6px',
-        padding: '10px',
-        minWidth: '160px',
-        minHeight: '80px',
-        cursor: 'pointer',
-        position: 'relative',
-      }}
     >
       {/* Modul-Info */}
-      <div style={{ fontWeight: 600, fontSize: '13px', marginBottom: '2px' }}>
+      <div className="font-semibold text-[13px] mb-0.5">
         {name}
       </div>
-      <div style={{ fontSize: '10px', color: 'var(--text-secondary)', marginBottom: hasPump ? '4px' : '0' }}>
+      <div className={cn(
+        "text-[10px] text-foreground-secondary",
+        hasPump ? "mb-1" : "mb-0"
+      )}>
         {subtitle}
       </div>
 
       {/* Pump Badge */}
       {hasPump && (
-        <div style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '4px',
-          padding: '2px 6px',
-          background: 'var(--accent)',
-          color: 'var(--bg-primary)',
-          borderRadius: '10px',
-          fontSize: '9px',
-          fontWeight: 600,
-        }}>
+        <div className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-accent text-background rounded-[10px] text-[9px] font-semibold">
           <span>💧</span>
           <span>PUMPE</span>
         </div>
@@ -77,20 +61,9 @@ export default function ModuleNode({ data }) {
             />
             {input.label && input.label.trim() !== '' && (
               <div
+                className="absolute -left-8 text-[9px] font-semibold text-foreground bg-black/50 px-1 py-0.5 rounded-[3px] whitespace-nowrap pointer-events-none font-mono uppercase"
                 style={{
-                  position: 'absolute',
-                  left: '-32px',
                   top: `calc(${yOffset}% - 8px)`,
-                  fontSize: '9px',
-                  fontWeight: 600,
-                  color: 'var(--text-primary)',
-                  background: 'rgba(0, 0, 0, 0.5)',
-                  padding: '2px 4px',
-                  borderRadius: '3px',
-                  whiteSpace: 'nowrap',
-                  pointerEvents: 'none',
-                  fontFamily: 'monospace',
-                  textTransform: 'uppercase',
                 }}
               >
                 {input.label}
@@ -121,20 +94,9 @@ export default function ModuleNode({ data }) {
             />
             {output.label && output.label.trim() !== '' && (
               <div
+                className="absolute -right-8 text-[9px] font-semibold text-foreground bg-black/50 px-1 py-0.5 rounded-[3px] whitespace-nowrap pointer-events-none font-mono uppercase"
                 style={{
-                  position: 'absolute',
-                  right: '-32px',
                   top: `calc(${yOffset}% - 8px)`,
-                  fontSize: '9px',
-                  fontWeight: 600,
-                  color: 'var(--text-primary)',
-                  background: 'rgba(0, 0, 0, 0.5)',
-                  padding: '2px 4px',
-                  borderRadius: '3px',
-                  whiteSpace: 'nowrap',
-                  pointerEvents: 'none',
-                  fontFamily: 'monospace',
-                  textTransform: 'uppercase',
                 }}
               >
                 {output.label}

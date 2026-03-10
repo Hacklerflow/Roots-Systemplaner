@@ -1,6 +1,22 @@
 import { useState, useEffect } from 'react';
 import InputOutputEditor from './InputOutputEditor';
 import { createInput, createOutput, isBuilding, getModuleTypeOptions } from '../../data/types';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 export default function ElementModal({ element, onClose, onSave, onDelete, leitungskatalog = [], verbindungsartenkatalog = [], dimensionskatalog = [], modultypen = [], pumpenkatalog = [] }) {
   const [formData, setFormData] = useState({
@@ -99,267 +115,187 @@ export default function ElementModal({ element, onClose, onSave, onDelete, leitu
   };
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: 'rgba(0, 0, 0, 0.8)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000,
-      }}
-      onClick={onClose}
-    >
-      <div
-        style={{
-          background: 'var(--bg-secondary)',
-          border: '1px solid var(--border)',
-          borderRadius: '8px',
-          padding: '24px',
-          maxWidth: '900px',
-          width: '90%',
-          maxHeight: '90vh',
-          overflow: 'auto',
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 style={{ marginTop: 0, marginBottom: '24px' }}>
-          {isBuildingElement ? 'Gebäude bearbeiten' : 'Modul bearbeiten'}
-        </h2>
+    <Dialog open={!!element} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="bg-background-secondary border-border max-w-[900px] max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-xl font-semibold">
+            {isBuildingElement ? 'Gebäude bearbeiten' : 'Modul bearbeiten'}
+          </DialogTitle>
+        </DialogHeader>
 
-        {/* Name */}
-        <div style={{ marginBottom: '24px' }}>
-          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
-            Name
-          </label>
-          <input
-            type="text"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            style={{
-              width: '100%',
-              padding: '8px',
-              background: 'var(--bg-tertiary)',
-              border: '1px solid var(--border)',
-              borderRadius: '4px',
-              color: 'var(--text-primary)',
-              fontFamily: 'inherit',
-            }}
-          />
-        </div>
-
-        {/* Modultyp (nur für Module) */}
-        {!isBuildingElement && (
-          <div style={{ marginBottom: '24px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
-              Modultyp
+        <div className="space-y-6">
+          {/* Name */}
+          <div className="space-y-2">
+            <label htmlFor="element-name" className="block text-[13px] font-semibold">
+              Name
             </label>
-            <select
-              value={formData.moduleType || ''}
-              onChange={(e) => setFormData({ ...formData, moduleType: e.target.value })}
-              style={{
-                width: '100%',
-                padding: '8px',
-                background: 'var(--bg-tertiary)',
-                border: '1px solid var(--border)',
-                borderRadius: '4px',
-                color: 'var(--text-primary)',
-                fontFamily: 'inherit',
-              }}
-            >
-              {getModuleTypeOptions().map(type => (
-                <option key={type} value={type}>{type}</option>
-              ))}
-            </select>
-          </div>
-        )}
-
-        {/* Eigenschaften */}
-        <Section title="Eigenschaften">
-          {isProEinheit && (
-            <FormField
-              label={`Menge (${einheit})`}
-              type="number"
-              value={formData.properties?.menge ?? null}
-              onChange={(value) => handleChange('properties', 'menge', value)}
+            <Input
+              id="element-name"
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="bg-background-tertiary border-border focus-visible:border-accent focus-visible:ring-accent/10"
             />
-          )}
-          {Object.keys(formData.properties || {}).map((key) => {
-            // Skip menge if it's shown separately above
-            if (key === 'menge' && isProEinheit) return null;
+          </div>
 
-            // Dynamic label for preis_euro
-            let label = formatLabel(key);
-            if (key === 'preis_euro' && isProEinheit) {
-              label = `Preis pro ${einheit} (€)`;
-            } else if (key === 'preis_euro') {
-              label = 'Preis (€)';
-            }
-
-            return (
-              <FormField
-                key={key}
-                label={label}
-                value={formData.properties[key]}
-                onChange={(value) => handleChange('properties', key, value)}
-              />
-            );
-          })}
-        </Section>
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
-          {/* Eingänge (nicht für Gebäude) */}
+          {/* Modultyp (nur für Module) */}
           {!isBuildingElement && (
-            <div>
-              <Section title={`Eingänge (${formData.inputs.length}/12)`}>
-                {formData.inputs.map((input, idx) => (
-                  <InputOutputEditor
-                    key={input.id}
-                    connector={input}
-                    type="input"
-                    onUpdate={(updated) => handleUpdateInput(idx, updated)}
-                    onDelete={() => handleDeleteInput(idx)}
-                    leitungskatalog={leitungskatalog}
-                    verbindungsartenkatalog={verbindungsartenkatalog}
-                    dimensionskatalog={dimensionskatalog}
-                    modultypen={modultypen}
-                    pumpenkatalog={pumpenkatalog}
-                  />
-                ))}
-                <button
-                  type="button"
-                  onClick={handleAddInput}
-                  disabled={formData.inputs.length >= 12}
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    background: formData.inputs.length >= 12 ? 'var(--bg-tertiary)' : 'var(--success)',
-                    color: formData.inputs.length >= 12 ? 'var(--text-secondary)' : 'var(--bg-primary)',
-                    border: 'none',
-                    borderRadius: '4px',
-                    fontSize: '12px',
-                    fontWeight: 600,
-                    cursor: formData.inputs.length >= 12 ? 'not-allowed' : 'pointer',
-                    fontFamily: 'inherit',
-                  }}
-                >
-                  + Eingang hinzufügen
-                </button>
-              </Section>
+            <div className="space-y-2">
+              <label htmlFor="module-type" className="block text-[13px] font-semibold">
+                Modultyp
+              </label>
+              <Select
+                value={formData.moduleType || ''}
+                onValueChange={(value) => setFormData({ ...formData, moduleType: value })}
+              >
+                <SelectTrigger className="bg-background-tertiary border-border focus:ring-accent">
+                  <SelectValue placeholder="Modultyp auswählen" />
+                </SelectTrigger>
+                <SelectContent className="bg-background-secondary border-border">
+                  {getModuleTypeOptions().map(type => (
+                    <SelectItem key={type} value={type}>
+                      {type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           )}
 
-          {/* Ausgänge - nur für Module, nicht für Gebäude */}
+          {/* Eigenschaften */}
+          <Section title="Eigenschaften">
+            {isProEinheit && (
+              <FormField
+                label={`Menge (${einheit})`}
+                type="number"
+                value={formData.properties?.menge ?? null}
+                onChange={(value) => handleChange('properties', 'menge', value)}
+              />
+            )}
+            {Object.keys(formData.properties || {}).map((key) => {
+              // Skip menge if it's shown separately above
+              if (key === 'menge' && isProEinheit) return null;
+
+              // Dynamic label for preis_euro
+              let label = formatLabel(key);
+              if (key === 'preis_euro' && isProEinheit) {
+                label = `Preis pro ${einheit} (€)`;
+              } else if (key === 'preis_euro') {
+                label = 'Preis (€)';
+              }
+
+              return (
+                <FormField
+                  key={key}
+                  label={label}
+                  value={formData.properties[key]}
+                  onChange={(value) => handleChange('properties', key, value)}
+                />
+              );
+            })}
+          </Section>
+
+          {/* Eingänge und Ausgänge Grid */}
           {!isBuildingElement && (
-            <div>
-              <Section title={`Ausgänge (${formData.outputs.length}/36)`}>
-                {formData.outputs.map((output, idx) => (
-                  <InputOutputEditor
-                    key={output.id}
-                    connector={output}
-                    type="output"
-                    onUpdate={(updated) => handleUpdateOutput(idx, updated)}
-                    onDelete={() => handleDeleteOutput(idx)}
-                    leitungskatalog={leitungskatalog}
-                    verbindungsartenkatalog={verbindungsartenkatalog}
-                    dimensionskatalog={dimensionskatalog}
-                    modultypen={modultypen}
-                    pumpenkatalog={pumpenkatalog}
-                  />
-                ))}
-                <button
-                  type="button"
-                  onClick={handleAddOutput}
-                  disabled={formData.outputs.length >= 36}
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    background: formData.outputs.length >= 36 ? 'var(--bg-tertiary)' : 'var(--success)',
-                    color: formData.outputs.length >= 36 ? 'var(--text-secondary)' : 'var(--bg-primary)',
-                    border: 'none',
-                    borderRadius: '4px',
-                    fontSize: '12px',
-                    fontWeight: 600,
-                    cursor: formData.outputs.length >= 36 ? 'not-allowed' : 'pointer',
-                    fontFamily: 'inherit',
-                  }}
-                >
-                  + Ausgang hinzufügen
-                </button>
-              </Section>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Eingänge */}
+              <div>
+                <Section title={`Eingänge (${formData.inputs.length}/12)`}>
+                  {formData.inputs.map((input, idx) => (
+                    <InputOutputEditor
+                      key={input.id}
+                      connector={input}
+                      type="input"
+                      onUpdate={(updated) => handleUpdateInput(idx, updated)}
+                      onDelete={() => handleDeleteInput(idx)}
+                      leitungskatalog={leitungskatalog}
+                      verbindungsartenkatalog={verbindungsartenkatalog}
+                      dimensionskatalog={dimensionskatalog}
+                      modultypen={modultypen}
+                      pumpenkatalog={pumpenkatalog}
+                    />
+                  ))}
+                  <Button
+                    type="button"
+                    onClick={handleAddInput}
+                    disabled={formData.inputs.length >= 12}
+                    className="w-full bg-success hover:bg-success/90 text-background disabled:bg-background-tertiary disabled:text-text-secondary disabled:cursor-not-allowed text-xs"
+                  >
+                    + Eingang hinzufügen
+                  </Button>
+                </Section>
+              </div>
+
+              {/* Ausgänge */}
+              <div>
+                <Section title={`Ausgänge (${formData.outputs.length}/36)`}>
+                  {formData.outputs.map((output, idx) => (
+                    <InputOutputEditor
+                      key={output.id}
+                      connector={output}
+                      type="output"
+                      onUpdate={(updated) => handleUpdateOutput(idx, updated)}
+                      onDelete={() => handleDeleteOutput(idx)}
+                      leitungskatalog={leitungskatalog}
+                      verbindungsartenkatalog={verbindungsartenkatalog}
+                      dimensionskatalog={dimensionskatalog}
+                      modultypen={modultypen}
+                      pumpenkatalog={pumpenkatalog}
+                    />
+                  ))}
+                  <Button
+                    type="button"
+                    onClick={handleAddOutput}
+                    disabled={formData.outputs.length >= 36}
+                    className="w-full bg-success hover:bg-success/90 text-background disabled:bg-background-tertiary disabled:text-text-secondary disabled:cursor-not-allowed text-xs"
+                  >
+                    + Ausgang hinzufügen
+                  </Button>
+                </Section>
+              </div>
             </div>
           )}
         </div>
 
-        {/* Buttons */}
-        <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
-          <button
-            onClick={handleSave}
-            style={{
-              flex: 1,
-              padding: '12px',
-              background: 'var(--accent)',
-              color: 'var(--bg-primary)',
-              border: 'none',
-              borderRadius: '4px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-            }}
-          >
-            Speichern
-          </button>
-          <button
+        <DialogFooter className="mt-6">
+          <Button
+            type="button"
             onClick={onClose}
-            style={{
-              flex: 1,
-              padding: '12px',
-              background: 'var(--bg-tertiary)',
-              color: 'var(--text-primary)',
-              border: '1px solid var(--border)',
-              borderRadius: '4px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-            }}
+            variant="secondary"
+            className="bg-background-tertiary hover:bg-border"
           >
             Abbrechen
-          </button>
+          </Button>
           {onDelete && !isBuildingElement && (
-            <button
+            <Button
+              type="button"
               onClick={onDelete}
-              style={{
-                flex: 1,
-                padding: '12px',
-                background: 'var(--error)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-              }}
+              variant="destructive"
+              className="bg-destructive hover:bg-destructive/90"
             >
               Löschen
-            </button>
+            </Button>
           )}
-        </div>
-      </div>
-    </div>
+          <Button
+            type="button"
+            onClick={handleSave}
+            className="bg-accent hover:bg-[#3ba958] text-background shadow-[0_2px_8px_rgba(46,160,67,0.3)]"
+          >
+            Speichern
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
 function Section({ title, children }) {
   return (
-    <div style={{ marginBottom: '24px' }}>
-      <h3 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '12px', color: 'var(--accent)' }}>
+    <div className="mb-6">
+      <h3 className="text-sm font-semibold mb-3 text-accent">
         {title}
       </h3>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div className="flex flex-col gap-3">
         {children}
       </div>
     </div>
@@ -369,40 +305,31 @@ function Section({ title, children }) {
 function FormField({ label, value, onChange, type = 'string' }) {
   if (type === 'boolean') {
     return (
-      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+      <label className="flex items-center gap-2 cursor-pointer">
         <input
           type="checkbox"
           checked={value || false}
           onChange={(e) => onChange(e.target.checked)}
-          style={{ width: '16px', height: '16px' }}
+          className="w-4 h-4"
         />
-        <span style={{ fontSize: '13px' }}>{label}</span>
+        <span className="text-[13px]">{label}</span>
       </label>
     );
   }
 
   return (
     <div>
-      <label style={{ display: 'block', marginBottom: '4px', fontSize: '13px' }}>
+      <label className="block mb-1 text-[13px]">
         {label}
       </label>
-      <input
+      <Input
         type={type === 'number' ? 'number' : 'text'}
         value={value ?? ''}
         onChange={(e) => {
           const val = type === 'number' ? (e.target.value ? parseFloat(e.target.value) : null) : e.target.value;
           onChange(val);
         }}
-        style={{
-          width: '100%',
-          padding: '8px',
-          background: 'var(--bg-tertiary)',
-          border: '1px solid var(--border)',
-          borderRadius: '4px',
-          color: 'var(--text-primary)',
-          fontFamily: 'inherit',
-          fontSize: '13px',
-        }}
+        className="bg-background-tertiary border-border focus-visible:border-accent focus-visible:ring-accent/10 text-[13px]"
       />
     </div>
   );

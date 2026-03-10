@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { catalogsAPI, adminAPI } from '../../api/client';
+import { Button } from '@/components/ui/button';
 
 export default function CatalogManagement() {
   const [stats, setStats] = useState(null);
@@ -92,40 +93,37 @@ export default function CatalogManagement() {
   };
 
   if (loading) {
-    return <div className="admin-section">Lade Katalog-Statistiken...</div>;
+    return <div className="bg-background-secondary border border-border rounded-lg p-6">Lade Katalog-Statistiken...</div>;
   }
 
   return (
     <div>
       {/* Message Display */}
       {message && (
-        <div style={{
-          padding: '12px 16px',
-          marginBottom: '16px',
-          borderRadius: '6px',
-          background: message.type === 'success' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-          border: `1px solid ${message.type === 'success' ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
-          color: message.type === 'success' ? '#22c55e' : '#ef4444',
-        }}>
+        <div className={`p-3 mb-4 rounded-md border ${
+          message.type === 'success'
+            ? 'bg-success/10 border-success/30 text-success'
+            : 'bg-destructive/10 border-destructive/30 text-destructive'
+        }`}>
           {message.text}
         </div>
       )}
 
-      <div className="admin-section">
-        <div className="admin-section-header">
+      <div className="bg-background-secondary border border-border rounded-lg p-6">
+        <div className="flex justify-between items-start mb-6">
           <div>
-            <h2 className="admin-section-title">📦 Katalog-Übersicht</h2>
-            <p className="admin-section-description">
+            <h2 className="text-2xl font-semibold mb-2">Katalog-Übersicht</h2>
+            <p className="text-foreground-secondary text-sm">
               Verwaltung aller Katalog-Daten (Module, Verbindungen, Leitungen, etc.)
             </p>
           </div>
-          <button onClick={loadStats} className="admin-button admin-button-secondary">
-            🔄 Aktualisieren
-          </button>
+          <Button onClick={loadStats} variant="outline">
+            Aktualisieren
+          </Button>
         </div>
 
         {stats && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-4">
             <CatalogCard
               title="Modultypen"
               count={stats.moduleTypes}
@@ -173,59 +171,54 @@ export default function CatalogManagement() {
       </div>
 
       {/* Default Catalog Set Management */}
-      <div className="admin-section">
-        <div className="admin-section-header">
+      <div className="bg-background-secondary border border-border rounded-lg p-6 mt-6">
+        <div className="flex justify-between items-start mb-6">
           <div>
-            <h2 className="admin-section-title">⭐ Standard-Set</h2>
-            <p className="admin-section-description">
+            <h2 className="text-2xl font-semibold mb-2">Standard-Set</h2>
+            <p className="text-foreground-secondary text-sm">
               Definiere ein Standard-Set, das für alle Benutzer geladen wird
             </p>
           </div>
         </div>
 
         {defaultSetInfo && (
-          <div style={{ marginBottom: '20px' }}>
-            <div style={{
-              background: 'var(--bg-tertiary)',
-              border: '1px solid var(--border)',
-              borderRadius: '8px',
-              padding: '20px',
-            }}>
-              <div style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
-                <strong>Aktuelles Standard-Set:</strong>
+          <div className="mb-5">
+            <div className="bg-background-tertiary border border-border rounded-lg p-5">
+              <div className="text-sm text-foreground-secondary mb-3 font-semibold">
+                Aktuelles Standard-Set:
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '12px', fontSize: '13px' }}>
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-3 text-xs">
                 <div>
-                  <span style={{ color: 'var(--text-secondary)' }}>Modultypen:</span>{' '}
-                  <strong style={{ color: 'var(--accent)' }}>{defaultSetInfo.counts?.moduleTypes || 0}</strong>
+                  <span className="text-foreground-secondary">Modultypen:</span>{' '}
+                  <strong className="text-accent">{defaultSetInfo.counts?.moduleTypes || 0}</strong>
                 </div>
                 <div>
-                  <span style={{ color: 'var(--text-secondary)' }}>Module:</span>{' '}
-                  <strong style={{ color: 'var(--accent)' }}>{defaultSetInfo.counts?.modules || 0}</strong>
+                  <span className="text-foreground-secondary">Module:</span>{' '}
+                  <strong className="text-accent">{defaultSetInfo.counts?.modules || 0}</strong>
                 </div>
                 <div>
-                  <span style={{ color: 'var(--text-secondary)' }}>Verbindungen:</span>{' '}
-                  <strong style={{ color: 'var(--accent)' }}>{defaultSetInfo.counts?.connections || 0}</strong>
+                  <span className="text-foreground-secondary">Verbindungen:</span>{' '}
+                  <strong className="text-accent">{defaultSetInfo.counts?.connections || 0}</strong>
                 </div>
                 <div>
-                  <span style={{ color: 'var(--text-secondary)' }}>Leitungen:</span>{' '}
-                  <strong style={{ color: 'var(--accent)' }}>{defaultSetInfo.counts?.pipes || 0}</strong>
+                  <span className="text-foreground-secondary">Leitungen:</span>{' '}
+                  <strong className="text-accent">{defaultSetInfo.counts?.pipes || 0}</strong>
                 </div>
                 <div>
-                  <span style={{ color: 'var(--text-secondary)' }}>Dimensionen:</span>{' '}
-                  <strong style={{ color: 'var(--accent)' }}>{defaultSetInfo.counts?.dimensions || 0}</strong>
+                  <span className="text-foreground-secondary">Dimensionen:</span>{' '}
+                  <strong className="text-accent">{defaultSetInfo.counts?.dimensions || 0}</strong>
                 </div>
                 <div>
-                  <span style={{ color: 'var(--text-secondary)' }}>Formeln:</span>{' '}
-                  <strong style={{ color: 'var(--accent)' }}>{defaultSetInfo.counts?.formulas || 0}</strong>
+                  <span className="text-foreground-secondary">Formeln:</span>{' '}
+                  <strong className="text-accent">{defaultSetInfo.counts?.formulas || 0}</strong>
                 </div>
                 <div>
-                  <span style={{ color: 'var(--text-secondary)' }}>Pumpen:</span>{' '}
-                  <strong style={{ color: 'var(--accent)' }}>{defaultSetInfo.counts?.pumps || 0}</strong>
+                  <span className="text-foreground-secondary">Pumpen:</span>{' '}
+                  <strong className="text-accent">{defaultSetInfo.counts?.pumps || 0}</strong>
                 </div>
               </div>
               {defaultSetInfo.lastUpdated && (
-                <div style={{ marginTop: '12px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                <div className="mt-3 text-xs text-foreground-secondary">
                   Zuletzt aktualisiert: {new Date(defaultSetInfo.lastUpdated).toLocaleString('de-DE')}
                 </div>
               )}
@@ -233,44 +226,42 @@ export default function CatalogManagement() {
           </div>
         )}
 
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-          <button
+        <div className="flex gap-3 flex-wrap">
+          <Button
             onClick={handleSaveAsDefault}
             disabled={loadingDefault}
-            className="admin-button admin-button-primary"
-            style={{ opacity: loadingDefault ? 0.6 : 1 }}
+            className="bg-accent hover:bg-accent/90"
           >
-            💾 Aktuellen Katalog als Standard speichern
-          </button>
-          <button
+            Aktuellen Katalog als Standard speichern
+          </Button>
+          <Button
             onClick={handleLoadDefault}
             disabled={loadingDefault}
-            className="admin-button admin-button-secondary"
-            style={{ opacity: loadingDefault ? 0.6 : 1 }}
+            variant="outline"
           >
-            📥 Standard-Set in Kataloge laden
-          </button>
+            Standard-Set in Kataloge laden
+          </Button>
         </div>
 
-        <div style={{ marginTop: '16px', padding: '16px', background: 'var(--bg-tertiary)', borderRadius: '6px', border: '1px solid var(--border)' }}>
-          <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-secondary)' }}>
-            💡 <strong>Hinweis:</strong> Das Standard-Set wird für alle Benutzer geladen, wenn ihre Kataloge leer sind.
+        <div className="mt-4 p-4 bg-background-tertiary rounded-md border border-border">
+          <p className="m-0 text-xs text-foreground-secondary">
+            <strong>Hinweis:</strong> Das Standard-Set wird für alle Benutzer geladen, wenn ihre Kataloge leer sind.
             Du kannst hier die aktuellen Kataloge als Standard definieren oder das Standard-Set in die aktuellen Kataloge laden.
           </p>
         </div>
       </div>
 
-      <div className="admin-section">
-        <div className="admin-section-header">
+      <div className="bg-background-secondary border border-border rounded-lg p-6 mt-6">
+        <div className="flex justify-between items-start mb-6">
           <div>
-            <h2 className="admin-section-title">⚙️ Katalog-Verwaltung</h2>
-            <p className="admin-section-description">
+            <h2 className="text-2xl font-semibold mb-2">Katalog-Verwaltung</h2>
+            <p className="text-foreground-secondary text-sm">
               Diese Kataloge können in den Einstellungen des Configurators verwaltet werden
             </p>
           </div>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div className="flex flex-col gap-3">
           <ManagementLink
             title="Modultypen verwalten"
             description="Neue Modultypen hinzufügen oder bestehende bearbeiten"
@@ -303,9 +294,9 @@ export default function CatalogManagement() {
           />
         </div>
 
-        <div style={{ marginTop: '24px', padding: '16px', background: 'var(--bg-tertiary)', borderRadius: '6px', border: '1px solid var(--border)' }}>
-          <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-secondary)' }}>
-            💡 <strong>Hinweis:</strong> Die Katalog-Verwaltung erfolgt über die Einstellungen im Configurator.
+        <div className="mt-6 p-4 bg-background-tertiary rounded-md border border-border">
+          <p className="m-0 text-xs text-foreground-secondary">
+            <strong>Hinweis:</strong> Die Katalog-Verwaltung erfolgt über die Einstellungen im Configurator.
             Öffne ein beliebiges Projekt und navigiere zu den Einstellungen, um Kataloge zu bearbeiten.
           </p>
         </div>
@@ -316,36 +307,23 @@ export default function CatalogManagement() {
 
 function CatalogCard({ title, count, icon, description }) {
   return (
-    <div style={{
-      background: 'var(--bg-tertiary)',
-      border: '1px solid var(--border)',
-      borderRadius: '8px',
-      padding: '20px',
-    }}>
-      <div style={{ fontSize: '32px', marginBottom: '8px' }}>{icon}</div>
-      <div style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '4px' }}>{title}</div>
-      <div style={{ fontSize: '32px', fontWeight: 700, color: 'var(--accent)', marginBottom: '8px' }}>{count}</div>
-      <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{description}</div>
+    <div className="bg-background-tertiary border border-border rounded-lg p-5">
+      <div className="text-3xl mb-2">{icon}</div>
+      <div className="text-sm text-foreground-secondary mb-1">{title}</div>
+      <div className="text-3xl font-bold text-accent mb-2">{count}</div>
+      <div className="text-xs text-foreground-secondary">{description}</div>
     </div>
   );
 }
 
 function ManagementLink({ title, description, path }) {
   return (
-    <div style={{
-      background: 'var(--bg-tertiary)',
-      border: '1px solid var(--border)',
-      borderRadius: '6px',
-      padding: '16px',
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-    }}>
+    <div className="bg-background-tertiary border border-border rounded-md p-4 flex justify-between items-center">
       <div>
-        <div style={{ fontSize: '15px', fontWeight: 600, marginBottom: '4px' }}>{title}</div>
-        <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{description}</div>
+        <div className="text-base font-semibold mb-1">{title}</div>
+        <div className="text-xs text-foreground-secondary">{description}</div>
       </div>
-      <div style={{ fontSize: '12px', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>
+      <div className="text-xs text-foreground-secondary font-mono">
         {path}
       </div>
     </div>

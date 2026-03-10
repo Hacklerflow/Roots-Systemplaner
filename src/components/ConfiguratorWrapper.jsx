@@ -170,14 +170,7 @@ export default function ConfiguratorWrapper({
 
   if (loading) {
     return (
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '100vh',
-        background: '#1a1a1a',
-        color: 'rgba(255, 255, 255, 0.6)',
-      }}>
+      <div className="flex items-center justify-center h-screen bg-[#1a1a1a] text-foreground-secondary">
         Lade Projekt...
       </div>
     );
@@ -185,29 +178,11 @@ export default function ConfiguratorWrapper({
 
   if (error) {
     return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '100vh',
-        background: '#1a1a1a',
-        color: 'rgba(255, 255, 255, 0.87)',
-        gap: '20px',
-      }}>
-        <div style={{ color: '#ef4444', fontSize: '18px' }}>{error}</div>
+      <div className="flex flex-col items-center justify-center h-screen bg-[#1a1a1a] text-foreground gap-5">
+        <div className="text-[#ef4444] text-lg">{error}</div>
         <button
           onClick={handleBackToDashboard}
-          style={{
-            padding: '10px 20px',
-            background: '#2ea043',
-            color: 'white',
-            border: 'none',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: 600,
-          }}
+          className="px-5 py-2.5 bg-[#2ea043] text-white rounded-md cursor-pointer text-sm font-semibold"
         >
           Zurück zur Übersicht
         </button>
@@ -220,52 +195,27 @@ export default function ConfiguratorWrapper({
   return (
     <>
       {/* Header with Back button and Save info */}
-      <header
-        style={{
-          background: 'var(--bg-secondary)',
-          borderBottom: '1px solid var(--border)',
-          padding: '16px 24px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+      <header className="bg-background-secondary border-b border-border px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-4">
           <button
             onClick={handleBackToDashboard}
-            style={{
-              padding: '8px 16px',
-              background: 'rgba(255, 255, 255, 0.1)',
-              color: 'var(--text-primary)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: 500,
-            }}
+            className="px-4 py-2 bg-white/10 text-foreground border border-white/20 rounded cursor-pointer text-sm font-medium"
           >
             ← Zurück
           </button>
 
           <div>
-            <h1 style={{ margin: 0, fontSize: '20px', fontWeight: 600 }}>
+            <h1 className="m-0 text-xl font-semibold">
               {project?.name || 'Projekt'}
             </h1>
-            <p style={{
-              margin: 0,
-              fontSize: '12px',
-              color: 'rgba(255, 255, 255, 0.5)',
-            }}>
+            <p className="m-0 text-xs text-white/50">
               {saving ? 'Speichert...' : `Zuletzt gespeichert: ${formatLastSaved()}`}
             </p>
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <span style={{
-            fontSize: '12px',
-            color: 'rgba(255, 255, 255, 0.6)',
-          }}>
+        <div className="flex gap-2 items-center">
+          <span className="text-xs text-white/60">
             {user?.name}
           </span>
 
@@ -273,17 +223,9 @@ export default function ConfiguratorWrapper({
             <button
               onClick={() => saveProject(true)}
               disabled={saving}
-              style={{
-                padding: '10px 16px',
-                background: saving ? '#666' : 'var(--success)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                fontWeight: 600,
-                cursor: saving ? 'not-allowed' : 'pointer',
-                fontFamily: 'inherit',
-                fontSize: '13px',
-              }}
+              className={`px-4 py-2.5 text-white rounded font-semibold text-sm ${
+                saving ? 'bg-[#666] cursor-not-allowed' : 'bg-success cursor-pointer'
+              }`}
             >
               {saving ? 'Speichert...' : 'Speichern'}
             </button>
@@ -292,7 +234,7 @@ export default function ConfiguratorWrapper({
       </header>
 
       {/* Existing tab content */}
-      <div style={{ flex: 1, overflow: 'auto' }}>
+      <div className="flex-1 overflow-auto">
         <ErrorBoundary>
           {activeTab === 'konfigurator' && (
             <ConfiguratorEditor

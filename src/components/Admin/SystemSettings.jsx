@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 export default function SystemSettings() {
   const [settings, setSettings] = useState({
@@ -32,42 +34,33 @@ export default function SystemSettings() {
   return (
     <div>
       {/* General Settings */}
-      <div className="admin-section">
-        <div className="admin-section-header">
+      <div className="bg-background-secondary border border-border rounded-lg p-6">
+        <div className="flex justify-between items-start mb-6">
           <div>
-            <h2 className="admin-section-title">Allgemeine Einstellungen</h2>
-            <p className="admin-section-description">
+            <h2 className="text-2xl font-semibold mb-2">Allgemeine Einstellungen</h2>
+            <p className="text-foreground-secondary text-sm">
               Grundlegende System-Konfiguration
             </p>
           </div>
-          <button
+          <Button
             onClick={handleSave}
             disabled={saving}
-            className="admin-button admin-button-success"
+            className="bg-success hover:bg-success/90"
           >
             {saving ? 'Speichert...' : 'Speichern'}
-          </button>
+          </Button>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div className="flex flex-col gap-4">
           <SettingRow
             label="Anwendungsname"
             description="Der Name der Anwendung, wie er in der UI angezeigt wird"
           >
-            <input
+            <Input
               type="text"
               value={settings.appName}
               onChange={(e) => setSettings({ ...settings, appName: e.target.value })}
-              style={{
-                padding: '8px 12px',
-                background: 'var(--bg-tertiary)',
-                border: '1px solid var(--border)',
-                borderRadius: '4px',
-                color: 'var(--text-primary)',
-                fontFamily: 'inherit',
-                fontSize: '14px',
-                width: '300px',
-              }}
+              className="bg-background-tertiary border-border w-[300px]"
             />
           </SettingRow>
 
@@ -75,37 +68,28 @@ export default function SystemSettings() {
             label="Version"
             description="Aktuelle Version der Anwendung"
           >
-            <input
+            <Input
               type="text"
               value={settings.appVersion}
               disabled
-              style={{
-                padding: '8px 12px',
-                background: 'var(--bg-tertiary)',
-                border: '1px solid var(--border)',
-                borderRadius: '4px',
-                color: 'var(--text-secondary)',
-                fontFamily: 'inherit',
-                fontSize: '14px',
-                width: '150px',
-              }}
+              className="bg-background-tertiary border-border w-[150px] text-foreground-secondary"
             />
           </SettingRow>
         </div>
       </div>
 
       {/* System Settings */}
-      <div className="admin-section">
-        <div className="admin-section-header">
+      <div className="bg-background-secondary border border-border rounded-lg p-6 mt-6">
+        <div className="flex justify-between items-start mb-6">
           <div>
-            <h2 className="admin-section-title">🔧 System-Einstellungen</h2>
-            <p className="admin-section-description">
+            <h2 className="text-2xl font-semibold mb-2">System-Einstellungen</h2>
+            <p className="text-foreground-secondary text-sm">
               Erweiterte System-Konfiguration
             </p>
           </div>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div className="flex flex-col gap-4">
           <SettingRow
             label="Wartungsmodus"
             description="Wenn aktiviert, können nur Admins auf die Anwendung zugreifen"
@@ -139,82 +123,73 @@ export default function SystemSettings() {
       </div>
 
       {/* API & Integration */}
-      <div className="admin-section">
-        <div className="admin-section-header">
+      <div className="bg-background-secondary border border-border rounded-lg p-6 mt-6">
+        <div className="flex justify-between items-start mb-6">
           <div>
-            <h2 className="admin-section-title">🔌 API & Integrationen</h2>
-            <p className="admin-section-description">
+            <h2 className="text-2xl font-semibold mb-2">API & Integrationen</h2>
+            <p className="text-foreground-secondary text-sm">
               Externe Dienste und API-Konfiguration
             </p>
           </div>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div className="flex flex-col gap-4">
           <SettingRow
             label="API-Basis-URL"
             description="Die Basis-URL für das Backend-API"
           >
-            <input
+            <Input
               type="text"
               value="http://localhost:3001"
               disabled
-              style={{
-                padding: '8px 12px',
-                background: 'var(--bg-tertiary)',
-                border: '1px solid var(--border)',
-                borderRadius: '4px',
-                color: 'var(--text-secondary)',
-                fontFamily: 'monospace',
-                fontSize: '13px',
-                width: '300px',
-              }}
+              className="bg-background-tertiary border-border w-[300px] text-foreground-secondary font-mono text-xs"
             />
           </SettingRow>
 
-          <div style={{ padding: '16px', background: 'var(--bg-tertiary)', border: '1px solid var(--border)', borderRadius: '6px' }}>
-            <p style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 600 }}>
+          <div className="p-4 bg-background-tertiary border border-border rounded-md">
+            <p className="mb-3 text-sm font-semibold">
               Airtable Integration
             </p>
-            <p style={{ margin: '0 0 16px 0', fontSize: '13px', color: 'var(--text-secondary)' }}>
+            <p className="mb-4 text-xs text-foreground-secondary">
               Airtable API-Einstellungen können in den Projekt-Einstellungen konfiguriert werden.
             </p>
-            <button
+            <Button
               onClick={() => alert('Airtable-Einstellungen sind projekt-spezifisch und können in den Projekt-Einstellungen konfiguriert werden.')}
-              className="admin-button admin-button-secondary"
-              style={{ fontSize: '13px' }}
+              variant="outline"
+              size="sm"
             >
               Zu Projekt-Einstellungen
-            </button>
+            </Button>
           </div>
         </div>
       </div>
 
       {/* About */}
-      <div className="admin-section">
-        <div className="admin-section-header">
+      <div className="bg-background-secondary border border-border rounded-lg p-6 mt-6">
+        <div className="flex justify-between items-start mb-6">
           <div>
-            <h2 className="admin-section-title">ℹ️ Über das System</h2>
-            <p className="admin-section-description">
+            <h2 className="text-2xl font-semibold mb-2">Über das System</h2>
+            <p className="text-foreground-secondary text-sm">
               System-Informationen und Credits
             </p>
           </div>
         </div>
 
-        <div style={{ padding: '20px', background: 'var(--bg-tertiary)', border: '1px solid var(--border)', borderRadius: '8px' }}>
-          <div style={{ marginBottom: '16px' }}>
-            <div style={{ fontSize: '24px', fontWeight: 700, marginBottom: '8px' }}>
+        <div className="p-5 bg-background-tertiary border border-border rounded-lg">
+          <div className="mb-4">
+            <div className="text-2xl font-bold mb-2">
               Roots Configurator
             </div>
-            <div style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
+            <div className="text-sm text-foreground-secondary mb-4">
               Version {settings.appVersion}
             </div>
           </div>
 
-          <div style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
-            <p style={{ margin: '0 0 12px 0' }}>
+          <div className="text-sm text-foreground-secondary leading-relaxed">
+            <p className="mb-3">
               Professionelles Planungstool für Roots Energy Wärmepumpensysteme mit Stücklisten-Generierung.
             </p>
-            <p style={{ margin: 0 }}>
+            <p className="m-0">
               © 2024 Roots Energy. Alle Rechte vorbehalten.
             </p>
           </div>
@@ -226,18 +201,10 @@ export default function SystemSettings() {
 
 function SettingRow({ label, description, children }) {
   return (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      padding: '16px',
-      background: 'var(--bg-tertiary)',
-      border: '1px solid var(--border)',
-      borderRadius: '6px',
-    }}>
-      <div style={{ flex: 1 }}>
-        <div style={{ fontSize: '15px', fontWeight: 600, marginBottom: '4px' }}>{label}</div>
-        <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{description}</div>
+    <div className="flex justify-between items-center p-4 bg-background-tertiary border border-border rounded-md">
+      <div className="flex-1">
+        <div className="text-base font-semibold mb-1">{label}</div>
+        <div className="text-xs text-foreground-secondary">{description}</div>
       </div>
       <div>{children}</div>
     </div>
@@ -248,27 +215,15 @@ function ToggleSwitch({ checked, onChange }) {
   return (
     <button
       onClick={onChange}
-      style={{
-        width: '48px',
-        height: '26px',
-        background: checked ? 'var(--accent)' : 'var(--bg-primary)',
-        border: `2px solid ${checked ? 'var(--accent)' : 'var(--border)'}`,
-        borderRadius: '13px',
-        position: 'relative',
-        cursor: 'pointer',
-        transition: 'all 0.2s',
-      }}
+      className={`w-12 h-[26px] rounded-full border-2 relative transition-all ${
+        checked
+          ? 'bg-accent border-accent'
+          : 'bg-background border-border'
+      }`}
     >
-      <div style={{
-        width: '18px',
-        height: '18px',
-        background: 'white',
-        borderRadius: '50%',
-        position: 'absolute',
-        top: '2px',
-        left: checked ? '24px' : '2px',
-        transition: 'all 0.2s',
-      }} />
+      <div className={`w-[18px] h-[18px] bg-white rounded-full absolute top-[2px] transition-all ${
+        checked ? 'left-[22px]' : 'left-[2px]'
+      }`} />
     </button>
   );
 }

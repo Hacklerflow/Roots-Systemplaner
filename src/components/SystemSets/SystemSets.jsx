@@ -1,4 +1,6 @@
 import { useState, useRef } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 export default function SystemSets({
   systemSets,
@@ -145,53 +147,31 @@ export default function SystemSets({
   const activeSet = systemSets.find(s => s.id === activeSetId);
 
   return (
-    <div style={{
-      background: 'var(--bg-primary)',
-      minHeight: 'calc(100vh - 140px)',
-      padding: '24px',
-    }}>
+    <div className="bg-background min-h-[calc(100vh-140px)] p-6">
       {/* Header */}
-      <div style={{ marginBottom: '24px' }}>
-        <h2 style={{ margin: 0, marginBottom: '4px', fontSize: '24px' }}>System Sets</h2>
-        <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-secondary)' }}>
+      <div className="mb-6">
+        <h2 className="m-0 mb-1 text-2xl">System Sets</h2>
+        <p className="m-0 text-sm text-foreground-secondary">
           Verwalte deine Katalog-Vorlagen (Module, Leitungen, Dimensionen, etc.)
         </p>
       </div>
 
       {/* Info Box - Was wird gespeichert */}
-      <div style={{
-        background: 'var(--bg-secondary)',
-        border: '1px solid var(--border)',
-        borderRadius: '8px',
-        padding: '16px',
-        marginBottom: '24px',
-        maxWidth: '700px',
-      }}>
-        <h3 style={{
-          margin: '0 0 12px 0',
-          fontSize: '14px',
-          fontWeight: 600,
-          color: 'var(--text-primary)',
-        }}>
+      <div className="bg-background-secondary border border-border rounded-lg p-4 mb-6 max-w-[700px]">
+        <h3 className="m-0 mb-3 text-sm font-semibold">
           Ein System Set speichert folgende Kataloge:
         </h3>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: '8px',
-          fontSize: '13px',
-          color: 'var(--text-secondary)',
-        }}>
+        <div className="grid grid-cols-2 gap-2 text-[13px] text-foreground-secondary">
           <div>
-            <strong style={{ color: 'var(--text-primary)' }}>Moduldatenbank:</strong>
-            <div style={{ marginLeft: '12px', marginTop: '4px', lineHeight: '1.6' }}>
+            <strong className="text-foreground">Moduldatenbank:</strong>
+            <div className="ml-3 mt-1 leading-relaxed">
               • Module<br/>
               • Modultypen
             </div>
           </div>
           <div>
-            <strong style={{ color: 'var(--text-primary)' }}>Einstellungen:</strong>
-            <div style={{ marginLeft: '12px', marginTop: '4px', lineHeight: '1.6' }}>
+            <strong className="text-foreground">Einstellungen:</strong>
+            <div className="ml-3 mt-1 leading-relaxed">
               • Verbindungen<br/>
               • Leitungen<br/>
               • Dimensionen<br/>
@@ -201,125 +181,68 @@ export default function SystemSets({
             </div>
           </div>
         </div>
-        <p style={{
-          margin: '12px 0 0 0',
-          fontSize: '12px',
-          color: 'var(--text-secondary)',
-          fontStyle: 'italic',
-        }}>
+        <p className="m-0 mt-3 text-xs text-foreground-secondary italic">
           Tipp: Erstelle Sets für verschiedene Projekttypen (z.B. "Einfamilienhaus Standard", "Gewerbe 2024")
         </p>
       </div>
 
       {/* Import/Export Buttons */}
-      <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', maxWidth: '700px' }}>
-        <button
+      <div className="flex gap-3 mb-6 max-w-[700px]">
+        <Button
           onClick={handleExportAllSets}
           disabled={systemSets.length === 0}
-          style={{
-            flex: 1,
-            padding: '12px 16px',
-            background: systemSets.length === 0 ? 'var(--bg-tertiary)' : 'var(--success)',
-            color: systemSets.length === 0 ? 'var(--text-secondary)' : 'white',
-            border: 'none',
-            borderRadius: '4px',
-            fontWeight: 600,
-            cursor: systemSets.length === 0 ? 'not-allowed' : 'pointer',
-            fontFamily: 'inherit',
-            fontSize: '14px',
-            opacity: systemSets.length === 0 ? 0.5 : 1,
-          }}
+          className="flex-1 bg-success hover:bg-success/90 text-white disabled:bg-background-tertiary disabled:text-foreground-secondary disabled:cursor-not-allowed disabled:opacity-50"
         >
           Alle Sets exportieren
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={() => fileInputRef.current?.click()}
-          style={{
-            flex: 1,
-            padding: '12px 16px',
-            background: 'var(--accent)',
-            color: 'var(--bg-primary)',
-            border: 'none',
-            borderRadius: '4px',
-            fontWeight: 600,
-            cursor: 'pointer',
-            fontFamily: 'inherit',
-            fontSize: '14px',
-          }}
+          className="flex-1 bg-accent hover:bg-accent/90 text-background"
         >
           Sets importieren
-        </button>
+        </Button>
         <input
           ref={fileInputRef}
           type="file"
           accept=".json"
           onChange={handleImportFile}
-          style={{ display: 'none' }}
+          className="hidden"
         />
       </div>
 
       {/* Active Set Display */}
       {activeSet && (
-        <div
-          style={{
-            background: 'var(--bg-secondary)',
-            border: '2px solid var(--accent)',
-            borderRadius: '8px',
-            padding: '20px',
-            marginBottom: '24px',
-            maxWidth: '700px',
-          }}
-        >
-          <div style={{ fontSize: '12px', color: 'var(--accent)', fontWeight: 600, marginBottom: '8px' }}>
+        <div className="bg-background-secondary border-2 border-accent rounded-lg p-5 mb-6 max-w-[700px]">
+          <div className="text-xs text-accent font-semibold mb-2">
             AKTIVES SET
           </div>
-          <div style={{ fontSize: '20px', fontWeight: 600, marginBottom: '4px' }}>
+          <div className="text-xl font-semibold mb-1">
             {activeSet.name}
           </div>
-          <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+          <div className="text-[13px] text-foreground-secondary">
             Erstellt am {new Date(activeSet.createdAt).toLocaleDateString('de-DE')}
           </div>
-          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '12px' }}>
+          <div className="text-xs text-foreground-secondary mt-3">
             {activeSet.modules?.length || 0} Module • {activeSet.leitungskatalog?.length || 0} Leitungen • {activeSet.dimensionskatalog?.length || 0} Dimensionen
           </div>
         </div>
       )}
 
       {/* Create New Set */}
-      <div
-        style={{
-          background: 'var(--bg-secondary)',
-          border: '1px solid var(--border)',
-          borderRadius: '8px',
-          padding: '20px',
-          marginBottom: '24px',
-          maxWidth: '700px',
-        }}
-      >
-        <h3 style={{ margin: 0, marginBottom: '16px', fontSize: '16px' }}>
+      <div className="bg-background-secondary border border-border rounded-lg p-5 mb-6 max-w-[700px]">
+        <h3 className="m-0 mb-4 text-base">
           Neues System Set erstellen
         </h3>
         {!isCreating ? (
-          <button
+          <Button
             onClick={() => setIsCreating(true)}
-            style={{
-              width: '100%',
-              padding: '12px',
-              background: 'var(--accent)',
-              color: 'var(--bg-primary)',
-              border: 'none',
-              borderRadius: '4px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              fontSize: '14px',
-            }}
+            className="w-full bg-accent hover:bg-accent/90 text-background"
           >
             + Aktuellen Stand als neues Set speichern
-          </button>
+          </Button>
         ) : (
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <input
+          <div className="flex gap-2">
+            <Input
               type="text"
               value={newSetName}
               onChange={(e) => setNewSetName(e.target.value)}
@@ -332,165 +255,84 @@ export default function SystemSets({
               }}
               placeholder="z.B. Wien System Set"
               autoFocus
-              style={{
-                flex: 1,
-                padding: '12px',
-                background: 'var(--bg-tertiary)',
-                border: '1px solid var(--border)',
-                borderRadius: '4px',
-                color: 'var(--text-primary)',
-                fontFamily: 'inherit',
-                fontSize: '14px',
-              }}
+              className="flex-1 bg-background-tertiary border-border"
             />
-            <button
+            <Button
               onClick={handleCreate}
-              style={{
-                padding: '12px 20px',
-                background: 'var(--success)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-                fontSize: '14px',
-              }}
+              className="bg-success hover:bg-success/90 text-white px-5"
             >
               Speichern
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => {
                 setIsCreating(false);
                 setNewSetName('');
               }}
-              style={{
-                padding: '12px 20px',
-                background: 'var(--bg-tertiary)',
-                color: 'var(--text-primary)',
-                border: '1px solid var(--border)',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-                fontSize: '14px',
-              }}
+              variant="secondary"
+              className="bg-background-tertiary border-border px-5"
             >
               Abbrechen
-            </button>
+            </Button>
           </div>
         )}
       </div>
 
       {/* Available Sets */}
-      <div style={{ maxWidth: '700px' }}>
-        <h3 style={{ margin: 0, marginBottom: '16px', fontSize: '16px' }}>
+      <div className="max-w-[700px]">
+        <h3 className="m-0 mb-4 text-base">
           Verfügbare System Sets ({systemSets.length})
         </h3>
         {systemSets.length === 0 ? (
-          <div
-            style={{
-              padding: '40px',
-              textAlign: 'center',
-              color: 'var(--text-secondary)',
-              fontSize: '14px',
-              background: 'var(--bg-secondary)',
-              borderRadius: '8px',
-            }}
-          >
+          <div className="p-10 text-center text-foreground-secondary text-sm bg-background-secondary rounded-lg">
             Noch keine System Sets vorhanden
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div className="flex flex-col gap-3">
             {systemSets.map((set) => (
               <div
                 key={set.id}
-                style={{
-                  background: set.id === activeSetId ? 'var(--bg-tertiary)' : 'var(--bg-secondary)',
-                  border: `1px solid ${set.id === activeSetId ? 'var(--accent)' : 'var(--border)'}`,
-                  borderRadius: '8px',
-                  padding: '16px',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                }}
+                className={`${
+                  set.id === activeSetId ? 'bg-background-tertiary border-accent' : 'bg-background-secondary border-border'
+                } border rounded-lg p-4 flex justify-between items-center`}
               >
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
-                    <span style={{ fontSize: '16px', fontWeight: 600 }}>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2.5 mb-1.5">
+                    <span className="text-base font-semibold">
                       {set.name}
                     </span>
                     {set.id === activeSetId && (
-                      <span
-                        style={{
-                          fontSize: '10px',
-                          padding: '3px 10px',
-                          background: 'var(--accent)',
-                          color: 'var(--bg-primary)',
-                          borderRadius: '12px',
-                          fontWeight: 600,
-                        }}
-                      >
+                      <span className="text-[10px] px-2.5 py-0.5 bg-accent text-background rounded-xl font-semibold">
                         AKTIV
                       </span>
                     )}
                   </div>
-                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                  <div className="text-xs text-foreground-secondary">
                     {new Date(set.createdAt).toLocaleDateString('de-DE')} • {set.modules?.length || 0} Module • {set.leitungskatalog?.length || 0} Leitungen
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: '8px' }}>
+                <div className="flex gap-2">
                   {set.id !== activeSetId && (
-                    <button
+                    <Button
                       onClick={() => handleSwitch(set.id)}
-                      style={{
-                        padding: '8px 16px',
-                        background: 'var(--accent)',
-                        color: 'var(--bg-primary)',
-                        border: 'none',
-                        borderRadius: '4px',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        fontFamily: 'inherit',
-                        fontSize: '13px',
-                      }}
+                      className="bg-accent hover:bg-accent/90 text-background text-[13px] px-4 py-2 h-auto"
                     >
                       Aktivieren
-                    </button>
+                    </Button>
                   )}
-                  <button
+                  <Button
                     onClick={() => handleExportSet(set)}
-                    style={{
-                      padding: '8px 16px',
-                      background: 'var(--success)',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      fontFamily: 'inherit',
-                      fontSize: '13px',
-                    }}
+                    className="bg-success hover:bg-success/90 text-white text-[13px] px-4 py-2 h-auto"
                   >
                     Export
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     onClick={() => handleDelete(set.id, set.name)}
                     disabled={set.id === activeSetId}
-                    style={{
-                      padding: '8px 16px',
-                      background: set.id === activeSetId ? 'var(--bg-tertiary)' : 'var(--error)',
-                      color: set.id === activeSetId ? 'var(--text-secondary)' : 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      fontWeight: 600,
-                      cursor: set.id === activeSetId ? 'not-allowed' : 'pointer',
-                      fontFamily: 'inherit',
-                      fontSize: '13px',
-                      opacity: set.id === activeSetId ? 0.5 : 1,
-                    }}
+                    variant="destructive"
+                    className="bg-destructive hover:bg-destructive/90 disabled:bg-background-tertiary disabled:text-foreground-secondary disabled:cursor-not-allowed disabled:opacity-50 text-[13px] px-4 py-2 h-auto"
                   >
                     Löschen
-                  </button>
+                  </Button>
                 </div>
               </div>
             ))}

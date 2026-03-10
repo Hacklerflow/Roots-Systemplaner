@@ -7,15 +7,15 @@ export default function ListView({ configuration, setConfiguration, modultypen =
 
   if (!modules || modules.length === 0) {
     return (
-      <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-secondary)' }}>
+      <div className="p-6 text-center text-foreground-secondary">
         Keine Konfiguration vorhanden. Erstelle zuerst Module im Konfigurator.
       </div>
     );
   }
 
   return (
-    <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto', minHeight: '100%' }}>
-      <h2 style={{ marginTop: 0, marginBottom: '24px' }}>System-Übersicht</h2>
+    <div className="p-6 max-w-[1200px] mx-auto min-h-full">
+      <h2 className="mt-0 mb-6">System-Übersicht</h2>
 
       {/* Module */}
       {modules.length > 0 && (
@@ -39,7 +39,7 @@ export default function ListView({ configuration, setConfiguration, modultypen =
       {/* Verbindungen */}
       <Section title="Verbindungen">
         {connections.length === 0 ? (
-          <div style={{ fontSize: '13px', color: 'var(--text-secondary)', padding: '12px' }}>
+          <div className="text-sm text-foreground-secondary p-3">
             Keine Verbindungen vorhanden
           </div>
         ) : (
@@ -79,17 +79,8 @@ export default function ListView({ configuration, setConfiguration, modultypen =
 
 function Section({ title, children }) {
   return (
-    <div style={{ marginBottom: '32px' }}>
-      <h3
-        style={{
-          fontSize: '16px',
-          fontWeight: 600,
-          marginBottom: '16px',
-          color: 'var(--accent)',
-          textTransform: 'uppercase',
-          letterSpacing: '0.5px',
-        }}
-      >
+    <div className="mb-8">
+      <h3 className="text-base font-semibold mb-4 text-accent uppercase tracking-wider">
         {title}
       </h3>
       <div>{children}</div>
@@ -122,80 +113,44 @@ function ModuleCard({ module, modultypen = [], onUpdateModule }) {
   };
 
   return (
-    <div
-      style={{
-        background: 'var(--bg-secondary)',
-        border: '2px solid var(--success)',
-        borderRadius: '8px',
-        marginBottom: '12px',
-      }}
-    >
+    <div className="bg-background-secondary border-2 border-success rounded-lg mb-3">
       {/* Header */}
       <div
         onClick={() => setExpanded(!expanded)}
-        style={{
-          padding: '16px',
-          cursor: 'pointer',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}
+        className="p-4 cursor-pointer flex justify-between items-center"
       >
         <div>
-          <div style={{ fontWeight: 600, fontSize: '16px', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div className="font-semibold text-base mb-1 flex items-center gap-2">
             {module.name}
             {hasPumps && (
-              <span style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '4px',
-                padding: '2px 6px',
-                background: 'var(--accent)',
-                color: 'var(--bg-primary)',
-                borderRadius: '10px',
-                fontSize: '9px',
-                fontWeight: 600,
-              }}>
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-accent text-background rounded-full text-[9px] font-semibold">
                 💧 PUMPE
               </span>
             )}
           </div>
-          <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+          <div className="text-xs text-foreground-secondary">
             {module.moduleType} | {(module.inputs || []).length} Ein | {(module.outputs || []).length} Aus
             {hasPumps && ` | ${pumps.length} Pumpe${pumps.length > 1 ? 'n' : ''}`}
           </div>
         </div>
-        <div style={{ fontSize: '18px', color: 'var(--text-secondary)' }}>
+        <div className="text-lg text-foreground-secondary">
           {expanded ? '−' : '+'}
         </div>
       </div>
 
       {/* Expanded Content */}
       {expanded && (
-        <div style={{ padding: '0 16px 16px 16px', borderTop: '1px solid var(--border)' }}>
+        <div className="px-4 pb-4 border-t border-border">
           {/* Produktlink Button */}
           {module.properties?.produktlink && (
-            <div style={{ marginTop: '16px', marginBottom: '16px' }}>
+            <div className="mt-4 mb-4">
               <a
                 href={module.properties.produktlink}
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{ textDecoration: 'none' }}
+                className="no-underline"
               >
-                <button
-                  style={{
-                    padding: '10px 16px',
-                    background: 'var(--accent)',
-                    color: 'var(--bg-primary)',
-                    border: 'none',
-                    borderRadius: '4px',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    fontFamily: 'inherit',
-                    fontSize: '13px',
-                    width: '100%',
-                  }}
-                >
+                <button className="px-4 py-2.5 bg-accent text-background rounded font-semibold cursor-pointer text-sm w-full">
                   🔗 Produktlink
                 </button>
               </a>
@@ -207,33 +162,14 @@ function ModuleCard({ module, modultypen = [], onUpdateModule }) {
             <DetailSection title="Eigenschaften">
               {/* Menge field for pro_einheit modules */}
               {isProEinheit && (
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    padding: '6px 0',
-                    fontSize: '13px',
-                    borderBottom: '1px solid var(--border)',
-                    alignItems: 'center',
-                  }}
-                >
-                  <span style={{ color: 'var(--text-secondary)' }}>Menge ({einheit}):</span>
+                <div className="flex justify-between py-1.5 text-sm border-b border-border items-center">
+                  <span className="text-foreground-secondary">Menge ({einheit}):</span>
                   <input
                     type="number"
                     step="0.01"
                     value={module.properties?.menge ?? ''}
                     onChange={(e) => handleMengeChange(e.target.value ? parseFloat(e.target.value) : null)}
-                    style={{
-                      width: '100px',
-                      padding: '4px 8px',
-                      background: 'var(--bg-tertiary)',
-                      border: '1px solid var(--border)',
-                      borderRadius: '4px',
-                      color: 'var(--text-primary)',
-                      fontFamily: 'inherit',
-                      fontSize: '13px',
-                      fontWeight: 500,
-                    }}
+                    className="w-[100px] px-2 py-1 bg-background-tertiary border border-border rounded text-foreground text-sm font-medium"
                   />
                 </div>
               )}
@@ -259,22 +195,9 @@ function ModuleCard({ module, modultypen = [], onUpdateModule }) {
 
               {/* Calculated total price for pro_einheit modules */}
               {isProEinheit && module.properties?.menge && module.properties?.preis_euro && (
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    padding: '6px 0',
-                    fontSize: '13px',
-                    borderBottom: '1px solid var(--border)',
-                    backgroundColor: 'var(--bg-tertiary)',
-                    marginTop: '4px',
-                    paddingLeft: '8px',
-                    paddingRight: '8px',
-                    borderRadius: '4px',
-                  }}
-                >
-                  <span style={{ color: 'var(--accent)', fontWeight: 600 }}>Gesamtpreis (€):</span>
-                  <span style={{ color: 'var(--accent)', fontWeight: 600 }}>
+                <div className="flex justify-between py-1.5 text-sm border-b border-border bg-background-tertiary mt-1 px-2 rounded">
+                  <span className="text-accent font-semibold">Gesamtpreis (€):</span>
+                  <span className="text-accent font-semibold">
                     {(module.properties.menge * module.properties.preis_euro).toFixed(2)}
                   </span>
                 </div>
@@ -288,17 +211,12 @@ function ModuleCard({ module, modultypen = [], onUpdateModule }) {
               {(module.inputs || []).map((input, idx) => (
                 <div
                   key={input.id}
-                  style={{
-                    padding: '8px',
-                    background: 'var(--bg-tertiary)',
-                    borderRadius: '4px',
-                    marginBottom: '6px',
-                  }}
+                  className="p-2 bg-background-tertiary rounded mb-1.5"
                 >
-                  <div style={{ fontSize: '13px', fontWeight: 500 }}>
+                  <div className="text-sm font-medium">
                     {input.label || `Eingang ${idx + 1}`}
                   </div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                  <div className="text-xs text-foreground-secondary mt-1">
                     Typ: {CONNECTION_TYPE_LABELS[input.connectionType]}
                     {(input.allowedModuleTypes || []).length > 0 && (
                       <div>Erlaubt: {(input.allowedModuleTypes || []).join(', ')}</div>
@@ -315,36 +233,27 @@ function ModuleCard({ module, modultypen = [], onUpdateModule }) {
               {(module.outputs || []).map((output, idx) => (
                 <div
                   key={output.id}
-                  style={{
-                    padding: '8px',
-                    background: output.pump?.enabled ? 'rgba(46, 160, 67, 0.1)' : 'var(--bg-tertiary)',
-                    border: output.pump?.enabled ? '1px solid var(--accent)' : 'none',
-                    borderRadius: '4px',
-                    marginBottom: '6px',
-                  }}
+                  className={`p-2 rounded mb-1.5 ${
+                    output.pump?.enabled
+                      ? 'bg-[rgba(46,160,67,0.1)] border border-accent'
+                      : 'bg-background-tertiary'
+                  }`}
                 >
-                  <div style={{ fontSize: '13px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div className="text-sm font-medium flex items-center gap-1.5">
                     {output.label || `Ausgang ${idx + 1}`}
                     {output.pump?.enabled && (
-                      <span style={{
-                        padding: '2px 6px',
-                        background: 'var(--accent)',
-                        color: 'var(--bg-primary)',
-                        borderRadius: '8px',
-                        fontSize: '8px',
-                        fontWeight: 600,
-                      }}>
+                      <span className="px-1.5 py-0.5 bg-accent text-background rounded-lg text-[8px] font-semibold">
                         💧 PUMPE
                       </span>
                     )}
                   </div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                  <div className="text-xs text-foreground-secondary mt-1">
                     Typ: {CONNECTION_TYPE_LABELS[output.connectionType]}
                     {(output.allowedModuleTypes || []).length > 0 && (
                       <div>Erlaubt: {(output.allowedModuleTypes || []).join(', ')}</div>
                     )}
                     {output.pump?.enabled && output.pump?.förderhoehe_m > 0 && (
-                      <div style={{ color: 'var(--accent)', fontWeight: 600, marginTop: '4px' }}>
+                      <div className="text-accent font-semibold mt-1">
                         Förderhöhe: {output.pump.förderhoehe_m} m
                       </div>
                     )}
@@ -362,33 +271,29 @@ function ModuleCard({ module, modultypen = [], onUpdateModule }) {
 function ConnectionCard({ connection, sourceModule, targetModule, output, input, check }) {
   return (
     <div
-      style={{
-        background: 'var(--bg-secondary)',
-        border: `2px solid ${check.warning ? 'var(--error)' : 'var(--success)'}`,
-        borderRadius: '8px',
-        padding: '16px',
-        marginBottom: '12px',
-      }}
+      className={`bg-background-secondary rounded-lg p-4 mb-3 border-2 ${
+        check.warning ? 'border-error' : 'border-success'
+      }`}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: '13px', fontWeight: 600 }}>{sourceModule.name}</div>
-          <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+      <div className="flex items-center gap-3 mb-3">
+        <div className="flex-1">
+          <div className="text-sm font-semibold">{sourceModule.name}</div>
+          <div className="text-xs text-foreground-secondary">
             {output?.label || 'Ausgang'}
           </div>
         </div>
 
-        <div style={{ fontSize: '20px', color: 'var(--text-secondary)' }}>→</div>
+        <div className="text-xl text-foreground-secondary">→</div>
 
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: '13px', fontWeight: 600 }}>{targetModule.name}</div>
-          <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+        <div className="flex-1">
+          <div className="text-sm font-semibold">{targetModule.name}</div>
+          <div className="text-xs text-foreground-secondary">
             {input?.label || 'Eingang'}
           </div>
         </div>
       </div>
 
-      <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '8px' }}>
+      <div className="text-xs text-foreground-secondary mt-2">
         <div>Verbindungstyp: {CONNECTION_TYPE_LABELS[output?.connectionType || 'hydraulic']}</div>
         {connection?.laenge_meter && (
           <div>Länge: {connection.laenge_meter} m</div>
@@ -406,14 +311,11 @@ function ConnectionCard({ connection, sourceModule, targetModule, output, input,
 
       {/* Status */}
       <div
-        style={{
-          marginTop: '12px',
-          padding: '8px',
-          background: check.warning ? 'rgba(255, 68, 68, 0.1)' : 'rgba(0, 255, 136, 0.1)',
-          borderRadius: '4px',
-          fontSize: '12px',
-          color: check.warning ? 'var(--error)' : 'var(--success)',
-        }}
+        className={`mt-3 p-2 rounded text-xs ${
+          check.warning
+            ? 'bg-[rgba(255,68,68,0.1)] text-error'
+            : 'bg-[rgba(0,255,136,0.1)] text-success'
+        }`}
       >
         {check.warning ? (
           <>
@@ -429,15 +331,8 @@ function ConnectionCard({ connection, sourceModule, targetModule, output, input,
 
 function DetailSection({ title, children }) {
   return (
-    <div style={{ marginBottom: '16px', marginTop: '16px' }}>
-      <div
-        style={{
-          fontSize: '12px',
-          fontWeight: 600,
-          color: 'var(--accent)',
-          marginBottom: '8px',
-        }}
-      >
+    <div className="mb-4 mt-4">
+      <div className="text-xs font-semibold text-accent mb-2">
         {title}
       </div>
       <div>{children}</div>
@@ -453,17 +348,9 @@ function Property({ label, value }) {
   }
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        padding: '6px 0',
-        fontSize: '13px',
-        borderBottom: '1px solid var(--border)',
-      }}
-    >
-      <span style={{ color: 'var(--text-secondary)' }}>{label}:</span>
-      <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{displayValue}</span>
+    <div className="flex justify-between py-1.5 text-sm border-b border-border">
+      <span className="text-foreground-secondary">{label}:</span>
+      <span className="text-foreground font-medium">{displayValue}</span>
     </div>
   );
 }

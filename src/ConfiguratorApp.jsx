@@ -359,31 +359,17 @@ function ConfiguratorApp() {
   // Show loading state while catalogs are loading
   if (!catalogsLoaded) {
     return (
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '100vh',
-        background: '#1a1a1a',
-        color: 'rgba(255, 255, 255, 0.6)',
-      }}>
+      <div className="flex items-center justify-center h-screen bg-[#1a1a1a] text-foreground-secondary">
         Lade Kataloge...
       </div>
     );
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+    <div className="flex flex-col h-screen">
       {/* Catalog Error Banner */}
       {catalogsError && (
-        <div style={{
-          background: 'rgba(239, 160, 68, 0.15)',
-          borderBottom: '1px solid #ef9444',
-          color: '#ffc085',
-          padding: '12px 24px',
-          fontSize: '14px',
-          textAlign: 'center',
-        }}>
+        <div className="bg-[rgba(239,160,68,0.15)] border-b border-[#ef9444] text-[#ffc085] px-6 py-3 text-sm text-center">
           ⚠️ {catalogsError}
         </div>
       )}
@@ -422,7 +408,7 @@ function ConfiguratorApp() {
         </button>
 
         {/* Einstellungen Dropdown */}
-        <div ref={settingsDropdownRef} style={{ position: 'relative', display: 'inline-block' }}>
+        <div ref={settingsDropdownRef} className="relative inline-block">
           <button
             className={`tab ${activeTab === 'einstellungen' ? 'active' : ''}`}
             onClick={() => {
@@ -434,18 +420,7 @@ function ConfiguratorApp() {
           </button>
 
           {settingsDropdownOpen && (
-            <div style={{
-              position: 'absolute',
-              top: '100%',
-              left: 0,
-              background: 'var(--bg-secondary)',
-              border: '1px solid var(--border)',
-              borderRadius: '4px',
-              marginTop: '4px',
-              minWidth: '200px',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-              zIndex: 1000,
-            }}>
+            <div className="absolute top-full left-0 bg-background-secondary border border-border rounded mt-1 min-w-[200px] shadow-lg z-[1000]">
               {['dimensionen', 'leitungen', 'verbindungen', 'modultypen', 'formulas', 'pumpen', 'soles', 'manual', 'systemsets'].map(tab => {
                 const labels = {
                   verbindungen: 'Verbindungen',
@@ -465,18 +440,11 @@ function ConfiguratorApp() {
                       setActiveSettingsTab(tab);
                       setSettingsDropdownOpen(false);
                     }}
-                    style={{
-                      width: '100%',
-                      padding: '12px 16px',
-                      background: activeSettingsTab === tab ? 'var(--accent)' : 'transparent',
-                      color: activeSettingsTab === tab ? 'var(--bg-primary)' : 'var(--text-primary)',
-                      border: 'none',
-                      borderBottom: '1px solid var(--border)',
-                      textAlign: 'left',
-                      cursor: 'pointer',
-                      fontSize: '14px',
-                      fontWeight: activeSettingsTab === tab ? 600 : 400,
-                    }}
+                    className={`w-full px-4 py-3 border-b border-border text-left cursor-pointer text-sm ${
+                      activeSettingsTab === tab
+                        ? 'bg-accent text-background font-semibold'
+                        : 'bg-transparent text-foreground font-normal'
+                    }`}
                   >
                     {labels[tab]}
                   </button>

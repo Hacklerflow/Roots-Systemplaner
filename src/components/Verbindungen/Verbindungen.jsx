@@ -1,6 +1,15 @@
 import { useState } from 'react';
 import { CONNECTION_TYPES, CONNECTION_TYPE_LABELS } from '../../data/types';
 import { catalogsAPI } from '../../api/client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 export default function Verbindungen({ verbindungsartenkatalog, setVerbindungsartenkatalog, leitungskatalog }) {
   const [editingVerbindungsart, setEditingVerbindungsart] = useState(null);
@@ -100,9 +109,9 @@ export default function Verbindungen({ verbindungsartenkatalog, setVerbindungsar
   };
 
   return (
-    <div style={{ padding: '32px', maxWidth: '1400px', margin: '0 auto' }}>
-      <h2 style={{ marginTop: 0, marginBottom: '8px' }}>Verbindungsarten-Katalog</h2>
-      <p style={{ color: 'var(--text-secondary)', marginBottom: '32px', fontSize: '14px' }}>
+    <div className="p-8 max-w-[1400px] mx-auto">
+      <h2 className="mt-0 mb-2">Verbindungsarten-Katalog</h2>
+      <p className="text-foreground-secondary mb-8 text-sm">
         Verwalte verfügbare Verbindungsarten (z.B. Flansch, Schraube, Stecker) und definiere kompatible Leitungen
       </p>
 
@@ -143,89 +152,57 @@ export default function Verbindungen({ verbindungsartenkatalog, setVerbindungsar
       />
 
       {/* Neue Verbindungsart hinzufügen */}
-      <div
-        style={{
-          background: 'var(--bg-secondary)',
-          border: '2px solid var(--accent)',
-          borderRadius: '8px',
-          padding: '24px',
-          marginTop: '32px',
-        }}
-      >
-        <h3 style={{ marginTop: 0, marginBottom: '16px' }}>Neue Verbindungsart hinzufügen</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: '180px 1fr 100px 1fr 120px', gap: '12px', alignItems: 'end' }}>
+      <div className="bg-background-secondary border-2 border-accent rounded-lg p-6 mt-8">
+        <h3 className="mt-0 mb-4">Neue Verbindungsart hinzufügen</h3>
+        <div className="grid grid-cols-[180px_1fr_100px_1fr_120px] gap-3 items-end">
           <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '13px' }}>
+            <label className="block mb-2 font-semibold text-[13px]">
               Verbindungstyp
             </label>
-            <select
+            <Select
               value={newVerbindungsart.connectionType}
-              onChange={(e) => setNewVerbindungsart({ ...newVerbindungsart, connectionType: e.target.value, kompatible_leitungen: [] })}
-              style={{
-                width: '100%',
-                padding: '10px',
-                background: 'var(--bg-tertiary)',
-                border: '1px solid var(--border)',
-                borderRadius: '4px',
-                color: 'var(--text-primary)',
-                fontFamily: 'inherit',
-                fontSize: '14px',
-              }}
+              onValueChange={(value) => setNewVerbindungsart({ ...newVerbindungsart, connectionType: value, kompatible_leitungen: [] })}
             >
-              {Object.entries(CONNECTION_TYPE_LABELS).map(([key, label]) => (
-                <option key={key} value={key}>{label}</option>
-              ))}
-            </select>
+              <SelectTrigger className="bg-background-tertiary border-border">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-background-secondary border-border">
+                {Object.entries(CONNECTION_TYPE_LABELS).map(([key, label]) => (
+                  <SelectItem key={key} value={key}>{label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '13px' }}>
+            <label className="block mb-2 font-semibold text-[13px]">
               Name
             </label>
-            <input
+            <Input
               type="text"
               value={newVerbindungsart.name}
               onChange={(e) => setNewVerbindungsart({ ...newVerbindungsart, name: e.target.value })}
               placeholder="z.B. DN50 Flanschverbindung"
-              style={{
-                width: '100%',
-                padding: '10px',
-                background: 'var(--bg-tertiary)',
-                border: '1px solid var(--border)',
-                borderRadius: '4px',
-                color: 'var(--text-primary)',
-                fontFamily: 'inherit',
-                fontSize: '14px',
-              }}
+              className="bg-background-tertiary border-border"
             />
           </div>
 
           <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '13px' }}>
+            <label className="block mb-2 font-semibold text-[13px]">
               Kürzel *
             </label>
-            <input
+            <Input
               type="text"
               value={newVerbindungsart.kuerzel}
               onChange={(e) => setNewVerbindungsart({ ...newVerbindungsart, kuerzel: e.target.value.toUpperCase().slice(0, 6) })}
               placeholder="MAX 6"
               maxLength={6}
-              style={{
-                width: '100%',
-                padding: '10px',
-                background: 'var(--bg-tertiary)',
-                border: '1px solid var(--border)',
-                borderRadius: '4px',
-                color: 'var(--text-primary)',
-                fontFamily: 'inherit',
-                fontSize: '14px',
-                textTransform: 'uppercase',
-              }}
+              className="bg-background-tertiary border-border uppercase"
             />
           </div>
 
           <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '13px' }}>
+            <label className="block mb-2 font-semibold text-[13px]">
               Kompatible Leitungen
             </label>
             <select
@@ -235,17 +212,7 @@ export default function Verbindungen({ verbindungsartenkatalog, setVerbindungsar
                 const selected = Array.from(e.target.selectedOptions, option => parseInt(option.value));
                 setNewVerbindungsart({ ...newVerbindungsart, kompatible_leitungen: selected });
               }}
-              style={{
-                width: '100%',
-                minHeight: '42px',
-                padding: '6px',
-                background: 'var(--bg-tertiary)',
-                border: '1px solid var(--border)',
-                borderRadius: '4px',
-                color: 'var(--text-primary)',
-                fontFamily: 'inherit',
-                fontSize: '13px',
-              }}
+              className="w-full min-h-[42px] p-1.5 bg-background-tertiary border border-border rounded text-foreground text-[13px]"
             >
               {getLeitungenByType(newVerbindungsart.connectionType).map((leitung) => (
                 <option key={leitung.id} value={leitung.id}>
@@ -253,27 +220,17 @@ export default function Verbindungen({ verbindungsartenkatalog, setVerbindungsar
                 </option>
               ))}
             </select>
-            <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+            <div className="text-[11px] text-foreground-secondary mt-1">
               Mehrfachauswahl: Strg/Cmd + Klick
             </div>
           </div>
 
-          <button
+          <Button
             onClick={handleAdd}
-            style={{
-              padding: '10px 16px',
-              background: 'var(--accent)',
-              color: 'var(--bg-primary)',
-              border: 'none',
-              borderRadius: '4px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              fontSize: '14px',
-            }}
+            className="bg-accent hover:bg-accent/90 text-background"
           >
             + Hinzufügen
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -282,193 +239,131 @@ export default function Verbindungen({ verbindungsartenkatalog, setVerbindungsar
 
 function Section({ title, verbindungsarten, leitungen, connectionType, editingVerbindungsart, setEditingVerbindungsart, onUpdate, onDelete }) {
   return (
-    <div style={{ marginBottom: '32px' }}>
-      <h3 style={{ marginBottom: '16px', color: 'var(--accent)' }}>{title}</h3>
+    <div className="mb-8">
+      <h3 className="mb-4 text-accent">{title}</h3>
       {verbindungsarten.length === 0 ? (
-        <div style={{ padding: '16px', background: 'var(--bg-secondary)', borderRadius: '4px', color: 'var(--text-secondary)', fontSize: '13px' }}>
+        <div className="p-4 bg-background-secondary rounded text-foreground-secondary text-[13px]">
           Keine Verbindungsarten vorhanden
         </div>
       ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse', background: 'var(--bg-secondary)', borderRadius: '4px', overflow: 'hidden' }}>
-          <thead>
-            <tr style={{ background: 'var(--bg-tertiary)', borderBottom: '2px solid var(--border)' }}>
-              <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600, fontSize: '13px' }}>Name</th>
-              <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600, fontSize: '13px', width: '100px' }}>Kürzel</th>
-              <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600, fontSize: '13px' }}>Kompatible Leitungen</th>
-              <th style={{ padding: '12px', textAlign: 'right', fontWeight: 600, fontSize: '13px' }}>Aktionen</th>
-            </tr>
-          </thead>
-          <tbody>
-            {verbindungsarten.map((verbindungsart) => (
-              <tr key={verbindungsart.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                <td style={{ padding: '12px' }}>
-                  {editingVerbindungsart === verbindungsart.id ? (
-                    <input
-                      type="text"
-                      value={verbindungsart.name}
-                      onChange={(e) => onUpdate(verbindungsart.id, { name: e.target.value })}
-                      style={{
-                        width: '100%',
-                        padding: '6px 8px',
-                        background: 'var(--bg-tertiary)',
-                        border: '1px solid var(--border)',
-                        borderRadius: '4px',
-                        color: 'var(--text-primary)',
-                        fontFamily: 'inherit',
-                        fontSize: '13px',
-                      }}
-                    />
-                  ) : (
-                    <span style={{ fontSize: '14px', fontWeight: 600 }}>{verbindungsart.name}</span>
-                  )}
-                </td>
-                <td style={{ padding: '12px' }}>
-                  {editingVerbindungsart === verbindungsart.id ? (
-                    <input
-                      type="text"
-                      value={verbindungsart.kuerzel || ''}
-                      onChange={(e) => onUpdate(verbindungsart.id, { kuerzel: e.target.value.toUpperCase().slice(0, 6) })}
-                      maxLength={6}
-                      placeholder="MAX 6"
-                      style={{
-                        width: '100%',
-                        padding: '6px 8px',
-                        background: 'var(--bg-tertiary)',
-                        border: '1px solid var(--border)',
-                        borderRadius: '4px',
-                        color: 'var(--text-primary)',
-                        fontFamily: 'inherit',
-                        fontSize: '13px',
-                        textTransform: 'uppercase',
-                      }}
-                    />
-                  ) : (
-                    <span style={{
-                      fontSize: '13px',
-                      fontWeight: 700,
-                      color: 'var(--accent)',
-                      fontFamily: 'monospace',
-                    }}>
-                      {verbindungsart.kuerzel || '—'}
-                    </span>
-                  )}
-                </td>
-                <td style={{ padding: '12px' }}>
-                  {editingVerbindungsart === verbindungsart.id ? (
-                    <div>
-                      <select
-                        multiple
-                        value={(verbindungsart.kompatible_leitungen || []).map(id => String(id))}
-                        onChange={(e) => {
-                          const selected = Array.from(e.target.selectedOptions, option => parseInt(option.value));
-                          onUpdate(verbindungsart.id, { kompatible_leitungen: selected });
-                        }}
-                        style={{
-                          width: '100%',
-                          minHeight: '80px',
-                          padding: '6px',
-                          background: 'var(--bg-tertiary)',
-                          border: '1px solid var(--border)',
-                          borderRadius: '4px',
-                          color: 'var(--text-primary)',
-                          fontFamily: 'inherit',
-                          fontSize: '12px',
-                        }}
-                      >
-                        {leitungen.map((leitung) => (
-                          <option key={leitung.id} value={leitung.id}>
-                            {leitung.dimension}
-                          </option>
-                        ))}
-                      </select>
-                      <div style={{ fontSize: '10px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                        Strg/Cmd + Klick für Mehrfachauswahl
-                      </div>
-                    </div>
-                  ) : (
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                      {verbindungsart.kompatible_leitungen && verbindungsart.kompatible_leitungen.length > 0 ? (
-                        verbindungsart.kompatible_leitungen.map(leitungId => {
-                          const leitung = leitungen.find(l => l.id === leitungId);
-                          return leitung ? (
-                            <span
-                              key={leitungId}
-                              style={{
-                                display: 'inline-block',
-                                padding: '4px 8px',
-                                background: 'var(--bg-tertiary)',
-                                border: '1px solid var(--border)',
-                                borderRadius: '4px',
-                                fontSize: '12px',
-                                color: 'var(--text-primary)',
-                              }}
-                            >
-                              {leitung.dimension}
-                            </span>
-                          ) : null;
-                        })
-                      ) : (
-                        <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Keine</span>
-                      )}
-                    </div>
-                  )}
-                </td>
-                <td style={{ padding: '12px', textAlign: 'right' }}>
-                  <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                    {editingVerbindungsart === verbindungsart.id ? (
-                      <button
-                        onClick={() => setEditingVerbindungsart(null)}
-                        style={{
-                          padding: '6px 12px',
-                          background: 'var(--success)',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          fontSize: '12px',
-                          fontWeight: 600,
-                        }}
-                      >
-                        Fertig
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => setEditingVerbindungsart(verbindungsart.id)}
-                        style={{
-                          padding: '6px 12px',
-                          background: 'var(--bg-tertiary)',
-                          color: 'var(--text-primary)',
-                          border: '1px solid var(--border)',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          fontSize: '12px',
-                          fontWeight: 600,
-                        }}
-                      >
-                        Bearbeiten
-                      </button>
-                    )}
-                    <button
-                      onClick={() => onDelete(verbindungsart.id)}
-                      style={{
-                        padding: '6px 12px',
-                        background: 'var(--error)',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '12px',
-                        fontWeight: 600,
-                      }}
-                    >
-                      Löschen
-                    </button>
-                  </div>
-                </td>
+        <div className="bg-background-secondary rounded-lg overflow-hidden">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="bg-background-tertiary border-b-2 border-border">
+                <th className="p-3 text-left font-semibold text-[13px]">Name</th>
+                <th className="p-3 text-left font-semibold text-[13px] w-[100px]">Kürzel</th>
+                <th className="p-3 text-left font-semibold text-[13px]">Kompatible Leitungen</th>
+                <th className="p-3 text-right font-semibold text-[13px]">Aktionen</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {verbindungsarten.map((verbindungsart) => (
+                <tr key={verbindungsart.id} className="border-b border-border">
+                  <td className="p-3">
+                    {editingVerbindungsart === verbindungsart.id ? (
+                      <Input
+                        type="text"
+                        value={verbindungsart.name}
+                        onChange={(e) => onUpdate(verbindungsart.id, { name: e.target.value })}
+                        className="bg-background-tertiary border-border text-[13px]"
+                      />
+                    ) : (
+                      <span className="text-sm font-semibold">{verbindungsart.name}</span>
+                    )}
+                  </td>
+                  <td className="p-3">
+                    {editingVerbindungsart === verbindungsart.id ? (
+                      <Input
+                        type="text"
+                        value={verbindungsart.kuerzel || ''}
+                        onChange={(e) => onUpdate(verbindungsart.id, { kuerzel: e.target.value.toUpperCase().slice(0, 6) })}
+                        maxLength={6}
+                        placeholder="MAX 6"
+                        className="bg-background-tertiary border-border text-[13px] uppercase"
+                      />
+                    ) : (
+                      <span className="text-[13px] font-bold text-accent font-mono">
+                        {verbindungsart.kuerzel || '—'}
+                      </span>
+                    )}
+                  </td>
+                  <td className="p-3">
+                    {editingVerbindungsart === verbindungsart.id ? (
+                      <div>
+                        <select
+                          multiple
+                          value={(verbindungsart.kompatible_leitungen || []).map(id => String(id))}
+                          onChange={(e) => {
+                            const selected = Array.from(e.target.selectedOptions, option => parseInt(option.value));
+                            onUpdate(verbindungsart.id, { kompatible_leitungen: selected });
+                          }}
+                          className="w-full min-h-[80px] p-1.5 bg-background-tertiary border border-border rounded text-foreground text-xs"
+                        >
+                          {leitungen.map((leitung) => (
+                            <option key={leitung.id} value={leitung.id}>
+                              {leitung.dimension}
+                            </option>
+                          ))}
+                        </select>
+                        <div className="text-[10px] text-foreground-secondary mt-1">
+                          Strg/Cmd + Klick für Mehrfachauswahl
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-wrap gap-1.5">
+                        {verbindungsart.kompatible_leitungen && verbindungsart.kompatible_leitungen.length > 0 ? (
+                          verbindungsart.kompatible_leitungen.map(leitungId => {
+                            const leitung = leitungen.find(l => l.id === leitungId);
+                            return leitung ? (
+                              <span
+                                key={leitungId}
+                                className="inline-block px-2 py-1 bg-background-tertiary border border-border rounded text-xs"
+                              >
+                                {leitung.dimension}
+                              </span>
+                            ) : null;
+                          })
+                        ) : (
+                          <span className="text-[13px] text-foreground-secondary">Keine</span>
+                        )}
+                      </div>
+                    )}
+                  </td>
+                  <td className="p-3 text-right">
+                    <div className="flex gap-2 justify-end">
+                      {editingVerbindungsart === verbindungsart.id ? (
+                        <Button
+                          onClick={() => setEditingVerbindungsart(null)}
+                          className="bg-success hover:bg-success/90 text-white text-xs"
+                          size="sm"
+                        >
+                          Fertig
+                        </Button>
+                      ) : (
+                        <Button
+                          onClick={() => setEditingVerbindungsart(verbindungsart.id)}
+                          variant="secondary"
+                          className="bg-background-tertiary border-border text-xs"
+                          size="sm"
+                        >
+                          Bearbeiten
+                        </Button>
+                      )}
+                      <Button
+                        onClick={() => onDelete(verbindungsart.id)}
+                        variant="destructive"
+                        className="bg-destructive hover:bg-destructive/90 text-xs"
+                        size="sm"
+                      >
+                        Löschen
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );

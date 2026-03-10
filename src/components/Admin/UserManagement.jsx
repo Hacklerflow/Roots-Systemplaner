@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
 
 export default function UserManagement() {
   const [users, setUsers] = useState([]);
@@ -63,84 +64,83 @@ export default function UserManagement() {
   };
 
   if (loading) {
-    return <div className="admin-section">Lade Benutzer...</div>;
+    return <div className="bg-background-secondary border border-border rounded-lg p-6">Lade Benutzer...</div>;
   }
 
   return (
     <div>
-      <div className="admin-section">
-        <div className="admin-section-header">
+      <div className="bg-background-secondary border border-border rounded-lg p-6">
+        <div className="flex justify-between items-start mb-6">
           <div>
-            <h2 className="admin-section-title">👥 Benutzer-Verwaltung</h2>
-            <p className="admin-section-description">
+            <h2 className="text-2xl font-semibold mb-2">Benutzer-Verwaltung</h2>
+            <p className="text-foreground-secondary text-sm">
               Verwalte alle Benutzer und ihre Berechtigungen
             </p>
           </div>
-          <button
+          <Button
             onClick={() => setShowCreateModal(true)}
-            className="admin-button admin-button-primary"
+            className="bg-accent hover:bg-accent/90"
           >
             + Neuer Benutzer
-          </button>
+          </Button>
         </div>
 
         {/* Stats */}
-        <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
-          <StatCard label="Gesamt" value={users.length} color="var(--accent)" />
-          <StatCard label="Admins" value={users.filter(u => u.role === 'admin').length} color="var(--error)" />
-          <StatCard label="Benutzer" value={users.filter(u => u.role === 'user').length} color="var(--success)" />
+        <div className="flex gap-4 mb-6">
+          <StatCard label="Gesamt" value={users.length} color="text-accent" />
+          <StatCard label="Admins" value={users.filter(u => u.role === 'admin').length} color="text-destructive" />
+          <StatCard label="Benutzer" value={users.filter(u => u.role === 'user').length} color="text-success" />
         </div>
 
         {/* User Table */}
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse">
             <thead>
-              <tr style={{ borderBottom: '2px solid var(--border)' }}>
-                <th style={tableHeaderStyle}>Name</th>
-                <th style={tableHeaderStyle}>E-Mail</th>
-                <th style={tableHeaderStyle}>Rolle</th>
-                <th style={tableHeaderStyle}>Erstellt am</th>
-                <th style={tableHeaderStyle}>Aktionen</th>
+              <tr className="border-b-2 border-border">
+                <th className="text-left p-3 text-xs font-semibold text-foreground-secondary uppercase tracking-wide">Name</th>
+                <th className="text-left p-3 text-xs font-semibold text-foreground-secondary uppercase tracking-wide">E-Mail</th>
+                <th className="text-left p-3 text-xs font-semibold text-foreground-secondary uppercase tracking-wide">Rolle</th>
+                <th className="text-left p-3 text-xs font-semibold text-foreground-secondary uppercase tracking-wide">Erstellt am</th>
+                <th className="text-left p-3 text-xs font-semibold text-foreground-secondary uppercase tracking-wide">Aktionen</th>
               </tr>
             </thead>
             <tbody>
               {users.map(user => (
-                <tr key={user.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                  <td style={tableCellStyle}>
+                <tr key={user.id} className="border-b border-border">
+                  <td className="p-4 text-sm">
                     <strong>{user.name}</strong>
                   </td>
-                  <td style={tableCellStyle}>{user.email}</td>
-                  <td style={tableCellStyle}>
-                    <span style={{
-                      padding: '4px 12px',
-                      borderRadius: '12px',
-                      fontSize: '12px',
-                      fontWeight: 600,
-                      background: user.role === 'admin' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(34, 197, 94, 0.15)',
-                      color: user.role === 'admin' ? '#ef4444' : '#22c55e',
-                    }}>
-                      {user.role === 'admin' ? '👑 Admin' : '👤 User'}
+                  <td className="p-4 text-sm">{user.email}</td>
+                  <td className="p-4 text-sm">
+                    <span className={`px-3 py-1 rounded-xl text-xs font-semibold ${
+                      user.role === 'admin'
+                        ? 'bg-destructive/15 text-destructive'
+                        : 'bg-success/15 text-success'
+                    }`}>
+                      {user.role === 'admin' ? 'Admin' : 'User'}
                     </span>
                   </td>
-                  <td style={tableCellStyle}>
+                  <td className="p-4 text-sm">
                     {new Date(user.created_at).toLocaleDateString('de-DE')}
                   </td>
-                  <td style={tableCellStyle}>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button
+                  <td className="p-4 text-sm">
+                    <div className="flex gap-2">
+                      <Button
                         onClick={() => handleChangeRole(user.id, user.role)}
-                        className="admin-button admin-button-secondary"
-                        style={{ padding: '6px 12px', fontSize: '12px' }}
+                        variant="outline"
+                        size="sm"
+                        className="text-xs"
                       >
                         Rolle ändern
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         onClick={() => handleDeleteUser(user.id, user.name)}
-                        className="admin-button admin-button-danger"
-                        style={{ padding: '6px 12px', fontSize: '12px' }}
+                        variant="destructive"
+                        size="sm"
+                        className="text-xs"
                       >
                         Löschen
-                      </button>
+                      </Button>
                     </div>
                   </td>
                 </tr>
@@ -150,39 +150,20 @@ export default function UserManagement() {
         </div>
       </div>
 
-      {/* Create User Modal - Placeholder */}
+      {/* Create User Modal */}
       {showCreateModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0, 0, 0, 0.7)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 10000,
-        }}>
-          <div style={{
-            background: 'var(--bg-secondary)',
-            borderRadius: '12px',
-            padding: '32px',
-            maxWidth: '500px',
-            width: '90%',
-            border: '2px solid var(--accent)',
-          }}>
-            <h2 style={{ margin: '0 0 24px 0' }}>Neuen Benutzer erstellen</h2>
-            <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[10000]">
+          <div className="bg-background-secondary rounded-xl p-8 max-w-lg w-[90%] border-2 border-accent">
+            <h2 className="text-xl font-semibold mb-6">Neuen Benutzer erstellen</h2>
+            <p className="text-foreground-secondary mb-6">
               Diese Funktion wird bald verfügbar sein.
             </p>
-            <button
+            <Button
               onClick={() => setShowCreateModal(false)}
-              className="admin-button admin-button-primary"
-              style={{ width: '100%' }}
+              className="w-full bg-accent hover:bg-accent/90"
             >
               Schließen
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -192,30 +173,9 @@ export default function UserManagement() {
 
 function StatCard({ label, value, color }) {
   return (
-    <div style={{
-      flex: 1,
-      background: 'var(--bg-tertiary)',
-      border: '1px solid var(--border)',
-      borderRadius: '8px',
-      padding: '16px',
-    }}>
-      <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '8px' }}>{label}</div>
-      <div style={{ fontSize: '28px', fontWeight: 700, color }}>{value}</div>
+    <div className="flex-1 bg-background-tertiary border border-border rounded-lg p-4">
+      <div className="text-xs text-foreground-secondary mb-2">{label}</div>
+      <div className={`text-3xl font-bold ${color}`}>{value}</div>
     </div>
   );
 }
-
-const tableHeaderStyle = {
-  textAlign: 'left',
-  padding: '12px',
-  fontSize: '13px',
-  fontWeight: 600,
-  color: 'var(--text-secondary)',
-  textTransform: 'uppercase',
-  letterSpacing: '0.5px',
-};
-
-const tableCellStyle = {
-  padding: '16px 12px',
-  fontSize: '14px',
-};

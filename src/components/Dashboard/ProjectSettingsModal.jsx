@@ -1,6 +1,14 @@
 import { useState, useEffect } from 'react';
 import { projectsAPI } from '../../api/client';
-import './ProjectSettingsModal.css';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 export default function ProjectSettingsModal({ project, onClose, onSave }) {
   const [formData, setFormData] = useState({
@@ -62,86 +70,112 @@ export default function ProjectSettingsModal({ project, onClose, onSave }) {
   if (!project) return null;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content project-settings-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2>Projekteinstellungen</h2>
-          <button className="modal-close" onClick={onClose}>
-            ×
-          </button>
-        </div>
+    <Dialog open={!!project} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="bg-background-secondary border-border max-w-[600px]">
+        <DialogHeader className="border-b border-border pb-4">
+          <DialogTitle className="text-xl font-semibold">Projekteinstellungen</DialogTitle>
+        </DialogHeader>
 
         <form onSubmit={handleSubmit}>
-          <div className="modal-body">
-            <div className="form-field">
-              <label htmlFor="beheizte_flaeche">Beheizte Fläche (m²)</label>
-              <input
+          <div className="py-6 space-y-5">
+            <div className="space-y-1.5">
+              <label htmlFor="beheizte_flaeche" className="block text-[13px] font-semibold">
+                Beheizte Fläche (m²)
+              </label>
+              <Input
                 type="number"
                 id="beheizte_flaeche"
                 step="0.01"
                 value={formData.beheizte_flaeche}
                 onChange={(e) => handleChange('beheizte_flaeche', e.target.value)}
                 placeholder="z.B. 250.50"
+                className="bg-background-tertiary border-border focus-visible:border-accent focus-visible:ring-accent/10"
               />
             </div>
 
-            <div className="form-field">
-              <label htmlFor="anzahl_wohnungen">Anzahl der Wohnungen</label>
-              <input
+            <div className="space-y-1.5">
+              <label htmlFor="anzahl_wohnungen" className="block text-[13px] font-semibold">
+                Anzahl der Wohnungen
+              </label>
+              <Input
                 type="number"
                 id="anzahl_wohnungen"
                 value={formData.anzahl_wohnungen}
                 onChange={(e) => handleChange('anzahl_wohnungen', e.target.value)}
                 placeholder="z.B. 12"
+                className="bg-background-tertiary border-border focus-visible:border-accent focus-visible:ring-accent/10"
               />
             </div>
 
-            <div className="form-field">
-              <label htmlFor="anzahl_stockwerke">Anzahl der Stockwerke</label>
-              <input
+            <div className="space-y-1.5">
+              <label htmlFor="anzahl_stockwerke" className="block text-[13px] font-semibold">
+                Anzahl der Stockwerke
+              </label>
+              <Input
                 type="number"
                 id="anzahl_stockwerke"
                 value={formData.anzahl_stockwerke}
                 onChange={(e) => handleChange('anzahl_stockwerke', e.target.value)}
                 placeholder="z.B. 4"
+                className="bg-background-tertiary border-border focus-visible:border-accent focus-visible:ring-accent/10"
               />
             </div>
 
-            <div className="form-field">
-              <label htmlFor="eigentuemer">Eigentümer</label>
-              <input
+            <div className="space-y-1.5">
+              <label htmlFor="eigentuemer" className="block text-[13px] font-semibold">
+                Eigentümer
+              </label>
+              <Input
                 type="text"
                 id="eigentuemer"
                 value={formData.eigentuemer}
                 onChange={(e) => handleChange('eigentuemer', e.target.value)}
                 placeholder="Name des Eigentümers"
+                className="bg-background-tertiary border-border focus-visible:border-accent focus-visible:ring-accent/10"
               />
             </div>
 
-            <div className="form-field">
-              <label htmlFor="odoo_kontakt_link">Odoo Kontakt Link</label>
-              <input
+            <div className="space-y-1.5">
+              <label htmlFor="odoo_kontakt_link" className="block text-[13px] font-semibold">
+                Odoo Kontakt Link
+              </label>
+              <Input
                 type="url"
                 id="odoo_kontakt_link"
                 value={formData.odoo_kontakt_link}
                 onChange={(e) => handleChange('odoo_kontakt_link', e.target.value)}
                 placeholder="https://..."
+                className="bg-background-tertiary border-border focus-visible:border-accent focus-visible:ring-accent/10"
               />
             </div>
 
-            {error && <div className="error-message">{error}</div>}
+            {error && (
+              <div className="mt-4 px-3 py-3 bg-destructive/10 border border-destructive rounded-md text-destructive text-[13px]">
+                {error}
+              </div>
+            )}
           </div>
 
-          <div className="modal-footer">
-            <button type="button" onClick={onClose} className="cancel-button" disabled={saving}>
+          <DialogFooter className="border-t border-border pt-4">
+            <Button
+              type="button"
+              onClick={onClose}
+              disabled={saving}
+              variant="secondary"
+              className="bg-background-tertiary hover:bg-border"
+            >
               Abbrechen
-            </button>
-            <button type="submit" className="save-button" disabled={saving}>
+            </Button>
+            <Button
+              type="submit"
+              disabled={saving}
+              className="bg-accent hover:bg-[#3ba958] text-background shadow-[0_2px_8px_rgba(46,160,67,0.3)]"
+            >
               {saving ? 'Speichere...' : 'Speichern'}
-            </button>
-          </div>
+            </Button>
+          </DialogFooter>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

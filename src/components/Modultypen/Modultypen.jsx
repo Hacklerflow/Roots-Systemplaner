@@ -1,5 +1,14 @@
 import { useState } from 'react';
 import { catalogsAPI } from '../../api/client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 export default function Modultypen({ modultypen, setModultypen }) {
   const [editingType, setEditingType] = useState(null);
@@ -84,29 +93,21 @@ export default function Modultypen({ modultypen, setModultypen }) {
   };
 
   return (
-    <div style={{ padding: '32px', maxWidth: '1000px', margin: '0 auto' }}>
-      <h2 style={{ marginTop: 0, marginBottom: '8px' }}>Modultypen</h2>
-      <p style={{ color: 'var(--text-secondary)', marginBottom: '32px', fontSize: '14px' }}>
+    <div className="p-8 max-w-[1000px] mx-auto">
+      <h2 className="mt-0 mb-2">Modultypen</h2>
+      <p className="text-foreground-secondary mb-8 text-sm">
         Verwalte die verfügbaren Modultypen für die Moduldatenbank
       </p>
 
       {/* Neuen Modultyp hinzufügen */}
-      <div
-        style={{
-          background: 'var(--bg-secondary)',
-          border: '2px solid var(--accent)',
-          borderRadius: '8px',
-          padding: '24px',
-          marginBottom: '32px',
-        }}
-      >
-        <h3 style={{ marginTop: 0, marginBottom: '16px' }}>Neuen Modultyp hinzufügen</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+      <div className="bg-background-secondary border-2 border-accent rounded-lg p-6 mb-8">
+        <h3 className="mt-0 mb-4">Neuen Modultyp hinzufügen</h3>
+        <div className="grid grid-cols-[2fr_1fr_1fr] gap-3 mb-4">
           <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '13px' }}>
+            <label className="block mb-2 font-semibold text-[13px]">
               Name
             </label>
-            <input
+            <Input
               type="text"
               value={newTypeName}
               onChange={(e) => setNewTypeName(e.target.value)}
@@ -116,208 +117,118 @@ export default function Modultypen({ modultypen, setModultypen }) {
                 }
               }}
               placeholder="z.B. Wärmepumpe, Pufferspeicher"
-              style={{
-                width: '100%',
-                padding: '10px',
-                background: 'var(--bg-tertiary)',
-                border: '1px solid var(--border)',
-                borderRadius: '4px',
-                color: 'var(--text-primary)',
-                fontFamily: 'inherit',
-                fontSize: '14px',
-              }}
+              className="bg-background-tertiary border-border"
             />
           </div>
           <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '13px' }}>
+            <label className="block mb-2 font-semibold text-[13px]">
               Berechnungsart
             </label>
-            <select
-              value={newBerechnungsart}
-              onChange={(e) => setNewBerechnungsart(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '10px',
-                background: 'var(--bg-tertiary)',
-                border: '1px solid var(--border)',
-                borderRadius: '4px',
-                color: 'var(--text-primary)',
-                fontFamily: 'inherit',
-                fontSize: '14px',
-              }}
-            >
-              <option value="pro_unit">Pro Stück</option>
-              <option value="pro_einheit">Pro Einheit</option>
-            </select>
+            <Select value={newBerechnungsart} onValueChange={setNewBerechnungsart}>
+              <SelectTrigger className="bg-background-tertiary border-border">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-background-secondary border-border">
+                <SelectItem value="pro_unit">Pro Stück</SelectItem>
+                <SelectItem value="pro_einheit">Pro Einheit</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '13px' }}>
+            <label className="block mb-2 font-semibold text-[13px]">
               Einheit
             </label>
-            <input
+            <Input
               type="text"
               value={newEinheit}
               onChange={(e) => setNewEinheit(e.target.value)}
               placeholder={newBerechnungsart === 'pro_einheit' ? 'z.B. lm, m²' : ''}
               disabled={newBerechnungsart === 'pro_unit'}
-              style={{
-                width: '100%',
-                padding: '10px',
-                background: newBerechnungsart === 'pro_unit' ? 'var(--bg-tertiary)' : 'var(--bg-tertiary)',
-                border: '1px solid var(--border)',
-                borderRadius: '4px',
-                color: 'var(--text-primary)',
-                fontFamily: 'inherit',
-                fontSize: '14px',
-                opacity: newBerechnungsart === 'pro_unit' ? 0.5 : 1,
-                cursor: newBerechnungsart === 'pro_unit' ? 'not-allowed' : 'text',
-              }}
+              className="bg-background-tertiary border-border disabled:opacity-50 disabled:cursor-not-allowed"
             />
           </div>
         </div>
-        <button
+        <Button
           onClick={handleAdd}
-          style={{
-            width: '100%',
-            padding: '10px 16px',
-            background: 'var(--accent)',
-            color: 'var(--bg-primary)',
-            border: 'none',
-            borderRadius: '4px',
-            fontWeight: 600,
-            cursor: 'pointer',
-            fontFamily: 'inherit',
-            fontSize: '14px',
-          }}
+          className="w-full bg-accent hover:bg-accent/90 text-background"
         >
           + Hinzufügen
-        </button>
+        </Button>
       </div>
 
       {/* Liste der Modultypen */}
-      <div style={{ marginBottom: '32px' }}>
-        <h3 style={{ marginBottom: '16px', color: 'var(--accent)' }}>Verfügbare Modultypen</h3>
+      <div className="mb-8">
+        <h3 className="mb-4 text-accent">Verfügbare Modultypen</h3>
         {modultypen.length === 0 ? (
-          <div style={{ padding: '16px', background: 'var(--bg-secondary)', borderRadius: '4px', color: 'var(--text-secondary)', fontSize: '13px' }}>
+          <div className="p-4 bg-background-secondary rounded text-foreground-secondary text-[13px]">
             Keine Modultypen vorhanden
           </div>
         ) : (
-          <div style={{ background: 'var(--bg-secondary)', borderRadius: '8px', overflow: 'hidden' }}>
+          <div className="bg-background-secondary rounded-lg overflow-hidden">
             {modultypen.map((type, index) => (
               <div
                 key={type.id}
-                style={{
-                  padding: '16px',
-                  borderBottom: index < modultypen.length - 1 ? '1px solid var(--border)' : 'none',
-                }}
+                className={`p-4 ${index < modultypen.length - 1 ? 'border-b border-border' : ''}`}
               >
                 {editingType === type.id ? (
                   <div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '12px', marginBottom: '12px' }}>
-                      <div>
-                        <input
-                          type="text"
-                          value={editFormData.name}
-                          onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
-                          autoFocus
-                          style={{
-                            width: '100%',
-                            padding: '8px',
-                            background: 'var(--bg-tertiary)',
-                            border: '1px solid var(--accent)',
-                            borderRadius: '4px',
-                            color: 'var(--text-primary)',
-                            fontFamily: 'inherit',
-                            fontSize: '14px',
-                          }}
-                        />
-                      </div>
-                      <div>
-                        <select
-                          value={editFormData.berechnungsart}
-                          onChange={(e) => setEditFormData({ ...editFormData, berechnungsart: e.target.value })}
-                          style={{
-                            width: '100%',
-                            padding: '8px',
-                            background: 'var(--bg-tertiary)',
-                            border: '1px solid var(--border)',
-                            borderRadius: '4px',
-                            color: 'var(--text-primary)',
-                            fontFamily: 'inherit',
-                            fontSize: '14px',
-                          }}
-                        >
-                          <option value="pro_unit">Pro Stück</option>
-                          <option value="pro_einheit">Pro Einheit</option>
-                        </select>
-                      </div>
-                      <div>
-                        <input
-                          type="text"
-                          value={editFormData.einheit}
-                          onChange={(e) => setEditFormData({ ...editFormData, einheit: e.target.value })}
-                          placeholder={editFormData.berechnungsart === 'pro_einheit' ? 'z.B. lm, m²' : ''}
-                          disabled={editFormData.berechnungsart === 'pro_unit'}
-                          style={{
-                            width: '100%',
-                            padding: '8px',
-                            background: 'var(--bg-tertiary)',
-                            border: '1px solid var(--border)',
-                            borderRadius: '4px',
-                            color: 'var(--text-primary)',
-                            fontFamily: 'inherit',
-                            fontSize: '14px',
-                            opacity: editFormData.berechnungsart === 'pro_unit' ? 0.5 : 1,
-                            cursor: editFormData.berechnungsart === 'pro_unit' ? 'not-allowed' : 'text',
-                          }}
-                        />
-                      </div>
+                    <div className="grid grid-cols-[2fr_1fr_1fr] gap-3 mb-3">
+                      <Input
+                        type="text"
+                        value={editFormData.name}
+                        onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                        autoFocus
+                        className="bg-background-tertiary border-accent"
+                      />
+                      <Select
+                        value={editFormData.berechnungsart}
+                        onValueChange={(value) => setEditFormData({ ...editFormData, berechnungsart: value })}
+                      >
+                        <SelectTrigger className="bg-background-tertiary border-border">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-background-secondary border-border">
+                          <SelectItem value="pro_unit">Pro Stück</SelectItem>
+                          <SelectItem value="pro_einheit">Pro Einheit</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Input
+                        type="text"
+                        value={editFormData.einheit}
+                        onChange={(e) => setEditFormData({ ...editFormData, einheit: e.target.value })}
+                        placeholder={editFormData.berechnungsart === 'pro_einheit' ? 'z.B. lm, m²' : ''}
+                        disabled={editFormData.berechnungsart === 'pro_unit'}
+                        className="bg-background-tertiary border-border disabled:opacity-50 disabled:cursor-not-allowed"
+                      />
                     </div>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button
-                        onClick={() => {
-                          handleUpdate(type.id, editFormData);
-                        }}
-                        style={{
-                          padding: '8px 16px',
-                          background: 'var(--success)',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          fontSize: '12px',
-                          fontWeight: 600,
-                        }}
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => handleUpdate(type.id, editFormData)}
+                        className="bg-success hover:bg-success/90 text-white text-xs"
+                        size="sm"
                       >
                         Speichern
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         onClick={() => {
                           setEditingType(null);
                           setEditFormData(null);
                         }}
-                        style={{
-                          padding: '8px 16px',
-                          background: 'var(--bg-tertiary)',
-                          color: 'var(--text-primary)',
-                          border: '1px solid var(--border)',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          fontSize: '12px',
-                          fontWeight: 600,
-                        }}
+                        variant="secondary"
+                        className="bg-background-tertiary border-border text-xs"
+                        size="sm"
                       >
                         Abbrechen
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '14px', fontWeight: 500, marginBottom: '4px' }}>
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1">
+                      <div className="text-sm font-medium mb-1">
                         {type.name}
                       </div>
-                      <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                      <div className="text-xs text-foreground-secondary">
                         {type.berechnungsart === 'pro_einheit' ? (
                           <>Pro Einheit ({type.einheit})</>
                         ) : (
@@ -325,7 +236,7 @@ export default function Modultypen({ modultypen, setModultypen }) {
                         )}
                       </div>
                     </div>
-                    <button
+                    <Button
                       onClick={() => {
                         setEditingType(type.id);
                         setEditFormData({
@@ -334,34 +245,20 @@ export default function Modultypen({ modultypen, setModultypen }) {
                           einheit: type.einheit || '',
                         });
                       }}
-                      style={{
-                        padding: '6px 12px',
-                        background: 'var(--bg-tertiary)',
-                        color: 'var(--text-primary)',
-                        border: '1px solid var(--border)',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '12px',
-                        fontWeight: 600,
-                      }}
+                      variant="secondary"
+                      className="bg-background-tertiary border-border text-xs"
+                      size="sm"
                     >
                       Bearbeiten
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       onClick={() => handleDelete(type.id)}
-                      style={{
-                        padding: '6px 12px',
-                        background: 'var(--error)',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '12px',
-                        fontWeight: 600,
-                      }}
+                      variant="destructive"
+                      className="bg-destructive hover:bg-destructive/90 text-xs"
+                      size="sm"
                     >
                       Löschen
-                    </button>
+                    </Button>
                   </div>
                 )}
               </div>

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Handle, Position } from '@xyflow/react';
+import { Input } from '@/components/ui/input';
 
 export default function JunctionNode({ data }) {
   const { label = '', onLabelChange, onDelete } = data;
@@ -36,23 +37,14 @@ export default function JunctionNode({ data }) {
 
   return (
     <div
-      style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '12px' }}
+      className="relative flex items-center gap-3"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Knotenpunkt (Punkt) */}
       <div
         onClick={handleClick}
-        style={{
-          width: '24px',
-          height: '24px',
-          borderRadius: '50%',
-          background: 'var(--accent)',
-          border: '3px solid var(--bg-primary)',
-          cursor: 'pointer',
-          position: 'relative',
-          boxShadow: '0 2px 8px rgba(0, 217, 255, 0.3)',
-        }}
+        className="w-6 h-6 rounded-full bg-accent border-[3px] border-background cursor-pointer relative shadow-[0_2px_8px_rgba(0,217,255,0.3)]"
       >
         {/* Handles für alle 4 Richtungen */}
         {handlePositions.map(({ position, id }) => (
@@ -91,25 +83,7 @@ export default function JunctionNode({ data }) {
               e.stopPropagation();
               onDelete();
             }}
-            style={{
-              position: 'absolute',
-              top: '-8px',
-              right: '-8px',
-              width: '16px',
-              height: '16px',
-              borderRadius: '50%',
-              background: '#ff4444',
-              border: '2px solid var(--bg-primary)',
-              color: '#fff',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '10px',
-              fontWeight: 'bold',
-              padding: 0,
-              zIndex: 10,
-            }}
+            className="absolute -top-2 -right-2 w-4 h-4 rounded-full bg-destructive border-2 border-background text-white cursor-pointer flex items-center justify-center text-[10px] font-bold p-0 z-10"
             title="Knotenpunkt löschen"
           >
             ×
@@ -119,7 +93,7 @@ export default function JunctionNode({ data }) {
 
       {/* Label (rechts vom Punkt) */}
       {isEditing ? (
-        <input
+        <Input
           type="text"
           value={editValue}
           onChange={(e) => setEditValue(e.target.value)}
@@ -127,27 +101,11 @@ export default function JunctionNode({ data }) {
           onKeyDown={handleKeyDown}
           autoFocus
           placeholder="Beschriftung..."
-          style={{
-            padding: '4px 8px',
-            background: 'var(--bg-secondary)',
-            border: '1px solid var(--accent)',
-            borderRadius: '4px',
-            color: 'var(--text-primary)',
-            fontFamily: 'inherit',
-            fontSize: '12px',
-            minWidth: '100px',
-          }}
+          className="px-2 py-1 bg-background-secondary border-accent text-xs min-w-[100px] h-auto"
         />
       ) : (
         label && (
-          <div
-            style={{
-              fontSize: '12px',
-              color: 'var(--text-primary)',
-              fontWeight: 500,
-              whiteSpace: 'nowrap',
-            }}
-          >
+          <div className="text-xs text-foreground font-medium whitespace-nowrap">
             {label}
           </div>
         )

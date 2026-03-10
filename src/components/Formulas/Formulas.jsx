@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { catalogsAPI } from '../../api/client';
 import { evaluateFormula, validateFormula } from '../../utils/formulaEvaluator';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 export default function Formulas({ formulaskatalog, setFormulaskatalog }) {
   const [editingFormula, setEditingFormula] = useState(null);
@@ -145,62 +147,39 @@ export default function Formulas({ formulaskatalog, setFormulaskatalog }) {
   };
 
   return (
-    <div style={{ padding: '32px', maxWidth: '1400px', margin: '0 auto' }}>
-      <h2 style={{ marginTop: 0, marginBottom: '8px' }}>Formelkatalog</h2>
-      <p style={{ color: 'var(--text-secondary)', marginBottom: '32px', fontSize: '14px' }}>
-        Verwalte Druckverlust-Formeln für Rohrleitungsberechnungen. Verwende Platzhalter wie {'{{'} Rohrlänge {'}}'} für Variablen.
+    <div className="p-8 max-w-[1400px] mx-auto">
+      <h2 className="mt-0 mb-2">Formelkatalog</h2>
+      <p className="text-foreground-secondary mb-8 text-sm">
+        Verwalte Druckverlust-Formeln für Rohrleitungsberechnungen. Verwende Platzhalter wie {'{{ Rohrlänge }}'} für Variablen.
       </p>
 
       {/* Available Variables Help */}
-      <div style={{
-        background: 'var(--bg-secondary)',
-        border: '1px solid var(--border)',
-        borderRadius: '8px',
-        padding: '16px',
-        marginBottom: '24px',
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-          <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 600 }}>
+      <div className="bg-background-secondary border border-border rounded-lg p-4 mb-6">
+        <div className="flex justify-between items-center mb-3">
+          <h3 className="m-0 text-sm font-semibold">
             Verfügbare Variablen
           </h3>
-          <button
+          <Button
             onClick={handleRefreshVariables}
-            style={{
-              padding: '6px 12px',
-              background: 'var(--accent)',
-              color: 'var(--bg-primary)',
-              border: 'none',
-              borderRadius: '4px',
-              fontSize: '12px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-            }}
+            className="bg-accent hover:bg-accent/90 text-background text-xs px-3 py-1.5 h-auto"
           >
-            🔄 Aktualisieren
-          </button>
+            Aktualisieren
+          </Button>
         </div>
-        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', fontSize: '13px' }}>
+        <div className="flex gap-4 flex-wrap text-[13px]">
           {availableVariables.map((varName) => (
             <code
               key={varName}
-              style={{
-                background: 'var(--bg-tertiary)',
-                padding: '4px 8px',
-                borderRadius: '4px',
-                border: '1px solid var(--border)',
-              }}
+              className="bg-background-tertiary px-2 py-1 rounded border border-border"
             >
-              {'{{'} {varName} {'}}'}
+              {'{{ ' + varName + ' }}'}
             </code>
           ))}
         </div>
-        <p style={{ margin: '12px 0 0 0', fontSize: '12px', color: 'var(--text-secondary)' }}>
-          💡 Beispiel: <code>(&#123;&#123;Rohrlänge&#125;&#125; * 2.4) / &#123;&#123;Glykol 30%&#125;&#125;</code>
+        <p className="m-0 mt-3 text-xs text-foreground-secondary">
+          Beispiel: <code>(&#123;&#123;Rohrlänge&#125;&#125; * 2.4) / &#123;&#123;Glykol 30%&#125;&#125;</code>
         </p>
-        <p style={{ margin: '8px 0 0 0', fontSize: '11px', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
+        <p className="m-0 mt-2 text-[11px] text-foreground-secondary leading-relaxed">
           <strong>Standard-Variablen:</strong><br/>
           • <strong>Rohrlänge:</strong> Aus connection.rohrlänge_m oder connection.laenge_meter<br/>
           • <strong>Rohrdimension:</strong> Aus connection.dimension (z.B. "DN50" → 50)<br/>
@@ -214,86 +193,53 @@ export default function Formulas({ formulaskatalog, setFormulaskatalog }) {
       </div>
 
       {/* Formula Test Section */}
-      <div style={{
-        background: 'var(--bg-secondary)',
-        border: '1px solid var(--accent)',
-        borderRadius: '8px',
-        padding: '16px',
-        marginBottom: '24px',
-      }}>
-        <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 600 }}>
+      <div className="bg-background-secondary border border-accent rounded-lg p-4 mb-6">
+        <h3 className="m-0 mb-3 text-sm font-semibold">
           Formel testen
         </h3>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+        <div className="grid grid-cols-3 gap-3 mb-3">
           <div>
-            <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px' }}>
+            <label className="block mb-1 text-xs">
               Rohrlänge (m)
             </label>
-            <input
+            <Input
               type="number"
               step="0.1"
               value={testValues.Rohrlänge}
               onChange={(e) => setTestValues({ ...testValues, Rohrlänge: parseFloat(e.target.value) || 0 })}
-              style={{
-                width: '100%',
-                padding: '8px',
-                background: 'var(--bg-tertiary)',
-                border: '1px solid var(--border)',
-                borderRadius: '4px',
-                color: 'var(--text-primary)',
-                fontSize: '13px',
-              }}
+              className="bg-background-tertiary border-border text-[13px]"
             />
           </div>
           <div>
-            <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px' }}>
+            <label className="block mb-1 text-xs">
               Rohrdimension (DN)
             </label>
-            <input
+            <Input
               type="number"
               value={testValues.Rohrdimension}
               onChange={(e) => setTestValues({ ...testValues, Rohrdimension: parseFloat(e.target.value) || 0 })}
-              style={{
-                width: '100%',
-                padding: '8px',
-                background: 'var(--bg-tertiary)',
-                border: '1px solid var(--border)',
-                borderRadius: '4px',
-                color: 'var(--text-primary)',
-                fontSize: '13px',
-              }}
+              className="bg-background-tertiary border-border text-[13px]"
             />
           </div>
           <div>
-            <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px' }}>
+            <label className="block mb-1 text-xs">
               Faktor
             </label>
-            <input
+            <Input
               type="number"
               step="0.1"
               value={testValues.Faktor}
               onChange={(e) => setTestValues({ ...testValues, Faktor: parseFloat(e.target.value) || 1 })}
-              style={{
-                width: '100%',
-                padding: '8px',
-                background: 'var(--bg-tertiary)',
-                border: '1px solid var(--border)',
-                borderRadius: '4px',
-                color: 'var(--text-primary)',
-                fontSize: '13px',
-              }}
+              className="bg-background-tertiary border-border text-[13px]"
             />
           </div>
         </div>
         {testResult && (
-          <div style={{
-            padding: '12px',
-            background: testResult.success ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-            border: `1px solid ${testResult.success ? '#22c55e' : '#ef4444'}`,
-            borderRadius: '4px',
-            fontSize: '13px',
-            color: testResult.success ? '#22c55e' : '#ef4444',
-          }}>
+          <div className={`p-3 rounded border text-[13px] ${
+            testResult.success
+              ? 'bg-success/10 border-success text-success'
+              : 'bg-destructive/10 border-destructive text-destructive'
+          }`}>
             {testResult.success ? (
               <>Ergebnis: <strong>{testResult.value} m</strong> Druckverlust</>
             ) : (
@@ -304,270 +250,171 @@ export default function Formulas({ formulaskatalog, setFormulaskatalog }) {
       </div>
 
       {/* Formulas List */}
-      <div style={{ marginBottom: '32px' }}>
-        <h3 style={{ marginBottom: '16px', color: 'var(--accent)' }}>Gespeicherte Formeln</h3>
+      <div className="mb-8">
+        <h3 className="mb-4 text-accent">Gespeicherte Formeln</h3>
         {formulaskatalog.length === 0 ? (
-          <div style={{ padding: '16px', background: 'var(--bg-secondary)', borderRadius: '4px', color: 'var(--text-secondary)', fontSize: '13px' }}>
+          <div className="p-4 bg-background-secondary rounded text-foreground-secondary text-[13px]">
             Keine Formeln vorhanden
           </div>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', background: 'var(--bg-secondary)', borderRadius: '4px', overflow: 'hidden' }}>
-            <thead>
-              <tr style={{ background: 'var(--bg-tertiary)', borderBottom: '2px solid var(--border)' }}>
-                <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600, fontSize: '13px', width: '40px' }}>Aktiv</th>
-                <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600, fontSize: '13px' }}>Name</th>
-                <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600, fontSize: '13px' }}>Formel</th>
-                <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600, fontSize: '13px' }}>Beschreibung</th>
-                <th style={{ padding: '12px', textAlign: 'right', fontWeight: 600, fontSize: '13px' }}>Aktionen</th>
-              </tr>
-            </thead>
-            <tbody>
-              {formulaskatalog.map((formula) => (
-                <tr key={formula.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                  <td style={{ padding: '12px', textAlign: 'center' }}>
-                    <input
-                      type="radio"
-                      name="activeFormula"
-                      checked={formula.is_active}
-                      onChange={() => handleSetActive(formula.id)}
-                      style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                    />
-                  </td>
-                  <td style={{ padding: '12px' }}>
-                    {editingFormula === formula.id ? (
-                      <input
-                        type="text"
-                        value={formula.name}
-                        onChange={(e) => handleUpdate(formula.id, { name: e.target.value })}
-                        style={{
-                          width: '100%',
-                          padding: '6px 8px',
-                          background: 'var(--bg-tertiary)',
-                          border: '1px solid var(--border)',
-                          borderRadius: '4px',
-                          color: 'var(--text-primary)',
-                          fontSize: '13px',
-                        }}
-                      />
-                    ) : (
-                      <span style={{ fontSize: '14px', fontWeight: 600 }}>{formula.name}</span>
-                    )}
-                  </td>
-                  <td style={{ padding: '12px' }}>
-                    {editingFormula === formula.id ? (
-                      <input
-                        type="text"
-                        value={formula.formula}
-                        onChange={(e) => handleUpdate(formula.id, { formula: e.target.value })}
-                        style={{
-                          width: '100%',
-                          padding: '6px 8px',
-                          background: 'var(--bg-tertiary)',
-                          border: '1px solid var(--border)',
-                          borderRadius: '4px',
-                          color: 'var(--text-primary)',
-                          fontSize: '13px',
-                          fontFamily: 'monospace',
-                        }}
-                      />
-                    ) : (
-                      <code style={{
-                        fontSize: '13px',
-                        background: 'var(--bg-tertiary)',
-                        padding: '4px 8px',
-                        borderRadius: '4px',
-                      }}>
-                        {formula.formula}
-                      </code>
-                    )}
-                  </td>
-                  <td style={{ padding: '12px' }}>
-                    {editingFormula === formula.id ? (
-                      <input
-                        type="text"
-                        value={formula.beschreibung || ''}
-                        onChange={(e) => handleUpdate(formula.id, { beschreibung: e.target.value })}
-                        placeholder="Beschreibung (optional)"
-                        style={{
-                          width: '100%',
-                          padding: '6px 8px',
-                          background: 'var(--bg-tertiary)',
-                          border: '1px solid var(--border)',
-                          borderRadius: '4px',
-                          color: 'var(--text-primary)',
-                          fontSize: '13px',
-                        }}
-                      />
-                    ) : (
-                      <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-                        {formula.beschreibung || '—'}
-                      </span>
-                    )}
-                  </td>
-                  <td style={{ padding: '12px', textAlign: 'right' }}>
-                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                      <button
-                        onClick={() => handleTestFormula(formula.formula)}
-                        style={{
-                          padding: '6px 12px',
-                          background: 'var(--accent)',
-                          color: 'var(--bg-primary)',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          fontSize: '12px',
-                          fontWeight: 600,
-                        }}
-                      >
-                        Testen
-                      </button>
-                      {editingFormula === formula.id ? (
-                        <button
-                          onClick={() => setEditingFormula(null)}
-                          style={{
-                            padding: '6px 12px',
-                            background: 'var(--success)',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            fontSize: '12px',
-                            fontWeight: 600,
-                          }}
-                        >
-                          Fertig
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => setEditingFormula(formula.id)}
-                          style={{
-                            padding: '6px 12px',
-                            background: 'var(--bg-tertiary)',
-                            color: 'var(--text-primary)',
-                            border: '1px solid var(--border)',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            fontSize: '12px',
-                            fontWeight: 600,
-                          }}
-                        >
-                          Bearbeiten
-                        </button>
-                      )}
-                      <button
-                        onClick={() => handleDelete(formula.id)}
-                        style={{
-                          padding: '6px 12px',
-                          background: 'var(--error)',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          fontSize: '12px',
-                          fontWeight: 600,
-                        }}
-                      >
-                        Löschen
-                      </button>
-                    </div>
-                  </td>
+          <div className="bg-background-secondary rounded-lg overflow-hidden">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="bg-background-tertiary border-b-2 border-border">
+                  <th className="p-3 text-left font-semibold text-[13px] w-[40px]">Aktiv</th>
+                  <th className="p-3 text-left font-semibold text-[13px]">Name</th>
+                  <th className="p-3 text-left font-semibold text-[13px]">Formel</th>
+                  <th className="p-3 text-left font-semibold text-[13px]">Beschreibung</th>
+                  <th className="p-3 text-right font-semibold text-[13px]">Aktionen</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {formulaskatalog.map((formula) => (
+                  <tr key={formula.id} className="border-b border-border">
+                    <td className="p-3 text-center">
+                      <input
+                        type="radio"
+                        name="activeFormula"
+                        checked={formula.is_active}
+                        onChange={() => handleSetActive(formula.id)}
+                        className="w-[18px] h-[18px] cursor-pointer"
+                      />
+                    </td>
+                    <td className="p-3">
+                      {editingFormula === formula.id ? (
+                        <Input
+                          type="text"
+                          value={formula.name}
+                          onChange={(e) => handleUpdate(formula.id, { name: e.target.value })}
+                          className="bg-background-tertiary border-border text-[13px]"
+                        />
+                      ) : (
+                        <span className="text-sm font-semibold">{formula.name}</span>
+                      )}
+                    </td>
+                    <td className="p-3">
+                      {editingFormula === formula.id ? (
+                        <Input
+                          type="text"
+                          value={formula.formula}
+                          onChange={(e) => handleUpdate(formula.id, { formula: e.target.value })}
+                          className="bg-background-tertiary border-border text-[13px] font-mono"
+                        />
+                      ) : (
+                        <code className="text-[13px] bg-background-tertiary px-2 py-1 rounded">
+                          {formula.formula}
+                        </code>
+                      )}
+                    </td>
+                    <td className="p-3">
+                      {editingFormula === formula.id ? (
+                        <Input
+                          type="text"
+                          value={formula.beschreibung || ''}
+                          onChange={(e) => handleUpdate(formula.id, { beschreibung: e.target.value })}
+                          placeholder="Beschreibung (optional)"
+                          className="bg-background-tertiary border-border text-[13px]"
+                        />
+                      ) : (
+                        <span className="text-[13px] text-foreground-secondary">
+                          {formula.beschreibung || '—'}
+                        </span>
+                      )}
+                    </td>
+                    <td className="p-3 text-right">
+                      <div className="flex gap-2 justify-end">
+                        <Button
+                          onClick={() => handleTestFormula(formula.formula)}
+                          className="bg-accent hover:bg-accent/90 text-background text-xs"
+                          size="sm"
+                        >
+                          Testen
+                        </Button>
+                        {editingFormula === formula.id ? (
+                          <Button
+                            onClick={() => setEditingFormula(null)}
+                            className="bg-success hover:bg-success/90 text-white text-xs"
+                            size="sm"
+                          >
+                            Fertig
+                          </Button>
+                        ) : (
+                          <Button
+                            onClick={() => setEditingFormula(formula.id)}
+                            variant="secondary"
+                            className="bg-background-tertiary border-border text-xs"
+                            size="sm"
+                          >
+                            Bearbeiten
+                          </Button>
+                        )}
+                        <Button
+                          onClick={() => handleDelete(formula.id)}
+                          variant="destructive"
+                          className="bg-destructive hover:bg-destructive/90 text-xs"
+                          size="sm"
+                        >
+                          Löschen
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
       {/* Add New Formula */}
-      <div
-        style={{
-          background: 'var(--bg-secondary)',
-          border: '2px solid var(--accent)',
-          borderRadius: '8px',
-          padding: '24px',
-        }}
-      >
-        <h3 style={{ marginTop: 0, marginBottom: '16px' }}>Neue Formel hinzufügen</h3>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div className="bg-background-secondary border-2 border-accent rounded-lg p-6">
+        <h3 className="mt-0 mb-4">Neue Formel hinzufügen</h3>
+        <div className="flex flex-col gap-3">
           <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '13px' }}>
+            <label className="block mb-2 font-semibold text-[13px]">
               Name
             </label>
-            <input
+            <Input
               type="text"
               value={newFormula.name}
               onChange={(e) => setNewFormula({ ...newFormula, name: e.target.value })}
               placeholder="z.B. Standard Druckverlust"
-              style={{
-                width: '100%',
-                padding: '10px',
-                background: 'var(--bg-tertiary)',
-                border: '1px solid var(--border)',
-                borderRadius: '4px',
-                color: 'var(--text-primary)',
-                fontSize: '14px',
-              }}
+              className="bg-background-tertiary border-border"
             />
           </div>
 
           <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '13px' }}>
+            <label className="block mb-2 font-semibold text-[13px]">
               Formel
             </label>
-            <input
+            <Input
               type="text"
               value={newFormula.formula}
               onChange={(e) => setNewFormula({ ...newFormula, formula: e.target.value })}
               placeholder="({{Rohrlänge}} * 2.4) / {{Faktor}}"
-              style={{
-                width: '100%',
-                padding: '10px',
-                background: 'var(--bg-tertiary)',
-                border: '1px solid var(--border)',
-                borderRadius: '4px',
-                color: 'var(--text-primary)',
-                fontSize: '14px',
-                fontFamily: 'monospace',
-              }}
+              className="bg-background-tertiary border-border font-mono"
             />
           </div>
 
           <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '13px' }}>
+            <label className="block mb-2 font-semibold text-[13px]">
               Beschreibung (optional)
             </label>
-            <input
+            <Input
               type="text"
               value={newFormula.beschreibung}
               onChange={(e) => setNewFormula({ ...newFormula, beschreibung: e.target.value })}
               placeholder="Kurze Beschreibung der Formel"
-              style={{
-                width: '100%',
-                padding: '10px',
-                background: 'var(--bg-tertiary)',
-                border: '1px solid var(--border)',
-                borderRadius: '4px',
-                color: 'var(--text-primary)',
-                fontSize: '14px',
-              }}
+              className="bg-background-tertiary border-border"
             />
           </div>
 
-          <button
+          <Button
             onClick={handleAdd}
-            style={{
-              padding: '10px 16px',
-              background: 'var(--accent)',
-              color: 'var(--bg-primary)',
-              border: 'none',
-              borderRadius: '4px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              fontSize: '14px',
-            }}
+            className="bg-accent hover:bg-accent/90 text-background"
           >
             + Hinzufügen
-          </button>
+          </Button>
         </div>
       </div>
     </div>

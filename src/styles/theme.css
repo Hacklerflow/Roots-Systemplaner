@@ -1,5 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
   /* Colors */
   --bg-primary: #0a0a0a;
@@ -11,134 +15,108 @@
   --success: #00ff88;
   --error: #ff4444;
   --border: #333;
+
+  /* shadcn/ui required */
+  --radius: 0.5rem;
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-mono text-sm leading-relaxed;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  #root {
+    @apply min-h-screen flex flex-col;
+  }
+
+  button {
+    @apply font-mono;
+  }
+
+  input,
+  textarea,
+  select {
+    @apply font-mono;
+  }
 }
 
-body {
-  font-family: 'IBM Plex Mono', monospace;
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  font-size: 14px;
-  line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+@layer components {
+  /* Scrollbar Styling */
+  ::-webkit-scrollbar {
+    @apply w-2.5 h-2.5;
+  }
 
-#root {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
+  ::-webkit-scrollbar-track {
+    @apply bg-background;
+  }
 
-/* Scrollbar Styling */
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border rounded;
+  }
 
-::-webkit-scrollbar-track {
-  background: var(--bg-primary);
-}
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-[#444];
+  }
 
-::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 5px;
-}
+  /* React Flow Overrides */
+  .react-flow {
+    @apply bg-background;
+  }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #444;
-}
+  .react-flow__node {
+    @apply font-mono;
+  }
 
-/* React Flow Overrides */
-.react-flow {
-  background: var(--bg-primary);
-}
+  .react-flow__edge-path {
+    @apply stroke-accent;
+    stroke-width: 2;
+  }
 
-.react-flow__node {
-  font-family: 'IBM Plex Mono', monospace;
-}
+  .react-flow__controls {
+    @apply bg-background-secondary border border-border;
+  }
 
-.react-flow__edge-path {
-  stroke: var(--accent);
-  stroke-width: 2;
-}
+  .react-flow__controls-button {
+    @apply bg-background-tertiary border-b border-border text-foreground;
+  }
 
-.react-flow__controls {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-}
+  .react-flow__controls-button:hover {
+    @apply bg-background-secondary;
+  }
 
-.react-flow__controls-button {
-  background: var(--bg-tertiary);
-  border-bottom: 1px solid var(--border);
-  color: var(--text-primary);
-}
+  .react-flow__minimap {
+    @apply bg-background-secondary border border-border;
+  }
 
-.react-flow__controls-button:hover {
-  background: var(--bg-secondary);
-}
+  /* Tab Navigation (to be migrated to Tailwind) */
+  .tabs {
+    @apply flex bg-background-secondary border-b border-border;
+  }
 
-.react-flow__minimap {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-}
+  .tab {
+    @apply px-6 py-4 bg-transparent border-none text-foreground-secondary font-medium text-sm cursor-pointer border-b-2 border-transparent transition-all;
+  }
 
-/* Tab Navigation */
-.tabs {
-  display: flex;
-  background: var(--bg-secondary);
-  border-bottom: 1px solid var(--border);
-}
+  .tab:hover {
+    @apply text-foreground bg-background-tertiary;
+  }
 
-.tab {
-  padding: 16px 24px;
-  background: transparent;
-  border: none;
-  color: var(--text-secondary);
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-  transition: all 0.2s;
-}
+  .tab.active {
+    @apply text-accent border-b-accent;
+  }
 
-.tab:hover {
-  color: var(--text-primary);
-  background: var(--bg-tertiary);
-}
+  /* Utility Classes (to be replaced with Tailwind) */
+  .container {
+    @apply max-w-[1400px] mx-auto px-6;
+  }
 
-.tab.active {
-  color: var(--accent);
-  border-bottom-color: var(--accent);
-}
-
-/* Button Resets */
-button {
-  font-family: inherit;
-}
-
-input,
-textarea,
-select {
-  font-family: inherit;
-}
-
-/* Utility Classes */
-.container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 24px;
-}
-
-.page-title {
-  font-size: 24px;
-  font-weight: 600;
-  margin-bottom: 24px;
-  color: var(--accent);
+  .page-title {
+    @apply text-2xl font-semibold mb-6 text-accent;
+  }
 }

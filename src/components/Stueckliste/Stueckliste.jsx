@@ -459,71 +459,55 @@ export default function Stueckliste({ configuration, setConfiguration, modultype
 
   if (modules.length === 0) {
     return (
-      <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-secondary)' }}>
+      <div className="p-6 text-center text-foreground-secondary">
         Keine Konfiguration vorhanden. Erstelle zuerst Module im Konfigurator.
       </div>
     );
   }
 
   return (
-    <div style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto' }}>
+    <div className="p-6 max-w-[1400px] mx-auto">
       {/* Header mit Projekteckdaten */}
       {project && (
-        <div style={{
-          background: 'var(--bg-secondary)',
-          border: '2px solid var(--accent)',
-          borderRadius: '8px',
-          padding: '24px',
-          marginBottom: '32px'
-        }}>
-          <h2 style={{ margin: 0, marginBottom: '16px', color: 'var(--accent)' }}>
+        <div className="bg-background-secondary border-2 border-accent rounded-lg p-6 mb-8">
+          <h2 className="m-0 mb-4 text-accent">
             {project.name || 'Projekt'}
           </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px', fontSize: '13px' }}>
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-4 text-sm">
             {project.building_address && (
-              <div><span style={{ color: 'var(--text-secondary)' }}>Adresse:</span> <strong>{project.building_address}</strong></div>
+              <div><span className="text-foreground-secondary">Adresse:</span> <strong>{project.building_address}</strong></div>
             )}
             {project.beheizte_flaeche && (
-              <div><span style={{ color: 'var(--text-secondary)' }}>Beheizte Fläche:</span> <strong>{project.beheizte_flaeche} m²</strong></div>
+              <div><span className="text-foreground-secondary">Beheizte Fläche:</span> <strong>{project.beheizte_flaeche} m²</strong></div>
             )}
             {project.anzahl_wohnungen && (
-              <div><span style={{ color: 'var(--text-secondary)' }}>Anzahl Wohnungen:</span> <strong>{project.anzahl_wohnungen}</strong></div>
+              <div><span className="text-foreground-secondary">Anzahl Wohnungen:</span> <strong>{project.anzahl_wohnungen}</strong></div>
             )}
             {project.anzahl_stockwerke && (
-              <div><span style={{ color: 'var(--text-secondary)' }}>Anzahl Stockwerke:</span> <strong>{project.anzahl_stockwerke}</strong></div>
+              <div><span className="text-foreground-secondary">Anzahl Stockwerke:</span> <strong>{project.anzahl_stockwerke}</strong></div>
             )}
             {project.eigentuemer && (
-              <div><span style={{ color: 'var(--text-secondary)' }}>Eigentümer:</span> <strong>{project.eigentuemer}</strong></div>
+              <div><span className="text-foreground-secondary">Eigentümer:</span> <strong>{project.eigentuemer}</strong></div>
             )}
             {project.building_year && (
-              <div><span style={{ color: 'var(--text-secondary)' }}>Baujahr:</span> <strong>{project.building_year}</strong></div>
+              <div><span className="text-foreground-secondary">Baujahr:</span> <strong>{project.building_year}</strong></div>
             )}
           </div>
         </div>
       )}
 
       {/* Export-Buttons und Zusammenfassung */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+      <div className="flex justify-between items-center mb-8">
         <div>
-          <h3 style={{ margin: 0, marginBottom: '8px' }}>Stückliste</h3>
-          <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+          <h3 className="m-0 mb-2">Stückliste</h3>
+          <div className="text-sm text-foreground-secondary">
             {modules.length} Komponenten • {connections.length} Leitungen
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '12px' }}>
+        <div className="flex gap-3">
           <button
             onClick={() => setShowAirtableSettings(true)}
-            style={{
-              padding: '12px 16px',
-              background: 'var(--bg-tertiary)',
-              color: 'var(--text-primary)',
-              border: '1px solid var(--border)',
-              borderRadius: '4px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              fontSize: '14px',
-            }}
+            className="px-4 py-3 bg-background-tertiary text-foreground border border-border rounded font-semibold cursor-pointer text-sm"
             title="Airtable-Einstellungen"
           >
             ⚙️
@@ -531,54 +515,33 @@ export default function Stueckliste({ configuration, setConfiguration, modultype
           <button
             onClick={handleSendToAirtable}
             disabled={modules.length === 0 && connections.length === 0 || isSendingToAirtable}
-            style={{
-              padding: '12px 24px',
-              background: 'var(--accent)',
-              color: 'var(--bg-primary)',
-              border: 'none',
-              borderRadius: '4px',
-              fontWeight: 600,
-              cursor: modules.length === 0 && connections.length === 0 || isSendingToAirtable ? 'not-allowed' : 'pointer',
-              fontFamily: 'inherit',
-              fontSize: '14px',
-              opacity: modules.length === 0 && connections.length === 0 || isSendingToAirtable ? 0.5 : 1,
-            }}
+            className={`px-6 py-3 bg-accent text-background rounded font-semibold text-sm ${
+              modules.length === 0 && connections.length === 0 || isSendingToAirtable
+                ? 'cursor-not-allowed opacity-50'
+                : 'cursor-pointer opacity-100'
+            }`}
           >
             {isSendingToAirtable ? '⏳ Sende...' : '📤 An Airtable senden'}
           </button>
           <button
             onClick={handleExportJSON}
             disabled={modules.length === 0 && connections.length === 0}
-            style={{
-              padding: '12px 24px',
-              background: 'var(--bg-tertiary)',
-              color: 'var(--text-primary)',
-              border: '1px solid var(--border)',
-              borderRadius: '4px',
-              fontWeight: 600,
-              cursor: modules.length === 0 && connections.length === 0 ? 'not-allowed' : 'pointer',
-              fontFamily: 'inherit',
-              fontSize: '14px',
-              opacity: modules.length === 0 && connections.length === 0 ? 0.5 : 1,
-            }}
+            className={`px-6 py-3 bg-background-tertiary text-foreground border border-border rounded font-semibold text-sm ${
+              modules.length === 0 && connections.length === 0
+                ? 'cursor-not-allowed opacity-50'
+                : 'cursor-pointer opacity-100'
+            }`}
           >
             JSON Export
           </button>
           <button
             onClick={handleExportExcel}
             disabled={modules.length === 0 && connections.length === 0}
-            style={{
-              padding: '12px 24px',
-              background: 'var(--success)',
-              color: 'var(--bg-primary)',
-              border: 'none',
-              borderRadius: '4px',
-              fontWeight: 600,
-              cursor: modules.length === 0 && connections.length === 0 ? 'not-allowed' : 'pointer',
-              fontFamily: 'inherit',
-              fontSize: '14px',
-              opacity: modules.length === 0 && connections.length === 0 ? 0.5 : 1,
-            }}
+            className={`px-6 py-3 bg-success text-background rounded font-semibold text-sm ${
+              modules.length === 0 && connections.length === 0
+                ? 'cursor-not-allowed opacity-50'
+                : 'cursor-pointer opacity-100'
+            }`}
           >
             Excel Export
           </button>
@@ -630,21 +593,12 @@ export default function Stueckliste({ configuration, setConfiguration, modultype
                         value={menge ?? ''}
                         onChange={(e) => handleModuleMengeChange(module.id, e.target.value)}
                         placeholder="—"
-                        style={{
-                          width: '80px',
-                          padding: '4px 8px',
-                          background: 'var(--bg-tertiary)',
-                          border: '1px solid var(--border)',
-                          borderRadius: '4px',
-                          color: 'var(--text-primary)',
-                          fontFamily: 'inherit',
-                          fontSize: '13px',
-                        }}
+                        className="w-20 px-2 py-1 bg-background-tertiary border border-border rounded text-foreground text-sm"
                       />
                     ) : (
                       '1'
                     )}
-                    {isProEinheit && <span style={{ marginLeft: '4px', fontSize: '11px', color: 'var(--text-secondary)' }}>{einheit}</span>}
+                    {isProEinheit && <span className="ml-1 text-xs text-foreground-secondary">{einheit}</span>}
                   </td>
                   <td style={tableCellStyle}>
                     <input
@@ -653,18 +607,9 @@ export default function Stueckliste({ configuration, setConfiguration, modultype
                       value={preisEuro ?? ''}
                       onChange={(e) => handleModulePriceChange(module.id, e.target.value)}
                       placeholder="—"
-                      style={{
-                        width: '80px',
-                        padding: '4px 8px',
-                        background: 'var(--bg-tertiary)',
-                        border: '1px solid var(--border)',
-                        borderRadius: '4px',
-                        color: 'var(--text-primary)',
-                        fontFamily: 'inherit',
-                        fontSize: '13px',
-                      }}
+                      className="w-20 px-2 py-1 bg-background-tertiary border border-border rounded text-foreground text-sm"
                     />
-                    {isProEinheit && <span style={{ marginLeft: '4px', fontSize: '11px', color: 'var(--text-secondary)' }}>€/{einheit}</span>}
+                    {isProEinheit && <span className="ml-1 text-xs text-foreground-secondary">€/{einheit}</span>}
                   </td>
                   <td style={{ ...tableCellStyle, fontWeight: 600, color: 'var(--accent)' }}>
                     {gesamtpreis}
@@ -745,16 +690,7 @@ export default function Stueckliste({ configuration, setConfiguration, modultype
                         value={conn.preis_pro_meter ?? ''}
                         onChange={(e) => handleConnectionPriceChange(conn.id, e.target.value)}
                         placeholder="—"
-                        style={{
-                          width: '80px',
-                          padding: '4px 8px',
-                          background: 'var(--bg-tertiary)',
-                          border: '1px solid var(--border)',
-                          borderRadius: '4px',
-                          color: 'var(--text-primary)',
-                          fontFamily: 'inherit',
-                          fontSize: '13px',
-                        }}
+                        className="w-20 px-2 py-1 bg-background-tertiary border border-border rounded text-foreground text-sm"
                       />
                     </td>
                     <td style={tableCellStyle}>
@@ -785,42 +721,16 @@ export default function Stueckliste({ configuration, setConfiguration, modultype
       </Section>
 
       {/* Gesamtsumme */}
-      <div style={{
-        background: 'var(--bg-secondary)',
-        border: '3px solid var(--accent)',
-        borderRadius: '8px',
-        padding: '24px',
-        marginTop: '32px',
-      }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}>
-          <div style={{
-            fontSize: '20px',
-            fontWeight: 700,
-            color: 'var(--accent)',
-            textTransform: 'uppercase',
-            letterSpacing: '1px',
-          }}>
+      <div className="bg-background-secondary border-[3px] border-accent rounded-lg p-6 mt-8">
+        <div className="flex justify-between items-center">
+          <div className="text-xl font-bold text-accent uppercase tracking-wide">
             Gesamtsumme
           </div>
-          <div style={{
-            fontSize: '28px',
-            fontWeight: 700,
-            color: 'var(--accent)',
-          }}>
+          <div className="text-[28px] font-bold text-accent">
             {gesamtsumme.toFixed(2)} €
           </div>
         </div>
-        <div style={{
-          marginTop: '12px',
-          fontSize: '13px',
-          color: 'var(--text-secondary)',
-          display: 'flex',
-          gap: '24px',
-        }}>
+        <div className="mt-3 text-sm text-foreground-secondary flex gap-6">
           <span>Komponenten: {moduleSumme.toFixed(2)} €</span>
           <span>Leitungen: {leitungenSumme.toFixed(2)} €</span>
         </div>
@@ -836,27 +746,11 @@ export default function Stueckliste({ configuration, setConfiguration, modultype
 
 function Section({ title, children }) {
   return (
-    <div style={{ marginBottom: '48px' }}>
-      <h3
-        style={{
-          fontSize: '16px',
-          fontWeight: 600,
-          marginBottom: '16px',
-          color: 'var(--accent)',
-          textTransform: 'uppercase',
-          letterSpacing: '0.5px',
-        }}
-      >
+    <div className="mb-12">
+      <h3 className="text-base font-semibold mb-4 text-accent uppercase tracking-wider">
         {title}
       </h3>
-      <div
-        style={{
-          background: 'var(--bg-secondary)',
-          border: '1px solid var(--border)',
-          borderRadius: '8px',
-          overflow: 'hidden',
-        }}
-      >
+      <div className="bg-background-secondary border border-border rounded-lg overflow-hidden">
         {children}
       </div>
     </div>

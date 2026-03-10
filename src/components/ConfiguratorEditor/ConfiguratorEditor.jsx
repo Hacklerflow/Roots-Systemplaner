@@ -390,32 +390,13 @@ function ConfiguratorEditorInner({ modules: moduleTemplates, configuration, setC
   const hasBuilding = !!configuration?.building;
 
   return (
-    <div style={{ display: 'flex', height: '100%', width: '100%', position: 'relative' }}>
+    <div className="flex h-full w-full relative">
       {/* Toolbar */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '16px',
-          left: '16px',
-          zIndex: 10,
-          display: 'flex',
-          gap: '8px',
-        }}
-      >
+      <div className="absolute top-4 left-4 z-10 flex gap-2">
         {!hasBuilding ? (
           <button
             onClick={handleCreateBuilding}
-            style={{
-              padding: '10px 16px',
-              background: 'var(--accent)',
-              color: 'var(--bg-primary)',
-              border: 'none',
-              borderRadius: '4px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              fontSize: '13px',
-            }}
+            className="px-4 py-2.5 bg-accent text-background font-semibold rounded cursor-pointer text-sm"
           >
             Neues Gebäude
           </button>
@@ -423,7 +404,7 @@ function ConfiguratorEditorInner({ modules: moduleTemplates, configuration, setC
       </div>
 
       {/* React Flow Canvas */}
-      <div style={{ flex: 1, position: 'relative' }}>
+      <div className="flex-1 relative">
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -453,18 +434,8 @@ function ConfiguratorEditorInner({ modules: moduleTemplates, configuration, setC
         </ReactFlow>
         {/* Platzhalter wenn keine Module */}
         {hasBuilding && nodes.length === 0 && (
-          <div
-            style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              textAlign: 'center',
-              color: 'var(--text-secondary)',
-              pointerEvents: 'none',
-            }}
-          >
-            <div style={{ fontSize: '48px', marginBottom: '16px' }}>📦</div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center text-foreground-secondary pointer-events-none">
+            <div className="text-5xl mb-4">📦</div>
             <div>Füge Module über die Sidebar hinzu</div>
           </div>
         )}
@@ -472,40 +443,20 @@ function ConfiguratorEditorInner({ modules: moduleTemplates, configuration, setC
 
       {/* Sidebar mit Modulen */}
       {hasBuilding && (
-        <div
-          style={{
-            width: '300px',
-            background: 'var(--bg-secondary)',
-            borderLeft: '1px solid var(--border)',
-            padding: '16px',
-            overflowY: 'auto',
-          }}
-        >
-          <h3 style={{ marginTop: 0, marginBottom: '16px', fontSize: '14px' }}>
+        <div className="w-[300px] bg-background-secondary border-l border-border p-4 overflow-y-auto">
+          <h3 className="mt-0 mb-4 text-sm">
             Elemente hinzufügen
           </h3>
 
           {/* Knotenpunkt Button */}
           <button
             onClick={handleAddJunction}
-            style={{
-              width: '100%',
-              padding: '10px',
-              marginBottom: '16px',
-              background: 'var(--accent)',
-              color: 'var(--bg-primary)',
-              border: 'none',
-              borderRadius: '4px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              fontSize: '13px',
-            }}
+            className="w-full py-2.5 mb-4 bg-accent text-background rounded font-semibold cursor-pointer text-sm"
           >
             + Knotenpunkt
           </button>
 
-          <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '12px', fontWeight: 600 }}>
+          <div className="text-xs text-foreground-secondary mb-3 font-semibold">
             MODULE
           </div>
 
@@ -521,15 +472,8 @@ function ConfiguratorEditorInner({ modules: moduleTemplates, configuration, setC
 
             // Rendere gruppiert
             return Object.entries(grouped).map(([type, templates]) => (
-              <div key={type} style={{ marginBottom: '16px' }}>
-                <div style={{
-                  fontSize: '10px',
-                  color: 'var(--accent)',
-                  marginBottom: '6px',
-                  fontWeight: 600,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px',
-                }}>
+              <div key={type} className="mb-4">
+                <div className="text-[10px] text-accent mb-1.5 font-semibold uppercase tracking-wider">
                   {type}
                 </div>
                 {templates.map((template) => (
@@ -593,45 +537,19 @@ function ConfiguratorEditorInner({ modules: moduleTemplates, configuration, setC
 
 function ModuleCard({ module, onAdd }) {
   return (
-    <div
-      style={{
-        background: 'var(--bg-tertiary)',
-        border: '1px solid var(--border)',
-        borderRadius: '4px',
-        padding: '8px',
-        marginBottom: '6px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px',
-      }}
-    >
-      <div style={{ flex: 1 }}>
-        <div style={{ fontWeight: 600, fontSize: '12px', marginBottom: '2px' }}>
+    <div className="bg-background-tertiary border border-border rounded p-2 mb-1.5 flex items-center gap-2">
+      <div className="flex-1">
+        <div className="font-semibold text-xs mb-0.5">
           {module.name}
         </div>
-        <div style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>
+        <div className="text-[10px] text-foreground-secondary">
           {module.moduleType}
         </div>
       </div>
 
       <button
         onClick={onAdd}
-        style={{
-          width: '32px',
-          height: '32px',
-          padding: '0',
-          background: 'var(--accent)',
-          color: 'var(--bg-primary)',
-          border: 'none',
-          borderRadius: '4px',
-          fontSize: '18px',
-          fontWeight: 600,
-          cursor: 'pointer',
-          fontFamily: 'inherit',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
+        className="w-8 h-8 p-0 bg-accent text-background rounded text-lg font-semibold cursor-pointer flex items-center justify-center"
       >
         +
       </button>

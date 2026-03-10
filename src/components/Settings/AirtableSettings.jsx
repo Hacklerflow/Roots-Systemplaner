@@ -1,4 +1,12 @@
 import { useState, useEffect } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 export default function AirtableSettings({ onClose }) {
   const [settings, setSettings] = useState({
@@ -101,65 +109,30 @@ export default function AirtableSettings({ onClose }) {
   };
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: 'rgba(0, 0, 0, 0.8)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000,
-      }}
-      onClick={onClose}
-    >
-      <div
-        style={{
-          background: 'var(--bg-secondary)',
-          border: '2px solid var(--accent)',
-          borderRadius: '8px',
-          padding: '24px',
-          maxWidth: '600px',
-          width: '90%',
-          maxHeight: '90vh',
-          overflow: 'auto',
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 style={{ marginTop: 0, marginBottom: '8px', color: 'var(--accent)' }}>
-          Airtable-Integration
-        </h2>
-        <p style={{ color: 'var(--text-secondary)', marginBottom: '24px', fontSize: '13px' }}>
-          Konfiguriere die Verbindung zu deiner Airtable-Base für den Export der Stückliste.
-        </p>
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="bg-background-secondary border-2 border-accent max-w-[600px] max-h-[90vh] overflow-auto">
+        <DialogHeader>
+          <DialogTitle className="text-accent mb-2">Airtable-Integration</DialogTitle>
+          <p className="text-foreground-secondary text-[13px]">
+            Konfiguriere die Verbindung zu deiner Airtable-Base für den Export der Stückliste.
+          </p>
+        </DialogHeader>
 
         {/* Anleitung */}
-        <div
-          style={{
-            background: 'var(--bg-tertiary)',
-            border: '1px solid var(--border)',
-            borderRadius: '4px',
-            padding: '12px',
-            marginBottom: '24px',
-            fontSize: '12px',
-          }}
-        >
+        <div className="bg-background-tertiary border border-border rounded p-3 text-xs leading-relaxed">
           <strong>So erhältst du die benötigten Daten:</strong>
-          <ol style={{ margin: '8px 0 0 0', paddingLeft: '20px', lineHeight: '1.6' }}>
-            <li style={{ marginBottom: '8px' }}>
+          <ol className="mt-2 pl-5 space-y-2">
+            <li>
               <strong>Personal Access Token:</strong><br/>
               • Airtable.com → Account → Developer Hub → Create Token<br/>
               • <strong>WICHTIG:</strong> Scopes wählen:<br/>
-              &nbsp;&nbsp;✓ <code>data.records:read</code><br/>
-              &nbsp;&nbsp;✓ <code>data.records:write</code><br/>
+              &nbsp;&nbsp;✓ <code className="bg-background px-1 py-0.5 rounded">data.records:read</code><br/>
+              &nbsp;&nbsp;✓ <code className="bg-background px-1 py-0.5 rounded">data.records:write</code><br/>
               • <strong>WICHTIG:</strong> Deine Base auswählen!
             </li>
-            <li style={{ marginBottom: '8px' }}>
+            <li>
               <strong>Base ID:</strong><br/>
-              Öffne deine Base → URL: <code>https://airtable.com/<strong>appXXXXXXXXXXXXXX</strong>/...</code>
+              Öffne deine Base → URL: <code className="bg-background px-1 py-0.5 rounded">https://airtable.com/<strong>appXXXXXXXXXXXXXX</strong>/...</code>
             </li>
             <li>
               <strong>3 Tabellen erstellen:</strong><br/>
@@ -172,173 +145,92 @@ export default function AirtableSettings({ onClose }) {
         </div>
 
         {/* Formular */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+        <div className="space-y-4">
           {/* Personal Access Token */}
           <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '13px' }}>
+            <label className="block mb-2 font-semibold text-[13px]">
               Personal Access Token *
             </label>
-            <input
+            <Input
               type="password"
               value={settings.personalAccessToken}
               onChange={(e) => setSettings({ ...settings, personalAccessToken: e.target.value })}
               placeholder="patXXXXXXXXXXXXXX.XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-              style={{
-                width: '100%',
-                padding: '10px',
-                background: 'var(--bg-tertiary)',
-                border: '1px solid var(--border)',
-                borderRadius: '4px',
-                color: 'var(--text-primary)',
-                fontFamily: 'monospace',
-                fontSize: '12px',
-              }}
+              className="bg-background-tertiary border-border font-mono text-xs"
             />
           </div>
 
           {/* Base ID */}
           <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '13px' }}>
+            <label className="block mb-2 font-semibold text-[13px]">
               Base ID *
             </label>
-            <input
+            <Input
               type="text"
               value={settings.baseId}
               onChange={(e) => setSettings({ ...settings, baseId: e.target.value })}
               placeholder="appXXXXXXXXXXXXXX"
-              style={{
-                width: '100%',
-                padding: '10px',
-                background: 'var(--bg-tertiary)',
-                border: '1px solid var(--border)',
-                borderRadius: '4px',
-                color: 'var(--text-primary)',
-                fontFamily: 'monospace',
-                fontSize: '14px',
-              }}
+              className="bg-background-tertiary border-border font-mono"
             />
           </div>
 
           {/* Info: 3 Tabellen werden verwendet */}
-          <div
-            style={{
-              background: 'rgba(46, 160, 67, 0.1)',
-              border: '1px solid var(--success)',
-              borderRadius: '4px',
-              padding: '12px',
-              fontSize: '12px',
-            }}
-          >
+          <div className="bg-success/10 border border-success rounded p-3 text-xs">
             <strong>ℹ️ Automatische Tabellennamen:</strong><br/>
             Die App sendet an 3 feste Tabellen in deiner Base:<br/>
-            • <code>Projekte</code><br/>
-            • <code>Komponenten</code><br/>
-            • <code>Leitungen</code>
+            • <code className="bg-background px-1 py-0.5 rounded">Projekte</code><br/>
+            • <code className="bg-background px-1 py-0.5 rounded">Komponenten</code><br/>
+            • <code className="bg-background px-1 py-0.5 rounded">Leitungen</code>
           </div>
         </div>
 
         {/* Test Result */}
         {testResult && (
-          <div
-            style={{
-              padding: '12px',
-              borderRadius: '4px',
-              marginBottom: '16px',
-              background: testResult.success ? 'rgba(46, 160, 67, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-              border: `1px solid ${testResult.success ? 'var(--success)' : 'var(--error)'}`,
-              whiteSpace: 'pre-line',
-              fontSize: '12px',
-              color: 'var(--text-primary)',
-            }}
-          >
+          <div className={`px-3 py-3 rounded text-xs whitespace-pre-line ${
+            testResult.success
+              ? 'bg-success/10 border border-success'
+              : 'bg-destructive/10 border border-destructive'
+          }`}>
             {testResult.message}
           </div>
         )}
 
         {/* Buttons */}
-        <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
-          <button
+        <div className="space-y-3">
+          <Button
             onClick={handleTest}
             disabled={!settings.personalAccessToken || !settings.baseId || isTesting}
-            style={{
-              flex: 1,
-              padding: '12px',
-              background: 'var(--bg-tertiary)',
-              color: 'var(--text-primary)',
-              border: '1px solid var(--border)',
-              borderRadius: '4px',
-              fontWeight: 600,
-              cursor: settings.personalAccessToken && settings.baseId && !isTesting
-                ? 'pointer'
-                : 'not-allowed',
-              fontFamily: 'inherit',
-              fontSize: '14px',
-              opacity: settings.personalAccessToken && settings.baseId ? 1 : 0.5,
-            }}
+            variant="secondary"
+            className="w-full bg-background-tertiary hover:bg-border"
           >
             {isTesting ? '⏳ Teste alle 3 Tabellen...' : '🔍 Verbindung testen'}
-          </button>
-        </div>
+          </Button>
 
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <button
-            onClick={handleSave}
-            disabled={!settings.personalAccessToken || !settings.baseId}
-            style={{
-              flex: 1,
-              padding: '12px',
-              background: settings.personalAccessToken && settings.baseId
-                ? 'var(--accent)'
-                : 'var(--bg-tertiary)',
-              color: settings.personalAccessToken && settings.baseId
-                ? 'var(--bg-primary)'
-                : 'var(--text-secondary)',
-              border: 'none',
-              borderRadius: '4px',
-              fontWeight: 600,
-              cursor: settings.personalAccessToken && settings.baseId
-                ? 'pointer'
-                : 'not-allowed',
-              fontFamily: 'inherit',
-              fontSize: '14px',
-            }}
-          >
-            {isSaving ? 'Speichern...' : 'Speichern'}
-          </button>
-          <button
-            onClick={handleClear}
-            style={{
-              padding: '12px 24px',
-              background: 'var(--error)',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              fontSize: '14px',
-            }}
-          >
-            Löschen
-          </button>
-          <button
-            onClick={onClose}
-            style={{
-              padding: '12px 24px',
-              background: 'var(--bg-tertiary)',
-              color: 'var(--text-primary)',
-              border: '1px solid var(--border)',
-              borderRadius: '4px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              fontSize: '14px',
-            }}
-          >
-            Abbrechen
-          </button>
+          <div className="flex gap-3">
+            <Button
+              onClick={handleSave}
+              disabled={!settings.personalAccessToken || !settings.baseId}
+              className="flex-1 bg-accent hover:bg-accent/90 text-background disabled:bg-background-tertiary disabled:text-foreground-secondary"
+            >
+              {isSaving ? 'Speichern...' : 'Speichern'}
+            </Button>
+            <Button
+              onClick={handleClear}
+              variant="destructive"
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              Löschen
+            </Button>
+            <Button
+              onClick={onClose}
+              variant="secondary"
+              className="bg-background-tertiary hover:bg-border"
+            >
+              Abbrechen
+            </Button>
+          </div>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

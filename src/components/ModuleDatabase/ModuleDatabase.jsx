@@ -2,6 +2,15 @@ import { useState } from 'react';
 import { createModuleTemplate, createInput, createOutput } from '../../data/types';
 import InputOutputEditor from '../ConfiguratorEditor/InputOutputEditor';
 import { catalogsAPI } from '../../api/client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 export default function ModuleDatabase({ modules, setModules, leitungskatalog = [], verbindungsartenkatalog = [], dimensionskatalog = [], modultypen = [], pumpenkatalog = [], onReloadCatalogs }) {
   const [editingModule, setEditingModule] = useState(null);
@@ -104,7 +113,7 @@ export default function ModuleDatabase({ modules, setModules, leitungskatalog = 
         setModules(modules.filter((m) => m.name !== moduleToDelete.name));
       }
     } catch (err) {
-      console.error('❌ Fehler beim Löschen:', err);
+      console.error('Fehler beim Löschen:', err);
       setError('Fehler beim Löschen: ' + err.message);
     } finally {
       setSaving(false);
@@ -117,41 +126,24 @@ export default function ModuleDatabase({ modules, setModules, leitungskatalog = 
   };
 
   return (
-    <div style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto', minHeight: '100%' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+    <div className="p-6 max-w-[1400px] mx-auto min-h-full">
+      <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 style={{ margin: 0 }}>Moduldatenbank</h2>
-          {saving && <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: 'var(--text-secondary)' }}>Speichert...</p>}
+          <h2 className="m-0">Moduldatenbank</h2>
+          {saving && <p className="m-0 mt-1 text-xs text-foreground-secondary">Speichert...</p>}
         </div>
-        <button
+        <Button
           onClick={handleCreate}
           disabled={!!editingModule || saving}
-          style={{
-            padding: '12px 24px',
-            background: (editingModule || saving) ? 'var(--bg-tertiary)' : 'var(--accent)',
-            color: (editingModule || saving) ? 'var(--text-secondary)' : 'var(--bg-primary)',
-            border: 'none',
-            borderRadius: '4px',
-            fontWeight: 600,
-            cursor: (editingModule || saving) ? 'not-allowed' : 'pointer',
-            fontFamily: 'inherit',
-            fontSize: '14px',
-          }}
+          className="bg-accent hover:bg-accent/90 text-background disabled:bg-background-tertiary disabled:text-foreground-secondary disabled:cursor-not-allowed"
         >
           + Neues Modul
-        </button>
+        </Button>
       </div>
 
       {/* Error message */}
       {error && (
-        <div style={{
-          background: 'rgba(239, 68, 68, 0.1)',
-          border: '1px solid #ef4444',
-          color: '#fca5a5',
-          padding: '12px 16px',
-          borderRadius: '6px',
-          marginBottom: '16px',
-        }}>
+        <div className="bg-destructive/10 border border-destructive text-destructive/90 p-3 rounded-md mb-4">
           {error}
         </div>
       )}
@@ -185,11 +177,11 @@ export default function ModuleDatabase({ modules, setModules, leitungskatalog = 
         return Object.entries(grouped)
           .sort(([typeA], [typeB]) => typeA.localeCompare(typeB))
           .map(([type, typeModules]) => (
-          <div key={type} style={{ marginBottom: '32px' }}>
-            <h3 style={{ marginBottom: '16px', color: 'var(--accent)', fontSize: '16px' }}>
+          <div key={type} className="mb-8">
+            <h3 className="mb-4 text-accent text-base">
               {type}
             </h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px' }}>
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-4">
               {typeModules.map((module) => (
                 <ModuleCard
                   key={module.id}
@@ -227,26 +219,18 @@ function ModuleCard({ module, onEdit, disabled, modultypen }) {
   const showsUnit = moduleTypeInfo?.berechnungsart === 'pro_einheit' && moduleTypeInfo?.einheit;
 
   return (
-    <div
-      style={{
-        background: 'var(--bg-secondary)',
-        border: '1px solid var(--border)',
-        borderRadius: '8px',
-        padding: '16px',
-        opacity: disabled ? 0.5 : 1,
-      }}
-    >
-      <div style={{ fontWeight: 600, fontSize: '16px', marginBottom: '4px' }}>
+    <div className={`bg-background-secondary border border-border rounded-lg p-4 ${disabled ? 'opacity-50' : ''}`}>
+      <div className="font-semibold text-base mb-1">
         {module.name}
       </div>
-      <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
+      <div className="text-xs text-foreground-secondary mb-3">
         {module.moduleType || 'Modul'}
-        {showsUnit && <span style={{ marginLeft: '4px', color: 'var(--accent)' }}>({moduleTypeInfo.einheit})</span>}
+        {showsUnit && <span className="ml-1 text-accent">({moduleTypeInfo.einheit})</span>}
       </div>
 
       {/* Schnellinfo */}
-      <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
-        ⚡ {module.inputs.length} Eingänge | {module.outputs.length} Ausgänge
+      <div className="text-[11px] text-foreground-secondary mb-3">
+        {module.inputs.length} Eingänge | {module.outputs.length} Ausgänge
       </div>
 
       {/* Produktlink Button (falls vorhanden) */}
@@ -255,46 +239,26 @@ function ModuleCard({ module, onEdit, disabled, modultypen }) {
           href={module.properties.produktlink}
           target="_blank"
           rel="noopener noreferrer"
-          style={{ textDecoration: 'none', display: 'block', marginBottom: '8px' }}
+          className="block mb-2"
         >
-          <button
-            style={{
-              width: '100%',
-              padding: '6px',
-              background: 'var(--bg-tertiary)',
-              color: 'var(--text-secondary)',
-              border: '1px solid var(--border)',
-              borderRadius: '4px',
-              fontSize: '11px',
-              fontWeight: 500,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-            }}
+          <Button
+            variant="secondary"
+            className="w-full bg-background-tertiary border-border text-foreground-secondary text-[11px] h-auto py-1.5"
           >
-            🔗 Produktlink
-          </button>
+            Produktlink
+          </Button>
         </a>
       )}
 
       {/* Bearbeiten Button */}
-      <button
+      <Button
         onClick={onEdit}
         disabled={disabled}
-        style={{
-          width: '100%',
-          padding: '8px',
-          background: 'var(--bg-tertiary)',
-          color: 'var(--text-primary)',
-          border: '1px solid var(--border)',
-          borderRadius: '4px',
-          fontSize: '12px',
-          fontWeight: 600,
-          cursor: disabled ? 'not-allowed' : 'pointer',
-          fontFamily: 'inherit',
-        }}
+        variant="secondary"
+        className="w-full bg-background-tertiary border-border disabled:cursor-not-allowed text-xs"
       >
         Bearbeiten
-      </button>
+      </Button>
     </div>
   );
 }
@@ -374,78 +338,58 @@ function ModuleForm({ module, onSave, onCancel, onDelete, isCreating, leitungska
   return (
     <form
       onSubmit={handleSubmit}
-      style={{
-        background: 'var(--bg-secondary)',
-        border: '2px solid var(--accent)',
-        borderRadius: '8px',
-        padding: '24px',
-        marginBottom: '32px',
-      }}
+      className="bg-background-secondary border-2 border-accent rounded-lg p-6 mb-8"
     >
-      <h3 style={{ marginTop: 0, marginBottom: '24px' }}>
+      <h3 className="mt-0 mb-6">
         {isCreating ? 'Neues Modul erstellen' : 'Modul bearbeiten'}
       </h3>
 
       {/* Name & Modultyp */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '16px', marginBottom: '24px' }}>
+      <div className="grid grid-cols-[2fr_1fr] gap-4 mb-6">
         <div>
-          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '13px' }}>
+          <label className="block mb-2 font-semibold text-[13px]">
             Name *
           </label>
-          <input
+          <Input
             type="text"
             required
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            style={{
-              width: '100%',
-              padding: '10px',
-              background: 'var(--bg-tertiary)',
-              border: '1px solid var(--border)',
-              borderRadius: '4px',
-              color: 'var(--text-primary)',
-              fontFamily: 'inherit',
-              fontSize: '14px',
-            }}
+            className="bg-background-tertiary border-border"
           />
         </div>
 
         <div>
-          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '13px' }}>
+          <label className="block mb-2 font-semibold text-[13px]">
             Modultyp *
           </label>
-          <select
+          <Select
             required
             value={formData.moduleType || (modultypen.length > 0 ? modultypen[0].name : '')}
-            onChange={(e) => setFormData({ ...formData, moduleType: e.target.value })}
-            style={{
-              width: '100%',
-              padding: '10px',
-              background: 'var(--bg-tertiary)',
-              border: '1px solid var(--border)',
-              borderRadius: '4px',
-              color: 'var(--text-primary)',
-              fontFamily: 'inherit',
-              fontSize: '14px',
-            }}
+            onValueChange={(value) => setFormData({ ...formData, moduleType: value })}
           >
-            {modultypen.length === 0 ? (
-              <option value="">Keine Modultypen verfügbar</option>
-            ) : (
-              modultypen.map(type => (
-                <option key={type.id} value={type.name}>{type.name}</option>
-              ))
-            )}
-          </select>
+            <SelectTrigger className="bg-background-tertiary border-border">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-background-secondary border-border">
+              {modultypen.length === 0 ? (
+                <SelectItem value="">Keine Modultypen verfügbar</SelectItem>
+              ) : (
+                modultypen.map(type => (
+                  <SelectItem key={type.id} value={type.name}>{type.name}</SelectItem>
+                ))
+              )}
+            </SelectContent>
+          </Select>
           {modultypen.length === 0 && (
-            <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+            <div className="text-[11px] text-foreground-secondary mt-1">
               Bitte erstelle zuerst Modultypen im Tab "Modultypen"
             </div>
           )}
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px' }}>
+      <div className="grid grid-cols-3 gap-6">
         {/* Eigenschaften */}
         <FormSection title="Eigenschaften">
           <FormField
@@ -484,10 +428,10 @@ function ModuleForm({ module, onSave, onCancel, onDelete, isCreating, leitungska
 
         {/* Eingänge */}
         <div>
-          <h4 style={{ fontSize: '13px', fontWeight: 600, marginBottom: '12px', color: 'var(--accent)' }}>
+          <h4 className="text-[13px] font-semibold mb-3 text-accent">
             Eingänge ({formData.inputs.length}/12)
           </h4>
-          <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+          <div className="max-h-[400px] overflow-y-auto">
             {formData.inputs.map((input, idx) => (
               <InputOutputEditor
                 key={input.id}
@@ -502,34 +446,22 @@ function ModuleForm({ module, onSave, onCancel, onDelete, isCreating, leitungska
               />
             ))}
           </div>
-          <button
+          <Button
             type="button"
             onClick={handleAddInput}
             disabled={formData.inputs.length >= 12}
-            style={{
-              width: '100%',
-              padding: '8px',
-              marginTop: '8px',
-              background: formData.inputs.length >= 12 ? 'var(--bg-tertiary)' : 'var(--success)',
-              color: formData.inputs.length >= 12 ? 'var(--text-secondary)' : 'white',
-              border: 'none',
-              borderRadius: '4px',
-              fontSize: '12px',
-              fontWeight: 600,
-              cursor: formData.inputs.length >= 12 ? 'not-allowed' : 'pointer',
-              fontFamily: 'inherit',
-            }}
+            className="w-full mt-2 bg-success hover:bg-success/90 text-white disabled:bg-background-tertiary disabled:text-foreground-secondary disabled:cursor-not-allowed text-xs"
           >
             + Eingang
-          </button>
+          </Button>
         </div>
 
         {/* Ausgänge */}
         <div>
-          <h4 style={{ fontSize: '13px', fontWeight: 600, marginBottom: '12px', color: 'var(--accent)' }}>
+          <h4 className="text-[13px] font-semibold mb-3 text-accent">
             Ausgänge ({formData.outputs.length}/36)
           </h4>
-          <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+          <div className="max-h-[400px] overflow-y-auto">
             {formData.outputs.map((output, idx) => (
               <InputOutputEditor
                 key={output.id}
@@ -544,88 +476,45 @@ function ModuleForm({ module, onSave, onCancel, onDelete, isCreating, leitungska
               />
             ))}
           </div>
-          <button
+          <Button
             type="button"
             onClick={handleAddOutput}
             disabled={formData.outputs.length >= 36}
-            style={{
-              width: '100%',
-              padding: '8px',
-              marginTop: '8px',
-              background: formData.outputs.length >= 36 ? 'var(--bg-tertiary)' : 'var(--success)',
-              color: formData.outputs.length >= 36 ? 'var(--text-secondary)' : 'white',
-              border: 'none',
-              borderRadius: '4px',
-              fontSize: '12px',
-              fontWeight: 600,
-              cursor: formData.outputs.length >= 36 ? 'not-allowed' : 'pointer',
-              fontFamily: 'inherit',
-            }}
+            className="w-full mt-2 bg-success hover:bg-success/90 text-white disabled:bg-background-tertiary disabled:text-foreground-secondary disabled:cursor-not-allowed text-xs"
           >
             + Ausgang
-          </button>
+          </Button>
         </div>
       </div>
 
       {/* Buttons */}
-      <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
-        <button
+      <div className="flex gap-3 mt-6">
+        <Button
           type="submit"
-          style={{
-            flex: 1,
-            padding: '12px',
-            background: 'var(--accent)',
-            color: 'var(--bg-primary)',
-            border: 'none',
-            borderRadius: '4px',
-            fontWeight: 600,
-            cursor: 'pointer',
-            fontFamily: 'inherit',
-            fontSize: '14px',
-          }}
+          className="flex-1 bg-accent hover:bg-accent/90 text-background"
         >
           {isCreating ? 'Erstellen' : 'Speichern'}
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
           onClick={onCancel}
-          style={{
-            flex: 1,
-            padding: '12px',
-            background: 'var(--bg-tertiary)',
-            color: 'var(--text-primary)',
-            border: '1px solid var(--border)',
-            borderRadius: '4px',
-            fontWeight: 600,
-            cursor: 'pointer',
-            fontFamily: 'inherit',
-            fontSize: '14px',
-          }}
+          variant="secondary"
+          className="flex-1 bg-background-tertiary border-border"
         >
           Abbrechen
-        </button>
+        </Button>
         {!isCreating && (
-          <button
+          <Button
             type="button"
             onClick={() => {
               onDelete(formData);  // Pass the whole module, not just the ID
               onCancel();
             }}
-            style={{
-              flex: 1,
-              padding: '12px',
-              background: 'var(--error)',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              fontSize: '14px',
-            }}
+            variant="destructive"
+            className="flex-1 bg-destructive hover:bg-destructive/90"
           >
             Löschen
-          </button>
+          </Button>
         )}
       </div>
     </form>
@@ -635,17 +524,10 @@ function ModuleForm({ module, onSave, onCancel, onDelete, isCreating, leitungska
 function FormSection({ title, children }) {
   return (
     <div>
-      <div
-        style={{
-          fontSize: '13px',
-          fontWeight: 600,
-          color: 'var(--accent)',
-          marginBottom: '12px',
-        }}
-      >
+      <div className="text-[13px] font-semibold text-accent mb-3">
         {title}
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div className="flex flex-col gap-3">
         {children}
       </div>
     </div>
@@ -655,10 +537,10 @@ function FormSection({ title, children }) {
 function FormField({ label, value, onChange, type = 'text', step }) {
   return (
     <div>
-      <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px' }}>
+      <label className="block mb-1 text-xs">
         {label}
       </label>
-      <input
+      <Input
         type={type}
         step={step}
         value={value ?? ''}
@@ -666,16 +548,7 @@ function FormField({ label, value, onChange, type = 'text', step }) {
           const val = type === 'number' ? (e.target.value ? parseFloat(e.target.value) : null) : e.target.value;
           onChange(val);
         }}
-        style={{
-          width: '100%',
-          padding: '8px',
-          background: 'var(--bg-tertiary)',
-          border: '1px solid var(--border)',
-          borderRadius: '4px',
-          color: 'var(--text-primary)',
-          fontFamily: 'inherit',
-          fontSize: '12px',
-        }}
+        className="bg-background-tertiary border-border text-xs"
       />
     </div>
   );

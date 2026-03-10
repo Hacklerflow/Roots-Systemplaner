@@ -1,6 +1,22 @@
 import { useState, useEffect } from 'react';
 import { isJunction } from '../../data/types';
 import { evaluateFormula } from '../../utils/formulaEvaluator';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 export default function ConnectionModal({ connection, sourceModule, targetModule, leitungskatalog = [], verbindungsartenkatalog = [], formulaskatalog = [], onClose, onSave, onDelete }) {
   const [formData, setFormData] = useState({
@@ -160,326 +176,210 @@ export default function ConnectionModal({ connection, sourceModule, targetModule
     : targetModule.name;
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: 'rgba(0, 0, 0, 0.8)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000,
-      }}
-      onClick={onClose}
-    >
-      <div
-        style={{
-          background: 'var(--bg-secondary)',
-          border: '2px solid var(--accent)',
-          borderRadius: '8px',
-          padding: '24px',
-          maxWidth: '600px',
-          width: '90%',
-          maxHeight: '90vh',
-          overflow: 'auto',
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 style={{ marginTop: 0, marginBottom: '24px', color: 'var(--accent)' }}>
-          Verbindung bearbeiten
-        </h2>
+    <Dialog open={!!connection && !!sourceModule && !!targetModule} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="bg-background-secondary border-accent max-w-[600px] max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-xl font-semibold text-accent">
+            Verbindung bearbeiten
+          </DialogTitle>
+        </DialogHeader>
 
-        {/* Verbindungs-Info */}
-        <div style={{
-          background: 'var(--bg-tertiary)',
-          padding: '16px',
-          borderRadius: '4px',
-          marginBottom: '24px',
-          border: '1px solid var(--border)'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '4px' }}>
-                {sourceName}
+        <div className="space-y-6">
+          {/* Verbindungs-Info */}
+          <div className="bg-background-tertiary border border-border rounded-md p-4">
+            <div className="flex items-center gap-3">
+              <div className="flex-1">
+                <div className="text-[13px] font-semibold mb-1">
+                  {sourceName}
+                </div>
+                <div className="text-[11px] text-text-secondary">
+                  {output?.label || (isJunction(sourceModule) ? connection.sourceHandle : 'Ausgang')}
+                </div>
               </div>
-              <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-                {output?.label || (isJunction(sourceModule) ? connection.sourceHandle : 'Ausgang')}
-              </div>
-            </div>
-            <div style={{ fontSize: '20px', color: 'var(--accent)' }}>→</div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '4px' }}>
-                {targetName}
-              </div>
-              <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-                {input?.label || (isJunction(targetModule) ? connection.targetHandle : 'Eingang')}
+              <div className="text-xl text-accent">→</div>
+              <div className="flex-1">
+                <div className="text-[13px] font-semibold mb-1">
+                  {targetName}
+                </div>
+                <div className="text-[11px] text-text-secondary">
+                  {input?.label || (isJunction(targetModule) ? connection.targetHandle : 'Eingang')}
+                </div>
               </div>
             </div>
           </div>
+
+          {/* Aktive Formel Info */}
+          {activeFormula && (
+            <div className="bg-background-tertiary border border-border rounded-md p-3 text-xs">
+              <div className="font-semibold mb-1 text-accent">
+                📐 Aktive Formel: {activeFormula.name}
+              </div>
+              <code className="text-[11px] text-text-secondary">
+                {activeFormula.formula}
+              </code>
+            </div>
+          )}
+
+          {/* Eigenschaften */}
+          <div className="space-y-4">
+            {/* Länge */}
+            <div className="space-y-2">
+              <label htmlFor="laenge" className="block text-[13px] font-semibold">
+                Länge (Meter)
+              </label>
+              <Input
+                id="laenge"
+                type="number"
+                step="0.1"
+                value={formData.laenge_meter ?? ''}
+                onChange={(e) => setFormData({
+                  ...formData,
+                  laenge_meter: e.target.value ? parseFloat(e.target.value) : null
+                })}
+                placeholder="z.B. 5.5"
+                className="bg-background-tertiary border-border focus-visible:border-accent focus-visible:ring-accent/10"
+              />
+            </div>
+
+            {/* Leitungstyp aus Katalog */}
+            <div className="space-y-2">
+              <label htmlFor="leitung" className="block text-[13px] font-semibold">
+                Leitungstyp
+              </label>
+              <Select
+                value={formData.leitungskatalog_id}
+                onValueChange={(value) => handleLeitungSelect(value)}
+              >
+                <SelectTrigger className="bg-background-tertiary border-border focus:ring-accent">
+                  <SelectValue placeholder="Benutzerdefiniert" />
+                </SelectTrigger>
+                <SelectContent className="bg-background-secondary border-border">
+                  <SelectItem value="">Benutzerdefiniert</SelectItem>
+                  {getCompatibleLeitungen().map((leitung) => (
+                    <SelectItem key={leitung.id} value={leitung.id}>
+                      {leitung.dimension} ({leitung.preis_pro_meter ? `${leitung.preis_pro_meter} €/m` : 'kein Preis'})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Dimension (automatisch oder manuell) */}
+            <div className="space-y-2">
+              <label htmlFor="dimension" className="block text-[13px] font-semibold">
+                Dimension
+              </label>
+              <Input
+                id="dimension"
+                type="text"
+                value={formData.dimension}
+                onChange={(e) => setFormData({ ...formData, dimension: e.target.value })}
+                placeholder="z.B. DN50, 3/4 Zoll"
+                disabled={!!formData.leitungskatalog_id}
+                className="bg-background-tertiary border-border focus-visible:border-accent focus-visible:ring-accent/10 disabled:bg-background-secondary disabled:opacity-70 disabled:cursor-not-allowed"
+              />
+            </div>
+
+            {/* Preis pro Meter (automatisch oder manuell) */}
+            <div className="space-y-2">
+              <label htmlFor="preis" className="block text-[13px] font-semibold">
+                Preis pro Meter (€)
+              </label>
+              <Input
+                id="preis"
+                type="number"
+                step="0.01"
+                value={formData.preis_pro_meter ?? ''}
+                onChange={(e) => setFormData({
+                  ...formData,
+                  preis_pro_meter: e.target.value ? parseFloat(e.target.value) : null
+                })}
+                placeholder="z.B. 15.50"
+                disabled={!!formData.leitungskatalog_id}
+                className="bg-background-tertiary border-border focus-visible:border-accent focus-visible:ring-accent/10 disabled:bg-background-secondary disabled:opacity-70 disabled:cursor-not-allowed"
+              />
+            </div>
+
+            {/* Faktor (für Druckverlust-Berechnung) */}
+            <div className="space-y-2">
+              <label htmlFor="faktor" className="block text-[13px] font-semibold">
+                Faktor (für Druckverlust)
+              </label>
+              <Input
+                id="faktor"
+                type="number"
+                step="0.1"
+                min="0.1"
+                value={formData.faktor ?? 1.4}
+                onChange={(e) => setFormData({
+                  ...formData,
+                  faktor: e.target.value ? parseFloat(e.target.value) : 1.4
+                })}
+                className="bg-background-tertiary border-border focus-visible:border-accent focus-visible:ring-accent/10"
+              />
+              <div className="text-[11px] text-text-secondary">
+                Standard: 1.4 (für Sole-Kreisläufe)
+              </div>
+            </div>
+          </div>
+
+          {/* Berechneter Druckverlust */}
+          {activeFormula && (
+            <div className={`rounded-md p-4 border ${
+              calculatedLoss !== null
+                ? 'bg-success/10 border-success'
+                : calculationError
+                  ? 'bg-warning/10 border-warning'
+                  : 'bg-background-tertiary border-border'
+            }`}>
+              <div className={`font-semibold mb-2 text-[13px] ${
+                calculatedLoss !== null ? 'text-success' : 'text-text-primary'
+              }`}>
+                {calculatedLoss !== null ? '✓ Druckverlust berechnet' : 'Druckverlust'}
+              </div>
+              {calculatedLoss !== null ? (
+                <div className="text-2xl font-bold text-success">
+                  {calculatedLoss.toFixed(2)} m
+                </div>
+              ) : calculationError ? (
+                <div className="text-xs text-warning">
+                  ⚠️ {calculationError}
+                </div>
+              ) : (
+                <div className="text-xs text-text-secondary">
+                  Länge eingeben für automatische Berechnung
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* Aktive Formel Info */}
-        {activeFormula && (
-          <div style={{
-            background: 'var(--bg-tertiary)',
-            border: '1px solid var(--border)',
-            borderRadius: '4px',
-            padding: '12px',
-            marginBottom: '16px',
-            fontSize: '12px',
-          }}>
-            <div style={{ fontWeight: 600, marginBottom: '4px', color: 'var(--accent)' }}>
-              📐 Aktive Formel: {activeFormula.name}
-            </div>
-            <code style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-              {activeFormula.formula}
-            </code>
-          </div>
-        )}
-
-        {/* Eigenschaften */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
-          {/* Länge */}
-          <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '13px' }}>
-              Länge (Meter)
-            </label>
-            <input
-              type="number"
-              step="0.1"
-              value={formData.laenge_meter ?? ''}
-              onChange={(e) => setFormData({
-                ...formData,
-                laenge_meter: e.target.value ? parseFloat(e.target.value) : null
-              })}
-              placeholder="z.B. 5.5"
-              style={{
-                width: '100%',
-                padding: '10px',
-                background: 'var(--bg-tertiary)',
-                border: '1px solid var(--border)',
-                borderRadius: '4px',
-                color: 'var(--text-primary)',
-                fontFamily: 'inherit',
-                fontSize: '14px',
-              }}
-            />
-          </div>
-
-          {/* Leitungstyp aus Katalog */}
-          <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '13px' }}>
-              Leitungstyp
-            </label>
-            <select
-              value={formData.leitungskatalog_id}
-              onChange={(e) => handleLeitungSelect(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '10px',
-                background: 'var(--bg-tertiary)',
-                border: '1px solid var(--border)',
-                borderRadius: '4px',
-                color: 'var(--text-primary)',
-                fontFamily: 'inherit',
-                fontSize: '14px',
-              }}
-            >
-              <option value="">Benutzerdefiniert</option>
-              {getCompatibleLeitungen().map((leitung) => (
-                <option key={leitung.id} value={leitung.id}>
-                  {leitung.dimension} ({leitung.preis_pro_meter ? `${leitung.preis_pro_meter} €/m` : 'kein Preis'})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Dimension (automatisch oder manuell) */}
-          <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '13px' }}>
-              Dimension
-            </label>
-            <input
-              type="text"
-              value={formData.dimension}
-              onChange={(e) => setFormData({ ...formData, dimension: e.target.value })}
-              placeholder="z.B. DN50, 3/4 Zoll"
-              disabled={!!formData.leitungskatalog_id}
-              style={{
-                width: '100%',
-                padding: '10px',
-                background: formData.leitungskatalog_id ? 'var(--bg-secondary)' : 'var(--bg-tertiary)',
-                border: '1px solid var(--border)',
-                borderRadius: '4px',
-                color: 'var(--text-primary)',
-                fontFamily: 'inherit',
-                fontSize: '14px',
-                opacity: formData.leitungskatalog_id ? 0.7 : 1,
-                cursor: formData.leitungskatalog_id ? 'not-allowed' : 'text',
-              }}
-            />
-          </div>
-
-          {/* Preis pro Meter (automatisch oder manuell) */}
-          <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '13px' }}>
-              Preis pro Meter (€)
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              value={formData.preis_pro_meter ?? ''}
-              onChange={(e) => setFormData({
-                ...formData,
-                preis_pro_meter: e.target.value ? parseFloat(e.target.value) : null
-              })}
-              placeholder="z.B. 15.50"
-              disabled={!!formData.leitungskatalog_id}
-              style={{
-                width: '100%',
-                padding: '10px',
-                background: formData.leitungskatalog_id ? 'var(--bg-secondary)' : 'var(--bg-tertiary)',
-                border: '1px solid var(--border)',
-                borderRadius: '4px',
-                color: 'var(--text-primary)',
-                fontFamily: 'inherit',
-                fontSize: '14px',
-                opacity: formData.leitungskatalog_id ? 0.7 : 1,
-                cursor: formData.leitungskatalog_id ? 'not-allowed' : 'text',
-              }}
-            />
-          </div>
-
-          {/* Faktor (für Druckverlust-Berechnung) */}
-          <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '13px' }}>
-              Faktor (für Druckverlust)
-            </label>
-            <input
-              type="number"
-              step="0.1"
-              min="0.1"
-              value={formData.faktor ?? 1.4}
-              onChange={(e) => setFormData({
-                ...formData,
-                faktor: e.target.value ? parseFloat(e.target.value) : 1.4
-              })}
-              style={{
-                width: '100%',
-                padding: '10px',
-                background: 'var(--bg-tertiary)',
-                border: '1px solid var(--border)',
-                borderRadius: '4px',
-                color: 'var(--text-primary)',
-                fontFamily: 'inherit',
-                fontSize: '14px',
-              }}
-            />
-            <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-              Standard: 1.4 (für Sole-Kreisläufe)
-            </div>
-          </div>
-        </div>
-
-        {/* Berechneter Druckverlust */}
-        {activeFormula && (
-          <div style={{
-            background: calculatedLoss !== null
-              ? 'rgba(34, 197, 94, 0.1)'
-              : calculationError
-                ? 'rgba(239, 160, 68, 0.1)'
-                : 'var(--bg-tertiary)',
-            border: `1px solid ${calculatedLoss !== null
-              ? '#22c55e'
-              : calculationError
-                ? '#ef9444'
-                : 'var(--border)'}`,
-            borderRadius: '4px',
-            padding: '16px',
-            marginBottom: '24px',
-          }}>
-            <div style={{
-              fontWeight: 600,
-              marginBottom: '8px',
-              fontSize: '13px',
-              color: calculatedLoss !== null ? '#22c55e' : 'var(--text-primary)',
-            }}>
-              {calculatedLoss !== null ? '✓ Druckverlust berechnet' : 'Druckverlust'}
-            </div>
-            {calculatedLoss !== null ? (
-              <div style={{ fontSize: '24px', fontWeight: 700, color: '#22c55e' }}>
-                {calculatedLoss.toFixed(2)} m
-              </div>
-            ) : calculationError ? (
-              <div style={{ fontSize: '12px', color: '#ef9444' }}>
-                ⚠️ {calculationError}
-              </div>
-            ) : (
-              <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                Länge eingeben für automatische Berechnung
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Buttons */}
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <button
-            onClick={handleSave}
-            style={{
-              flex: 1,
-              padding: '12px',
-              background: 'var(--accent)',
-              color: 'var(--bg-primary)',
-              border: 'none',
-              borderRadius: '4px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              fontSize: '14px',
-            }}
-          >
-            Speichern
-          </button>
-          <button
+        <DialogFooter className="mt-6">
+          <Button
+            type="button"
             onClick={onClose}
-            style={{
-              flex: 1,
-              padding: '12px',
-              background: 'var(--bg-tertiary)',
-              color: 'var(--text-primary)',
-              border: '1px solid var(--border)',
-              borderRadius: '4px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              fontSize: '14px',
-            }}
+            variant="secondary"
+            className="bg-background-tertiary hover:bg-border"
           >
             Abbrechen
-          </button>
-          <button
+          </Button>
+          <Button
+            type="button"
             onClick={handleDelete}
-            style={{
-              flex: 1,
-              padding: '12px',
-              background: 'var(--error)',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              fontSize: '14px',
-            }}
+            variant="destructive"
+            className="bg-destructive hover:bg-destructive/90"
           >
             Löschen
-          </button>
-        </div>
-      </div>
-    </div>
+          </Button>
+          <Button
+            type="button"
+            onClick={handleSave}
+            className="bg-accent hover:bg-[#3ba958] text-background shadow-[0_2px_8px_rgba(46,160,67,0.3)]"
+          >
+            Speichern
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
