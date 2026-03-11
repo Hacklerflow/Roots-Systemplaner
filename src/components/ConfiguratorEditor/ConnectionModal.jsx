@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { isJunction } from '../../data/types';
-import { evaluateFormula } from '../../utils/formulaEvaluator';
+import { evaluateFormula, evaluateAdvancedPressureDrop, canUseAdvancedCalculation } from '../../utils/formulaEvaluator';
+import { catalogsAPI } from '../../api/client';
 import {
   Dialog,
   DialogContent,
@@ -18,7 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-export default function ConnectionModal({ connection, sourceModule, targetModule, leitungskatalog = [], verbindungsartenkatalog = [], formulaskatalog = [], onClose, onSave, onDelete }) {
+export default function ConnectionModal({ connection, sourceModule, targetModule, leitungskatalog = [], verbindungsartenkatalog = [], formulaskatalog = [], soleCatalog = [], onClose, onSave, onDelete }) {
   const [formData, setFormData] = useState({
     laenge_meter: connection.laenge_meter || connection.rohrlänge_m || null,
     dimension: connection.dimension || connection.rohrdimension || '',
@@ -29,6 +30,9 @@ export default function ConnectionModal({ connection, sourceModule, targetModule
 
   const [calculatedLoss, setCalculatedLoss] = useState(null);
   const [calculationError, setCalculationError] = useState(null);
+  const [advancedDetails, setAdvancedDetails] = useState(null);
+  const [calculationMethods, setCalculationMethods] = useState([]);
+  const [activeMethod, setActiveMethod] = useState(null);
 
   useEffect(() => {
     setFormData({
@@ -40,14 +44,32 @@ export default function ConnectionModal({ connection, sourceModule, targetModule
     });
   }, [connection]);
 
-  // Aktive Formel finden
+  // Fetch calculation methods on mount
+  useEffect(() => {
+    const fetchMethods = async () => {
+      try {
+        const result = await catalogsAPI.getCalculationMethods();
+        const methods = result.calculationMethods || [];
+        setCalculationMethods(methods);
+        const active = methods.find(m => m.is_active);
+        setActiveMethod(active);
+      } catch (error) {
+        console.error('Failed to fetch calculation methods:', error);
+      }
+    };
+    fetchMethods();
+  }, []);
+
+  // Aktive Formel finden (fallback for formula-based calculation)
   const activeFormula = formulaskatalog.find(f => f.is_active);
 
   // Berechne Druckverlust wenn sich Werte ändern
   useEffect(() => {
-    if (!activeFormula) {
+    // Check if we have a calculation method
+    if (!activeMethod && !activeFormula) {
       setCalculationError(null);
       setCalculatedLoss(null);
+      setAdvancedDetails(null);
       return;
     }
 
@@ -55,32 +77,90 @@ export default function ConnectionModal({ connection, sourceModule, targetModule
     if (!formData.laenge_meter) {
       setCalculatedLoss(null);
       setCalculationError(null);
+      setAdvancedDetails(null);
       return;
     }
 
     try {
-      // Extrahiere DN-Wert aus Dimension (z.B. "DN50" -> 50)
-      let dimensionValue = 0;
-      if (formData.dimension) {
-        const match = formData.dimension.match(/\d+/);
-        dimensionValue = match ? parseFloat(match[0]) : 0;
+      // ADVANCED CALCULATION (Haaland, Colebrook-White, etc.)
+      if (activeMethod && activeMethod.algorithmus !== 'formula') {
+        // Find pipe in catalog
+        const pipe = leitungskatalog.find(p => p.id === formData.leitungskatalog_id);
+
+        if (!pipe) {
+          setCalculatedLoss(null);
+          setCalculationError('Bitte wählen Sie einen Leitungstyp aus dem Katalog');
+          setAdvancedDetails(null);
+          return;
+        }
+
+        // Find fluid (use first one if not specified)
+        const fluid = soleCatalog.length > 0 ? soleCatalog[0] : null;
+
+        if (!fluid) {
+          setCalculatedLoss(null);
+          setCalculationError('Kein Wärmeträger (Sole) im Katalog gefunden');
+          setAdvancedDetails(null);
+          return;
+        }
+
+        // Check if advanced calculation is possible
+        const canCalculate = canUseAdvancedCalculation(pipe, fluid);
+        if (!canCalculate.possible) {
+          setCalculatedLoss(null);
+          setCalculationError(`Fehlende Eigenschaften: ${canCalculate.missingFields.join(', ')}`);
+          setAdvancedDetails(null);
+          return;
+        }
+
+        // Prepare connection data
+        const connectionData = {
+          laenge_meter: formData.laenge_meter,
+          volumenstrom_m3s: 0.0001, // Default small flow for preview
+          // User could add more fields later (heating power, etc.)
+        };
+
+        // Execute advanced calculation
+        const result = evaluateAdvancedPressureDrop(
+          connectionData,
+          activeMethod.algorithmus,
+          fluid,
+          pipe
+        );
+
+        setCalculatedLoss(result.pressureDrop_m);
+        setAdvancedDetails(result);
+        setCalculationError(null);
+        return;
       }
 
-      // Prepare data für Formula Evaluator
-      const data = {
-        Rohrlänge: parseFloat(formData.laenge_meter) || 0,
-        Rohrdimension: dimensionValue,
-        Faktor: parseFloat(formData.faktor) || 1.4,
-      };
+      // SIMPLE FORMULA CALCULATION (backward compatible)
+      if (activeFormula) {
+        // Extrahiere DN-Wert aus Dimension (z.B. "DN50" -> 50)
+        let dimensionValue = 0;
+        if (formData.dimension) {
+          const match = formData.dimension.match(/\d+/);
+          dimensionValue = match ? parseFloat(match[0]) : 0;
+        }
 
-      const loss = evaluateFormula(activeFormula.formula, data);
-      setCalculatedLoss(loss);
-      setCalculationError(null);
+        // Prepare data für Formula Evaluator
+        const data = {
+          Rohrlänge: parseFloat(formData.laenge_meter) || 0,
+          Rohrdimension: dimensionValue,
+          Faktor: parseFloat(formData.faktor) || 1.4,
+        };
+
+        const loss = evaluateFormula(activeFormula.formula, data);
+        setCalculatedLoss(loss);
+        setAdvancedDetails(null);
+        setCalculationError(null);
+      }
     } catch (error) {
       setCalculatedLoss(null);
+      setAdvancedDetails(null);
       setCalculationError(error.message);
     }
-  }, [formData, activeFormula]);
+  }, [formData, activeFormula, activeMethod, leitungskatalog, soleCatalog]);
 
   // Handler für Leitungsauswahl aus Katalog
   const handleLeitungSelect = (leitungId) => {
@@ -208,8 +288,25 @@ export default function ConnectionModal({ connection, sourceModule, targetModule
             </div>
           </div>
 
-          {/* Aktive Formel Info */}
-          {activeFormula && (
+          {/* Aktive Berechnungsmethode Info */}
+          {activeMethod && (
+            <div className="bg-background-tertiary border border-border rounded-md p-3 text-xs">
+              <div className="font-semibold mb-1 text-accent">
+                📐 Berechnungsmethode: {activeMethod.name}
+              </div>
+              <div className="text-[11px] text-text-secondary">
+                {activeMethod.beschreibung}
+              </div>
+              {activeMethod.genauigkeit && (
+                <div className="text-[10px] text-accent mt-1">
+                  Genauigkeit: {activeMethod.genauigkeit}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Fallback: Aktive Formel Info */}
+          {!activeMethod && activeFormula && (
             <div className="bg-background-tertiary border border-border rounded-md p-3 text-xs">
               <div className="font-semibold mb-1 text-accent">
                 📐 Aktive Formel: {activeFormula.name}
@@ -324,7 +421,7 @@ export default function ConnectionModal({ connection, sourceModule, targetModule
           </div>
 
           {/* Berechneter Druckverlust */}
-          {activeFormula && (
+          {(activeMethod || activeFormula) && (
             <div className={`rounded-md p-4 border ${
               calculatedLoss !== null
                 ? 'bg-success/10 border-success'
@@ -338,9 +435,43 @@ export default function ConnectionModal({ connection, sourceModule, targetModule
                 {calculatedLoss !== null ? '✓ Druckverlust berechnet' : 'Druckverlust'}
               </div>
               {calculatedLoss !== null ? (
-                <div className="text-2xl font-bold text-success">
-                  {calculatedLoss.toFixed(2)} m
-                </div>
+                <>
+                  <div className="text-2xl font-bold text-success mb-3">
+                    {calculatedLoss.toFixed(2)} m
+                  </div>
+
+                  {/* Erweiterte Details (nur bei advanced methods) */}
+                  {advancedDetails && (
+                    <div className="bg-background-secondary rounded-md p-3 space-y-1 text-xs border border-success/20">
+                      <div className="font-semibold text-accent mb-2">Berechnungsdetails</div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <span className="text-text-secondary">Geschwindigkeit:</span>
+                          <span className="ml-2 font-mono">{advancedDetails.velocity_ms.toFixed(3)} m/s</span>
+                        </div>
+                        <div>
+                          <span className="text-text-secondary">Reynolds-Zahl:</span>
+                          <span className="ml-2 font-mono">{advancedDetails.reynolds.toFixed(0)}</span>
+                        </div>
+                        <div>
+                          <span className="text-text-secondary">Strömung:</span>
+                          <span className="ml-2 capitalize">{advancedDetails.flowRegime}</span>
+                        </div>
+                        <div>
+                          <span className="text-text-secondary">Reibungskoeff. λ:</span>
+                          <span className="ml-2 font-mono">{advancedDetails.frictionFactor.toFixed(4)}</span>
+                        </div>
+                        <div className="col-span-2">
+                          <span className="text-text-secondary">Druckverlust:</span>
+                          <span className="ml-2 font-mono">{advancedDetails.pressureDrop_pa.toFixed(0)} Pa</span>
+                        </div>
+                      </div>
+                      <div className="text-[10px] text-text-secondary mt-2 italic">
+                        Basierend auf Standard-Volumenstrom von 0.1 l/s für Vorschau
+                      </div>
+                    </div>
+                  )}
+                </>
               ) : calculationError ? (
                 <div className="text-xs text-warning">
                   ⚠️ {calculationError}

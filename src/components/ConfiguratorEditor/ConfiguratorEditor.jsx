@@ -31,7 +31,7 @@ const edgeTypes = {
 };
 
 // Wrapper Komponente mit ReactFlowProvider
-export default function ConfiguratorEditor({ modules: moduleTemplates, configuration, setConfiguration, leitungskatalog, verbindungsartenkatalog, dimensionskatalog, modultypen, formulaskatalog, pumpenkatalog }) {
+export default function ConfiguratorEditor({ modules: moduleTemplates, configuration, setConfiguration, leitungskatalog, verbindungsartenkatalog, dimensionskatalog, modultypen, formulaskatalog, pumpenkatalog, soleskatalog }) {
   return (
     <ReactFlowProvider>
       <ConfiguratorEditorInner
@@ -44,13 +44,14 @@ export default function ConfiguratorEditor({ modules: moduleTemplates, configura
         modultypen={modultypen}
         formulaskatalog={formulaskatalog}
         pumpenkatalog={pumpenkatalog}
+        soleskatalog={soleskatalog}
       />
     </ReactFlowProvider>
   );
 }
 
 // Innere Komponente die useReactFlow verwenden kann
-function ConfiguratorEditorInner({ modules: moduleTemplates, configuration, setConfiguration, leitungskatalog, verbindungsartenkatalog, dimensionskatalog, modultypen, formulaskatalog, pumpenkatalog }) {
+function ConfiguratorEditorInner({ modules: moduleTemplates, configuration, setConfiguration, leitungskatalog, verbindungsartenkatalog, dimensionskatalog, modultypen, formulaskatalog, pumpenkatalog, soleskatalog }) {
   const reactFlowInstance = useReactFlow();
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -523,6 +524,7 @@ function ConfiguratorEditorInner({ modules: moduleTemplates, configuration, setC
           leitungskatalog={leitungskatalog}
           verbindungsartenkatalog={verbindungsartenkatalog}
           formulaskatalog={formulaskatalog}
+          soleCatalog={soleskatalog}
           onClose={() => setConnectionModalOpen(false)}
           onSave={handleSaveConnection}
           onDelete={() => {

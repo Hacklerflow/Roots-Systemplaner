@@ -247,6 +247,7 @@ export default function ConfiguratorWrapper({
               modultypen={modultypen}
               formulaskatalog={formulaskatalog}
               pumpenkatalog={pumpenkatalog}
+              soleskatalog={soleskatalog}
             />
           )}
 
@@ -271,6 +272,8 @@ export default function ConfiguratorWrapper({
             <PumpAnalysis
               configuration={configuration}
               formulaskatalog={formulaskatalog}
+              pipeCatalog={leitungskatalog}
+              soleCatalog={soleskatalog}
             />
           )}
 

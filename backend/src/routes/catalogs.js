@@ -1191,4 +1191,193 @@ router.delete('/soles/:id', async (req, res) => {
   }
 });
 
+/**
+ * GET /api/catalogs/calculation-methods
+ * Get all calculation methods
+ */
+router.get('/calculation-methods', async (req, res) => {
+  try {
+    console.log('📋 GET /calculation-methods - Fetching calculation methods...');
+    const result = await query(`
+      SELECT * FROM catalog_calculation_methods
+      ORDER BY is_active DESC, name
+    `);
+
+    res.json({ calculationMethods: result.rows });
+  } catch (error) {
+    console.error('Get calculation methods error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * POST /api/catalogs/calculation-methods
+ * Create a new calculation method
+ */
+router.post('/calculation-methods', async (req, res) => {
+  try {
+    const { name, beschreibung, algorithmus, genauigkeit, parameter, is_active } = req.body;
+
+    if (!name || !algorithmus) {
+      return res.status(400).json({ error: 'Name and algorithmus are required' });
+    }
+
+    // If setting this method as active, deactivate all others
+    if (is_active) {
+      await query('UPDATE catalog_calculation_methods SET is_active = false WHERE is_active = true');
+    }
+
+    const result = await query(`
+      INSERT INTO catalog_calculation_methods (name, beschreibung, algorithmus, genauigkeit, parameter, is_active)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING *
+    `, [name, beschreibung || null, algorithmus, genauigkeit || null, JSON.stringify(parameter || {}), is_active || false]);
+
+    res.status(201).json({
+      message: 'Calculation method created',
+      calculationMethod: result.rows[0],
+    });
+  } catch (error) {
+    if (error.code === '23505') {
+      return res.status(409).json({ error: 'Calculation method with this name already exists' });
+    }
+    console.error('Create calculation method error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * PUT /api/catalogs/calculation-methods/:id
+ * Update a calculation method
+ */
+router.put('/calculation-methods/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, beschreibung, algorithmus, genauigkeit, parameter, is_active } = req.body;
+
+    const fields = [];
+    const values = [];
+    let paramCount = 1;
+
+    if (name !== undefined) {
+      fields.push(`name = $${paramCount++}`);
+      values.push(name);
+    }
+    if (beschreibung !== undefined) {
+      fields.push(`beschreibung = $${paramCount++}`);
+      values.push(beschreibung);
+    }
+    if (algorithmus !== undefined) {
+      fields.push(`algorithmus = $${paramCount++}`);
+      values.push(algorithmus);
+    }
+    if (genauigkeit !== undefined) {
+      fields.push(`genauigkeit = $${paramCount++}`);
+      values.push(genauigkeit);
+    }
+    if (parameter !== undefined) {
+      fields.push(`parameter = $${paramCount++}`);
+      values.push(JSON.stringify(parameter));
+    }
+    if (is_active !== undefined) {
+      // If setting this method as active, deactivate all others first
+      if (is_active) {
+        await query('UPDATE catalog_calculation_methods SET is_active = false WHERE is_active = true AND id != $1', [id]);
+      }
+      fields.push(`is_active = $${paramCount++}`);
+      values.push(is_active);
+    }
+
+    if (fields.length === 0) {
+      return res.status(400).json({ error: 'No valid fields to update' });
+    }
+
+    fields.push(`updated_at = CURRENT_TIMESTAMP`);
+    values.push(id);
+
+    const result = await query(`
+      UPDATE catalog_calculation_methods
+      SET ${fields.join(', ')}
+      WHERE id = $${paramCount}
+      RETURNING *
+    `, values);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Calculation method not found' });
+    }
+
+    res.json({
+      message: 'Calculation method updated',
+      calculationMethod: result.rows[0],
+    });
+  } catch (error) {
+    if (error.code === '23505') {
+      return res.status(409).json({ error: 'Calculation method with this name already exists' });
+    }
+    console.error('Update calculation method error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * PUT /api/catalogs/calculation-methods/:id/activate
+ * Activate a specific calculation method (deactivates all others)
+ */
+router.put('/calculation-methods/:id/activate', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Deactivate all methods
+    await query('UPDATE catalog_calculation_methods SET is_active = false');
+
+    // Activate selected method
+    const result = await query(`
+      UPDATE catalog_calculation_methods
+      SET is_active = true, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $1
+      RETURNING *
+    `, [id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Calculation method not found' });
+    }
+
+    res.json({
+      message: 'Calculation method activated',
+      calculationMethod: result.rows[0],
+    });
+  } catch (error) {
+    console.error('Activate calculation method error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * DELETE /api/catalogs/calculation-methods/:id
+ * Delete a calculation method
+ */
+router.delete('/calculation-methods/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await query(`
+      DELETE FROM catalog_calculation_methods
+      WHERE id = $1
+      RETURNING *
+    `, [id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Calculation method not found' });
+    }
+
+    res.json({
+      message: 'Calculation method deleted',
+      calculationMethod: result.rows[0],
+    });
+  } catch (error) {
+    console.error('Delete calculation method error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 export default router;

@@ -318,6 +318,37 @@ export const catalogsAPI = {
       method: 'DELETE',
     });
   },
+
+  // Calculation Methods API
+  getCalculationMethods: async () => {
+    return apiRequest('/api/catalogs/calculation-methods');
+  },
+
+  addCalculationMethod: async (methodData) => {
+    return apiRequest('/api/catalogs/calculation-methods', {
+      method: 'POST',
+      body: JSON.stringify(methodData),
+    });
+  },
+
+  updateCalculationMethod: async (id, methodData) => {
+    return apiRequest(`/api/catalogs/calculation-methods/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(methodData),
+    });
+  },
+
+  activateCalculationMethod: async (id) => {
+    return apiRequest(`/api/catalogs/calculation-methods/${id}/activate`, {
+      method: 'PUT',
+    });
+  },
+
+  deleteCalculationMethod: async (id) => {
+    return apiRequest(`/api/catalogs/calculation-methods/${id}`, {
+      method: 'DELETE',
+    });
+  },
 };
 
 // Admin API

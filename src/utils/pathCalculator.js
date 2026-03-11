@@ -5,7 +5,7 @@
  * Uses BFS to find all reachable endpoints from each pump.
  */
 
-import { evaluateFormula } from './formulaEvaluator';
+import { evaluateFormula, evaluateAdvancedPressureDrop, canUseAdvancedCalculation } from './formulaEvaluator';
 
 /**
  * Find all modules that have pumps (outputs with pump.enabled = true)
@@ -151,17 +151,94 @@ export function findPathsFromPump(startModuleId, startOutputId, configuration) {
  * Calculate pressure loss for a single connection
  *
  * @param {Object} connection - Connection object with rohrlänge_m, rohrdimension, faktor
- * @param {Object} activeFormula - Active formula from catalog
- * @returns {Object} - { loss: number, error?: string }
+ * @param {Object} calculationMethodOrFormula - Calculation method or formula from catalog
+ * @param {Array} pipeCatalog - Pipe catalog for advanced calculation (optional)
+ * @param {Array} soleCatalog - Sole/fluid catalog for advanced calculation (optional)
+ * @returns {Object} - { loss: number, error?: string, details?: object }
  */
-export function calculateConnectionLoss(connection, activeFormula) {
-  if (!activeFormula || !activeFormula.formula) {
-    return { loss: 0, error: 'Keine aktive Formel' };
+export function calculateConnectionLoss(
+  connection,
+  calculationMethodOrFormula,
+  pipeCatalog = null,
+  soleCatalog = null
+) {
+  if (!calculationMethodOrFormula) {
+    return { loss: 0, error: 'Keine Berechnungsmethode aktiv' };
   }
 
   // Check if connection has required data
-  if (!connection.rohrlänge_m || connection.rohrlänge_m <= 0) {
+  const length_m = connection.rohrlänge_m || connection.laenge_meter || 0;
+  if (!length_m || length_m <= 0) {
     return { loss: 0, error: 'Rohrlänge fehlt' };
+  }
+
+  // Determine if this is an advanced calculation method or simple formula
+  const isAdvancedMethod = calculationMethodOrFormula.algorithmus &&
+                          calculationMethodOrFormula.algorithmus !== 'formula';
+
+  // ADVANCED CALCULATION (Haaland, Colebrook-White, etc.)
+  if (isAdvancedMethod) {
+    // Check if we have the necessary catalogs
+    if (!pipeCatalog || !soleCatalog) {
+      return {
+        loss: 0,
+        error: 'Pipe and Sole catalogs required for advanced calculation'
+      };
+    }
+
+    try {
+      // Find pipe in catalog
+      const pipeId = connection.leitungskatalog_id || connection.pipe_id;
+      const pipe = pipeCatalog.find(p => p.id === pipeId);
+
+      if (!pipe) {
+        return { loss: 0, error: 'Rohr nicht in Katalog gefunden' };
+      }
+
+      // Find fluid in catalog (use first one if not specified)
+      const soleId = connection.sole_id || (soleCatalog.length > 0 ? soleCatalog[0].id : null);
+      const fluid = soleCatalog.find(s => s.id === soleId) || soleCatalog[0];
+
+      if (!fluid) {
+        return { loss: 0, error: 'Sole nicht in Katalog gefunden' };
+      }
+
+      // Check if advanced calculation is possible
+      const canCalculate = canUseAdvancedCalculation(pipe, fluid);
+      if (!canCalculate.possible) {
+        return {
+          loss: 0,
+          error: `Fehlende Rohr/Fluid-Eigenschaften: ${canCalculate.missingFields.join(', ')}`
+        };
+      }
+
+      // Prepare connection data with length
+      const connectionData = {
+        ...connection,
+        laenge_meter: length_m
+      };
+
+      // Execute advanced calculation
+      const result = evaluateAdvancedPressureDrop(
+        connectionData,
+        calculationMethodOrFormula.algorithmus,
+        fluid,
+        pipe
+      );
+
+      return {
+        loss: result.pressureDrop_m,
+        details: result
+      };
+
+    } catch (error) {
+      return { loss: 0, error: `Advanced calculation failed: ${error.message}` };
+    }
+  }
+
+  // SIMPLE FORMULA CALCULATION (backward compatible)
+  if (!calculationMethodOrFormula.formula) {
+    return { loss: 0, error: 'Keine Formel definiert' };
   }
 
   try {
@@ -175,12 +252,12 @@ export function calculateConnectionLoss(connection, activeFormula) {
 
     // Prepare data for formula evaluation
     const data = {
-      Rohrlänge: parseFloat(connection.rohrlänge_m || connection.laenge_meter) || 0,
+      Rohrlänge: length_m,
       Rohrdimension: dimensionValue,
       Faktor: parseFloat(connection.faktor) || 1.4,
     };
 
-    const loss = evaluateFormula(activeFormula.formula, data);
+    const loss = evaluateFormula(calculationMethodOrFormula.formula, data);
     return { loss };
   } catch (error) {
     return { loss: 0, error: error.message };
@@ -191,17 +268,25 @@ export function calculateConnectionLoss(connection, activeFormula) {
  * Calculate total pressure loss for a path
  *
  * @param {Array} connections - Array of connection objects in the path
- * @param {Object} activeFormula - Active formula from catalog
+ * @param {Object} activeMethod - Active calculation method or formula from catalog
  * @param {boolean} includeBrineCircuit - Multiply by 2 for brine circuit (default true)
+ * @param {Array} pipeCatalog - Pipe catalog for advanced calculation (optional)
+ * @param {Array} soleCatalog - Sole/fluid catalog for advanced calculation (optional)
  * @returns {Object} - { total: number, details: Array, errors: Array }
  */
-export function calculatePathLoss(connections, activeFormula, includeBrineCircuit = true) {
+export function calculatePathLoss(
+  connections,
+  activeMethod,
+  includeBrineCircuit = true,
+  pipeCatalog = null,
+  soleCatalog = null
+) {
   const details = [];
   const errors = [];
   let total = 0;
 
   connections.forEach((conn, index) => {
-    const result = calculateConnectionLoss(conn, activeFormula);
+    const result = calculateConnectionLoss(conn, activeMethod, pipeCatalog, soleCatalog);
 
     if (result.error) {
       errors.push({
@@ -216,6 +301,7 @@ export function calculatePathLoss(connections, activeFormula, includeBrineCircui
       connectionId: conn.id,
       loss: result.loss,
       error: result.error,
+      calculationDetails: result.details,
       rohrlänge_m: conn.rohrlänge_m || conn.laenge_meter,
       rohrdimension: conn.rohrdimension || conn.dimension,
       faktor: conn.faktor,
@@ -269,10 +355,17 @@ export function calculatePumpUtilization(totalLoss, pumpCapacity) {
  * Calculate all pump paths and utilizations in a configuration
  *
  * @param {Object} configuration - Configuration object
- * @param {Object} activeFormula - Active formula from catalog
+ * @param {Object} activeMethod - Active calculation method or formula from catalog
+ * @param {Array} pipeCatalog - Pipe catalog for advanced calculation (optional)
+ * @param {Array} soleCatalog - Sole/fluid catalog for advanced calculation (optional)
  * @returns {Array} - Array of pump analysis objects
  */
-export function calculateAllPumpPaths(configuration, activeFormula) {
+export function calculateAllPumpPaths(
+  configuration,
+  activeMethod,
+  pipeCatalog = null,
+  soleCatalog = null
+) {
   const pumps = findPumps(configuration);
   const results = [];
 
@@ -280,7 +373,13 @@ export function calculateAllPumpPaths(configuration, activeFormula) {
     const paths = findPathsFromPump(pump.moduleId, pump.outputId, configuration);
 
     const pathResults = paths.map(path => {
-      const lossCalculation = calculatePathLoss(path.connections, activeFormula, true);
+      const lossCalculation = calculatePathLoss(
+        path.connections,
+        activeMethod,
+        true,
+        pipeCatalog,
+        soleCatalog
+      );
       const utilization = calculatePumpUtilization(
         lossCalculation.total,
         pump.pump.förderhoehe_m
@@ -315,11 +414,18 @@ export function calculateAllPumpPaths(configuration, activeFormula) {
  * Get a summary of pressure loss issues in the configuration
  *
  * @param {Object} configuration - Configuration object
- * @param {Object} activeFormula - Active formula from catalog
+ * @param {Object} activeMethod - Active calculation method or formula from catalog
+ * @param {Array} pipeCatalog - Pipe catalog for advanced calculation (optional)
+ * @param {Array} soleCatalog - Sole/fluid catalog for advanced calculation (optional)
  * @returns {Object} - Summary with warnings and recommendations
  */
-export function getPressureLossSummary(configuration, activeFormula) {
-  const pumpAnalysis = calculateAllPumpPaths(configuration, activeFormula);
+export function getPressureLossSummary(
+  configuration,
+  activeMethod,
+  pipeCatalog = null,
+  soleCatalog = null
+) {
+  const pumpAnalysis = calculateAllPumpPaths(configuration, activeMethod, pipeCatalog, soleCatalog);
 
   const warnings = [];
   const recommendations = [];

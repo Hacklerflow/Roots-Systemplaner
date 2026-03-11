@@ -5,40 +5,63 @@
  * Shows pump utilization, warnings, and recommendations.
  */
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import {
   calculateAllPumpPaths,
   getPressureLossSummary,
 } from '../../utils/pathCalculator';
+import { catalogsAPI } from '../../api/client';
 
-export default function PumpAnalysis({ configuration, formulaskatalog }) {
-  // Find active formula
+export default function PumpAnalysis({ configuration, formulaskatalog, pipeCatalog = [], soleCatalog = [] }) {
+  const [calculationMethods, setCalculationMethods] = useState([]);
+  const [activeMethod, setActiveMethod] = useState(null);
+
+  // Fetch calculation methods
+  useEffect(() => {
+    const fetchMethods = async () => {
+      try {
+        const result = await catalogsAPI.getCalculationMethods();
+        const methods = result.calculationMethods || [];
+        setCalculationMethods(methods);
+        const active = methods.find(m => m.is_active);
+        setActiveMethod(active);
+      } catch (error) {
+        console.error('Failed to fetch calculation methods:', error);
+      }
+    };
+    fetchMethods();
+  }, []);
+
+  // Find active formula (fallback)
   const activeFormula = useMemo(() => {
     return formulaskatalog?.find(f => f.is_active);
   }, [formulaskatalog]);
 
+  // Determine which method to use
+  const calculationMethod = activeMethod || activeFormula;
+
   // Calculate all pump paths
   const pumpAnalysis = useMemo(() => {
-    if (!activeFormula) return [];
-    return calculateAllPumpPaths(configuration, activeFormula);
-  }, [configuration, activeFormula]);
+    if (!calculationMethod) return [];
+    return calculateAllPumpPaths(configuration, calculationMethod, pipeCatalog, soleCatalog);
+  }, [configuration, calculationMethod, pipeCatalog, soleCatalog]);
 
   // Get summary with warnings
   const summary = useMemo(() => {
-    if (!activeFormula) return null;
-    return getPressureLossSummary(configuration, activeFormula);
-  }, [configuration, activeFormula]);
+    if (!calculationMethod) return null;
+    return getPressureLossSummary(configuration, calculationMethod, pipeCatalog, soleCatalog);
+  }, [configuration, calculationMethod, pipeCatalog, soleCatalog]);
 
-  if (!activeFormula) {
+  if (!calculationMethod) {
     return (
       <div style={styles.container}>
         <div style={styles.warning}>
           <div style={{ fontSize: '24px', marginBottom: '8px' }}>⚠️</div>
           <div style={{ fontWeight: 600, marginBottom: '4px' }}>
-            Keine aktive Formel
+            Keine aktive Berechnungsmethode
           </div>
           <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-            Bitte aktivieren Sie eine Druckverlust-Formel in den Einstellungen
+            Bitte aktivieren Sie eine Druckverlust-Berechnungsmethode in den Einstellungen
           </div>
         </div>
       </div>
@@ -67,11 +90,23 @@ export default function PumpAnalysis({ configuration, formulaskatalog }) {
       <div style={styles.header}>
         <h2 style={styles.title}>Pumpenanalyse</h2>
         <div style={styles.formulaInfo}>
-          <span style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>Formel:</span>
-          <span style={{ fontFamily: 'monospace', fontSize: '13px', marginLeft: '8px' }}>
-            {activeFormula.name}
+          <span style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>
+            Berechnungsmethode:
           </span>
+          <span style={{ fontWeight: 600, fontSize: '13px', marginLeft: '8px' }}>
+            {calculationMethod.name}
+          </span>
+          {calculationMethod.genauigkeit && (
+            <span style={{ color: 'var(--accent)', fontSize: '11px', marginLeft: '8px' }}>
+              ({calculationMethod.genauigkeit})
+            </span>
+          )}
         </div>
+        {calculationMethod.beschreibung && (
+          <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+            {calculationMethod.beschreibung}
+          </div>
+        )}
       </div>
 
       {/* Summary Stats */}

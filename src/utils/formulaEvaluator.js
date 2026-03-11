@@ -20,6 +20,8 @@
  * ```
  */
 
+import { PressureDropCalculator, FluidProperties, PipeProperties } from './pressureDropCalculator.js';
+
 /**
  * Evaluates a formula with given variable values
  *
@@ -252,4 +254,105 @@ export function validateConnectionData(connectionData, requiredVariables) {
   }
 
   return { valid: true };
+}
+
+/**
+ * Evaluate advanced pressure drop using scientific calculation methods
+ * (Darcy-Weisbach, Colebrook-White, Haaland, Swamee-Jain, Churchill)
+ *
+ * @param {Object} connectionData - Connection properties
+ * @param {string} method - Calculation method ('haaland', 'colebrook-white', 'swamee-jain', 'churchill')
+ * @param {Object} fluidData - Fluid properties from catalog
+ * @param {Object} pipeData - Pipe properties from catalog
+ * @returns {Object} - Calculation results { pressureDrop_m, velocity_ms, reynolds, frictionFactor, flowRegime, pressureDrop_pa }
+ */
+export function evaluateAdvancedPressureDrop(connectionData, method, fluidData, pipeData) {
+  // Validate inputs
+  if (!connectionData || !fluidData || !pipeData) {
+    throw new Error('Missing required data for advanced pressure drop calculation');
+  }
+
+  // Create Fluid Properties
+  const fluid = new FluidProperties(
+    fluidData.name || 'Unknown Fluid',
+    fluidData.dichte_kg_m3 || 1000.0,
+    fluidData.dyn_viskositaet_pas || 0.001002,
+    fluidData.waermekapazitaet_j_kgk || 4180.0,
+    fluidData.waermeleitfaehigkeit_w_mk || 0.6
+  );
+
+  // Create Pipe Properties
+  if (!pipeData.innendurchmesser_mm) {
+    throw new Error(`Pipe has no inner diameter (innendurchmesser_mm). Cannot perform advanced calculation.`);
+  }
+
+  const pipe = new PipeProperties(
+    pipeData.innendurchmesser_mm / 1000, // mm -> m
+    (pipeData.wandrauhigkeit_mm || 0.001) / 1000 // mm -> m
+  );
+
+  // Create Calculator
+  const calculator = new PressureDropCalculator(fluid, pipe);
+
+  // Determine volume flow
+  let volumeFlow_m3s;
+
+  if (connectionData.volumenstrom_m3s !== undefined && connectionData.volumenstrom_m3s !== null) {
+    // Use directly provided volume flow
+    volumeFlow_m3s = connectionData.volumenstrom_m3s;
+  } else if (connectionData.leistung_w !== undefined && connectionData.leistung_w !== null) {
+    // Calculate from heating power
+    const deltaT_k = connectionData.delta_t_k || 5; // Default 5K temperature difference
+    volumeFlow_m3s = PressureDropCalculator.volumeFlowFromPower(
+      connectionData.leistung_w,
+      deltaT_k,
+      fluid
+    );
+  } else if (connectionData.durchfluss_lmin !== undefined && connectionData.durchfluss_lmin !== null) {
+    // Convert from liters/min to m³/s
+    volumeFlow_m3s = connectionData.durchfluss_lmin / 60000; // L/min -> m³/s
+  } else {
+    throw new Error('No volume flow data available (volumenstrom_m3s, leistung_w, or durchfluss_lmin required)');
+  }
+
+  // Get pipe length
+  const length_m = connectionData.laenge_meter || connectionData.Rohrlänge || 0;
+
+  if (length_m === 0) {
+    throw new Error('Pipe length cannot be zero');
+  }
+
+  // Calculate pressure drop
+  const result = calculator.calculatePressureDrop(volumeFlow_m3s, length_m, method);
+
+  return result;
+}
+
+/**
+ * Check if advanced pressure drop calculation is possible with given data
+ *
+ * @param {Object} pipeData - Pipe properties from catalog
+ * @param {Object} fluidData - Fluid properties from catalog
+ * @returns {Object} - { possible: boolean, missingFields?: string[] }
+ */
+export function canUseAdvancedCalculation(pipeData, fluidData) {
+  const missing = [];
+
+  // Check pipe data
+  if (!pipeData?.innendurchmesser_mm) {
+    missing.push('Rohr: innendurchmesser_mm');
+  }
+
+  // Check fluid data
+  if (!fluidData?.dyn_viskositaet_pas) {
+    missing.push('Fluid: dyn_viskositaet_pas');
+  }
+  if (!fluidData?.dichte_kg_m3) {
+    missing.push('Fluid: dichte_kg_m3');
+  }
+
+  return {
+    possible: missing.length === 0,
+    missingFields: missing.length > 0 ? missing : undefined
+  };
 }
